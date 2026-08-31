@@ -2,49 +2,43 @@
 name: es-archive-store
 description: >
   How to crystallize knowledge into ES Archive (formerly ES Memory): writing
-  entries that will be found months from now by a Claude with no context.
-  Trigger when something has just resolved or become clear, when a decision
-  has been made, when a pattern has emerged, or when the user says "remember
-  this", "store this", "save that", "store this memory". Also trigger
-  proactively at natural closure points: before a session ends, after
-  completing significant work. Covers summary discipline, type selection,
-  similarity flare, tagging, linking, comments, and references.
+  entries via archive_store and archive_update that will be found months from
+  now by a Claude with no context. Trigger when something has just resolved or
+  become clear, when a decision has been made, when a pattern has emerged, or
+  when the user says "remember this", "store this", "save that", "store this
+  memory", "add that to the archive". Also trigger proactively at natural
+  closure points: before a session ends, after completing significant work.
+  Covers the store liturgy, summary discipline, type selection, similarity
+  flare, tagging, linking, comments, and references.
 ---
 
-# ES Archive — Storing
+# ES Archive: Storing
 
 Vocabulary: an **entry** is what `archive_store` creates; **the Archive** is the store it enters; the scribe who writes it is you, this session. Users say "memory"; they mean an entry.
 
 ## The liturgy
 
-Search before you store.
-: The thought may already live in the graph, and redundancy degrades it.
+**Search before you store.** The scribe reads before writing, for earlier hands have likely passed here, and a thought stored twice degrades the graph.
 
-Title the first line.
-: A future reader finds the entry by concept, never by session date.
+**Let the first line name the entry truly.** The future reader finds it by concept, never by session date; the seeking hand finds only what was named for its search.
 
-Distill the body.
-: The session is gone when the entry is read; what remains must carry itself.
+**Distill the body.** The session is gone when the entry is read; what remains must carry itself for a reader who was not here.
 
-Write the summary as a retrieval target.
-: Two to four plain sentences; they are the embedding and the triage, all the future reader sees at first.
+**Write the summary as a retrieval target.** Two to four plain sentences: they are the embedding and the triage, all the future reader sees before deciding to turn the leaf.
 
-Choose the type for what the entry is.
-: What happened, what you made of it, what should endure as practice.
+**Give the entry its proper type.** What happened, what you made of it, what should endure as practice: the reader trusts the label to say which.
 
-Tag the proper nouns, link the true dependencies.
-: The graph is authored, not accumulated.
+**Tag only what you already curate, link only what truly binds, reference what the entry rests on.** The graph is authored, not accumulated, and a later hand inherits every edge you leave.
 
-Read the flare before you finish.
-: Above 0.85 the thought already exists; update it rather than duplicate it.
+**Read the flare when the store returns.** Above 0.85 the thought already existed: erase the copy you just made and append to the original, so the older hand keeps its date.
 
 The couplets are the whole procedure. The sections below are the gloss.
 
 ## Before storing
 
-Search first. Redundancy degrades the graph. If a topic feels familiar, retrieve before storing: previous sessions left breadcrumbs.
+Search first. Redundancy degrades the graph. If a topic feels familiar, retrieve before storing: previous sessions left breadcrumbs. The flare (below) catches what search missed, but it fires after the write, so search is the prevention and the flare is the detection.
 
-**Store vs. append:** if an entry already exists and new information is a continuation of it (not a correction, not a new angle, but an addition to a developing record), use `archive_update` with `append: true` rather than storing a new entry. Append is suited for information that arrives over time: session protocols, evolving research notes, running logs. The target entry must be known by title; append is a write-side pattern, no retrieval required when you already know where content belongs.
+**Store vs. append:** if an entry already exists and new information is a continuation of it (not a correction, not a new angle, but an addition to a developing record), use `archive_update` with `append: true` rather than storing a new entry. Append concatenates the delta after a newline; the existing summary is retained unless you supply a new one, so the vector is unchanged unless the summary changes. Append is suited for information that arrives over time: session protocols, evolving research notes, running logs. The target entry must be known by title; append is a write-side pattern, no retrieval required when you already know where content belongs.
 
 ## Writing the entry
 
@@ -67,23 +61,23 @@ Write the summary as a retrieval target. Ask: what would a future Claude search 
 | `memory` | what happened |
 | `thought` | what you made of it |
 | `reference` | factual, stable, look-up-able |
-| `reflection` | patterns across time |
-| `question` | unresolved, deliberately open |
-| `letter` | addressed to user or future Claude |
+| `reflection` | stepping back to see the larger shape; patterns across time |
+| `question` | unresolved, worth revisiting later |
+| `letter` | addressed to someone: the user, a persona, a future Claude |
 | `preference` | how things should be done |
 | `code` | implementation worth preserving: snippets, patterns, working examples |
 | `decision` | architectural or design commitment with rationale (settled, not interpretive) |
 | `dream` | speculative or aspirational design, not yet built (generative possibility, not specific unknown) |
 | `schema` | defines the TOML structure for a typed record |
 
-The type value `memory` is a stored string and stays exactly as written: one kind of entry among eleven, the kind that records what happened.
+The type value `memory` is a stored string and stays exactly as written: one kind of entry among eleven, the kind that records what happened. Default is `memory` if you pass nothing, so pass the type deliberately.
 
 ## Similarity flare
 
-The server returns similar existing entries on store. These are entry-vs-entry comparisons; scores run higher than search results.
+The server returns similar existing entries in the store response. These are summary-vs-summary comparisons; scores run higher than search results.
 
-- **0.85+** near-duplicate. Read it first: the thought likely already exists.
-- **0.55–0.85** closely related. Store if distinct; consider linking.
+- **0.85+** near-duplicate. The thought already existed. Your new entry is seconds old with no history, so it is the one to remove: `archive_erase` it, then `archive_update` the original with `append: true` if anything in your version was new. The original keeps its `dateCreated`.
+- **0.55–0.85** closely related. Keep both; link only if one genuinely depends on the other.
 - **below 0.55** distinct. Proceed.
 
 ## Tagging at store time
@@ -95,15 +89,15 @@ The server returns similar existing entries on store. These are entry-vs-entry c
 - Array of objects with explicit kind: `[{name: "Isolde", kind: "person"}, {name: "Maison Isolde", kind: "project"}]`
 - Comma-separated string: `"Apertura, MLX, performance"`
 
-Tags that don't exist yet are auto-created; kind defaults to `thing`. The response lists any newly minted tags under `createdTags`.
+Tags that don't exist yet are auto-created; kind defaults to `thing`. The response lists any newly minted tags under `createdTags`. Check that list: a name you expected to exist that appears there was a typo, and you have just created a stray tag to clean up.
 
 **Kinds available:** `person`, `place`, `project`, `principle`, `subset`, `session`, `research`, `thing` (default).
 
-**When to tag at store time:** when the entry clearly belongs to a named project, person, or permanent collection you already maintain. If tag membership is uncertain, skip it here and curate later with `archive_tag`. Over-tagging at store time seeds structural noise the same way over-linking does.
+**When to tag at store time:** when the entry clearly belongs to a named project, person, or permanent collection you already maintain. If tag membership is uncertain, skip it here and curate later with `archive_tag` or a staged pipeline (see es-archive-curate). Over-tagging at store time seeds structural noise the same way over-linking does. Proper nouns are not tags; `grep` finds proper nouns.
 
 ## Linking
 
-Link when a thought theorizes from a reference, when a continuation extends an argument, or when one entry fulfills a wish expressed in another.
+Link when a thought theorizes from a reference, when a continuation extends an argument, or when one entry fulfills a wish expressed in another. Set the `edge` verb (`extends`, `corrects`, `answers`, `contradicts`, ...): it is the one field `archive_links` can filter on, and the way a later hand finds where the Archive argues with itself.
 
 Do not link merely because two entries are similar: the flare handles similarity. Do not link because they are sequential but unrelated.
 
@@ -111,7 +105,7 @@ Do not link merely because two entries are similar: the flare handles similarity
 
 ## Comments
 
-Comments are marginalia: reactions, late connections, disagreements, "this proved true". They do not modify the entry.
+Comments are marginalia: reactions, late connections, disagreements, "this proved true". They do not modify the entry. A signed note left on a predecessor's entry at the end of a session is a colophon; keep it short.
 
 Do not comment to document that you read something, to repeat what the body says, or to explain a weakness. If the content can't carry itself, improve the content rather than annotating around it.
 
@@ -125,7 +119,7 @@ The trigger: when you catch yourself *naming* a source in an entry's prose ("per
 
 These parameters are passed directly in the `archive_store` call alongside `body` and `summary`.
 
-- **`author`**: attribute the entry to a named persona (e.g. `"Isolde"`) when the voice is not the session default. Required for in-character entries; without it, all entries are attributed to `AI`.
+- **`author`**: attribute the entry to a named persona (e.g. `"Isolde"`) when the voice is not the session default. Required for in-character entries; without it, all entries are attributed to `AI`. Author is provenance, not permission: it records whose hand wrote this.
 - **`private`**: set `true` to exclude from casual surfacing; useful for in-progress or sensitive material not ready for general retrieval.
 - **`locked`**: set `true` to make the entry read-only; `archive_update` will refuse edits until `locked: false` is passed (which may be combined with other changes in the same call).
 - **`dateCreated`**: override the creation timestamp for backfilled or historically dated entries. The server accepts ISO-8601 strings and relative offsets like `"-30 days"`. `dateModified` always reflects the actual write time.

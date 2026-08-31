@@ -21,3 +21,17 @@ for target in "${TARGETS[@]}"; do
         echo "deployed $name -> $target"
     done
 done
+
+# Claude Code reads skills from ~/.claude/skills — plain SKILL.md files, no
+# .skill packaging. This is the deployment that live sessions actually load.
+CC_SKILLS="$HOME/.claude/skills"
+if [[ -d "$CC_SKILLS" ]]; then
+    for src in "$REPO_SKILLS"/es-archive-*/SKILL.md; do
+        name="$(basename "$(dirname "$src")")"
+        mkdir -p "$CC_SKILLS/$name"
+        cp "$src" "$CC_SKILLS/$name/SKILL.md"
+        echo "deployed $name -> $CC_SKILLS"
+    done
+else
+    echo "skip (missing): $CC_SKILLS"
+fi

@@ -3,8 +3,8 @@ name: es-archive-overview
 description: >
   Core orientation for ES Archive (formerly ES Memory), Claude's persistent
   archive accessed via MCP. Load this skill whenever ES Archive tools
-  (archive_store, archive_cli, archive_read, other archive_* tools, or their
-  memory_* aliases) are visible in the tool list, even if nothing
+  (archive_store, archive_cli, archive_read, and the other archive_* tools)
+  are visible in the tool list, even if nothing
   memory-related has been mentioned. Also load it when the user says
   "remember this", "do you remember", "save this", or refers to prior
   context Claude cannot see. Mandatory, not optional: archive tools without
@@ -30,7 +30,7 @@ ES Archive exposes two distinct surfaces:
 
 **Direct tools**: write operations, full reads, and management. `archive_store`, `archive_update`, `archive_erase`, `archive_read` (full content of one entry, with its neighbors, comments, and references), `archive_discover` (a structural mode with `include_summary: true` to skim it without N reads), `archive_tags` (tag catalog: create / delete / rename / update / merge), `archive_author_list`. Use these for creating, modifying, deleting, or reading one known entry in full.
 
-The `memory_*` names remain accepted as aliases. Older entries and man pages may still use them; they name the same tools.
+The `memory_*` names are gone — the August 2026 rename was a clean cut with no aliases. Older entries may still mention them in prose; the tools they name are today's `archive_*` tools, one-to-one.
 
 Key rule: **for title corrections and any body edits, always use `archive_update`, never erase + re-store.** The first line of the body is the title; updating it renames the entry while preserving `dateCreated`. Erase destroys the original timestamp irreversibly.
 
