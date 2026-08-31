@@ -389,7 +389,7 @@ static const NSTimeInterval kCenteringDuration = 0.7;
             NSForegroundColorAttributeName: NSColor.tertiaryLabelColor,
             NSParagraphStyleAttributeName: style,
         };
-        NSString *msg = @"No memories yet";
+        NSString *msg = @"No entries yet";
         NSSize sz = [msg sizeWithAttributes:attrs];
         CGRect bounds = self.bounds;
         [msg drawAtPoint:NSMakePoint((bounds.size.width - sz.width) * 0.5,

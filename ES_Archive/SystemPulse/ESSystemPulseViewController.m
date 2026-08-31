@@ -307,7 +307,7 @@ typedef NS_ENUM(NSInteger, ESCloudKitDotState) {
     NSView *cloudKitRow = [self buildCloudKitRow];
 
     NSGridView *grid = [NSGridView gridViewWithViews:@[
-        @[[self statTitleLabel:@"Memories"],   self.memoryCountLabel],
+        @[[self statTitleLabel:@"Entries"],   self.memoryCountLabel],
         @[[self statTitleLabel:@"Vectors"],    self.vectorCountLabel],
         @[[self statTitleLabel:@"Cache"],      self.cacheSizeLabel],
         @[[self statTitleLabel:@"Tool Calls"], self.toolCallCountLabel],
@@ -605,7 +605,7 @@ typedef NS_ENUM(NSInteger, ESCloudKitDotState) {
     NSMutableArray<NSString *> *lines = [@[
         @"MCP interface ready",
         [NSString stringWithFormat:@"Vector store loaded: %lu vectors",   (unsigned long)vecCount],
-        [NSString stringWithFormat:@"Memory archive loaded: %lu memories", (unsigned long)memCount],
+        [NSString stringWithFormat:@"Archive loaded: %lu entries", (unsigned long)memCount],
     ] mutableCopy];
 
     // One "listening" line per bound persona port — the server is multi-port.

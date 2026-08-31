@@ -76,7 +76,7 @@ static const CGFloat kContentWidth = 492.0;
 
     [stack addArrangedSubview:[self titleLabel:@"Connect ES Archive"]];
     [stack addArrangedSubview:[self bodyLabel:
-        @"Your AI’s memories live on this Mac. Connect the app you chat with — it talks to "
+        @"Your AI’s archive lives on this Mac. Connect the app you chat with — it talks to "
         @"ES Archive over a local connection, safe on your local machine and synced over iCloud."]];
 
     // The app's own connection story — the reason the window exists.
@@ -88,12 +88,12 @@ static const CGFloat kContentWidth = 492.0;
     // a button that cannot work.
     if ([ESBackupCommands hasSampleArchive]) {
         [self beginSectionInStack:stack];
-        [stack addArrangedSubview:[self sectionHeader:@"Sample Memories"]];
+        [stack addArrangedSubview:[self sectionHeader:@"Demo Archive"]];
         [stack addArrangedSubview:[self bodyLabel:
-            @"New here? Add a set of example memories, tags and links to try searching, "
+            @"New here? Import a set of example entries, tags and links to try searching, "
             @"following connections and reading the Archive Scope. They merge into your own "
             @"archive and stay there — nothing marks them as samples afterwards."]];
-        NSButton *samples = [NSButton buttonWithTitle:@"Add Sample Memories…"
+        NSButton *samples = [NSButton buttonWithTitle:@"Import Demo Archive…"
                                                target:self action:@selector(addSampleMemories:)];
         samples.bezelStyle = NSBezelStyleRounded;
         [stack addArrangedSubview:samples];

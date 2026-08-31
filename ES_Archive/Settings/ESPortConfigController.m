@@ -62,7 +62,7 @@ static NSString * const kColJWT    = @"jwt"; // per-route Cf-Access requirement
     // changes (the .mcpb bridge hardcodes it), it can only be switched
     // on or off.
     NSButton *bridge = [NSButton checkboxWithTitle:@"" target:self action:@selector(bridgeToggled:)];
-    bridge.toolTip = @"Serve the Claude bridge (ES-Memory-Bridge.mcpb) on its fixed port. "
+    bridge.toolTip = @"Serve the Claude bridge (ES-Archive-MCP.mcpb) on its fixed port. "
                      @"The port stays reserved for the bridge even while it is off.";
     self.bridgeCheckbox = bridge;
 

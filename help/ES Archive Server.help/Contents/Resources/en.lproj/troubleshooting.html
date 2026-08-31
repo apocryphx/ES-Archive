@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="index">
-<meta name="description" content="What to do when the memory tools do not appear, search comes back thin, or the window will not show.">
+<meta name="description" content="What to do when the archive tools do not appear, search comes back thin, or the window will not show.">
 <meta name="keywords" content="troubleshooting, problem, not working, tools missing, no results, empty, window, sync, iCloud, port in use, reindex, isolated, help">
 <meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
 <title>Troubleshooting</title>
@@ -13,7 +13,7 @@
 
 <h1><a name="troubleshooting"></a>Troubleshooting</h1>
 
-<h2><a name="no-tools"></a>The memory tools do not appear in my assistant</h2>
+<h2><a name="no-tools"></a>The archive tools do not appear in my assistant</h2>
 
 
 <ol>
@@ -33,14 +33,14 @@ call the tools, however well it is connected.</p>
 
 <h2><a name="thin-search"></a>Search finds nothing, or the wrong things</h2>
 
-<p>Semantic search matches a memory's <strong>summary</strong>, not its body. A memory stored
+<p>Semantic search matches an entry's <strong>summary</strong>, not its body. An entry stored
 without one has no vector, so it is invisible to search and appears as an isolated dot in
 <a href="archive-scope.html">Archive Scope</a>. Open Archive Scope and read the
 <strong>Isolated</strong> count in the status line: if it is more than a handful, that is your
-answer. Ask your assistant to add summaries to those memories.</p>
+answer. Ask your assistant to add summaries to those entries.</p>
 
-<p>Right after a restore, or after memories arrive from another Mac through iCloud, vectors are
-still being computed. Search over those memories sharpens over the next few moments. Watch the
+<p>Right after a restore, or after entries arrive from another Mac through iCloud, vectors are
+still being computed. Search over those entries sharpens over the next few moments. Watch the
 similarity edges appear in Archive Scope.</p>
 
 <p>If it never settles, choose <span class="ui">Reindex Vectors</span> from the menu-bar item to
@@ -59,29 +59,29 @@ The same applies if you assigned one port twice — the pane will tell you which
 <p>Port changes never take effect until you relaunch. If a new binding seems ignored, that is
 almost always why.</p>
 
-<h2><a name="wrong-author"></a>Memories are attributed to the wrong persona</h2>
+<h2><a name="wrong-author"></a>Entries are attributed to the wrong persona</h2>
 
 <p>Authorship comes from the port, so this means the client is pointed at the wrong one. Correct
 the client's configuration, then fold the mis-attributed records into the right persona with
 <span class="ui">Merge…</span> in <span class="ui">Settings ▸ Personas</span>. Back up first.</p>
 
-<h2><a name="sync"></a>My other Mac does not have the same memories</h2>
+<h2><a name="sync"></a>My other Mac does not have the same entries</h2>
 
 <ul>
 <li>Both Macs must be signed into the same Apple Account with iCloud Drive on.</li>
 <li>Sync is not instantaneous. Leave both awake and connected for a few minutes.</li>
-<li>Memories that arrive from another Mac need their vectors computed locally before search
+<li>Entries that arrive from another Mac need their vectors computed locally before search
 reaches them.</li>
 </ul>
 
 <p>If it still will not sync, back up on one Mac and restore on the other —
 <a href="backup-restore.html">Backing up and restoring</a>. That works with no iCloud at all.</p>
 
-<h2><a name="scope-empty"></a>Archive Scope says "No memories yet"</h2>
+<h2><a name="scope-empty"></a>Archive Scope says "No entries yet"</h2>
 
 <p>The archive is empty for the persona you have selected. Check the persona picker at the bottom
 right and try <strong>All (witness)</strong>. If that is empty too, nothing has been stored yet —
-add the sample memories from <span class="ui">Help ▸ Connect ES Archive…</span> to have something to
+import the demo archive from <span class="ui">Help ▸ Connect ES Archive…</span> to have something to
 look at.</p>
 
 <h2><a name="still-stuck"></a>Still stuck</h2>

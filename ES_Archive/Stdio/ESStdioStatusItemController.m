@@ -52,7 +52,7 @@
     headerItem.enabled = NO;
     [menu addItem:headerItem];
 
-    self.countItem = [[NSMenuItem alloc] initWithTitle:@"Memories: —" action:nil keyEquivalent:@""];
+    self.countItem = [[NSMenuItem alloc] initWithTitle:@"Entries: —" action:nil keyEquivalent:@""];
     self.countItem.enabled = NO;
     [menu addItem:self.countItem];
 
@@ -154,8 +154,8 @@
         return err ? nil : @(c);
     });
     self.countItem.title = count.boolValue
-        ? [NSString stringWithFormat:@"Memories: %lu", count.unsignedLongValue]
-        : @"Memories: —";
+        ? [NSString stringWithFormat:@"Entries: %lu", count.unsignedLongValue]
+        : @"Entries: —";
 }
 
 - (NSImage *)statusImage {

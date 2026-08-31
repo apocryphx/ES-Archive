@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="index">
-<meta name="description" content="What ES Archive is, who writes the memories, and where they are kept.">
+<meta name="description" content="What ES Archive is, who writes the entries, and where they are kept.">
 <meta name="keywords" content="how it works, overview, memory, archive, engine, embeddings, semantic search, iCloud, CloudKit, MCP, stdio">
 <meta name="AppleIcon" content="ES Archive MCP.help/Contents/Resources/shared/images/help-icon.png">
 <title>How ES Archive MCP works</title>
@@ -19,7 +19,7 @@ archive that outlives the session: it can write something down, find it again we
 connect it to related notes, and prune what has gone stale.</p>
 
 <p>The important thing to understand is <strong>who does the writing</strong>. You do not
-type memories into ES Archive MCP. Your AI does — through the tools this app exposes, while you
+type entries into ES Archive MCP. Your AI does — through the tools this app exposes, while you
 are having an ordinary conversation with it. ES Archive MCP is the archive and the instrument
 panel; the assistant is the author.</p>
 
@@ -27,7 +27,7 @@ panel; the assistant is the author.</p>
 
 <table>
 <tr><th>Part</th><th>What it is</th></tr>
-<tr><td>The archive</td><td>A database on this Mac holding every memory, tag, link and revision.</td></tr>
+<tr><td>The archive</td><td>A database on this Mac holding every entry, tag, link and revision.</td></tr>
 <tr><td>The engine</td><td>The part your AI talks to. It stores, searches, links and forgets on the assistant's instruction.</td></tr>
 <tr><td>The app</td><td>What you see: Archive Scope, Settings, backup and restore, and the window that connects a client.</td></tr>
 </table>
@@ -42,26 +42,26 @@ running — a second assistant, or you opening the app from Finder — it notice
 the running host, and stays out of the way. However many conversations are open, one process
 owns the archive.</p>
 
-<h2><a name="what-a-memory-is"></a>What a memory is</h2>
+<h2><a name="what-a-memory-is"></a>What an entry is</h2>
 
-<p>Each memory carries a title, a short summary, a body, a type, and the name of the persona
+<p>Each entry carries a title, a short summary, a body, a type, and the name of the persona
 that wrote it. On top of that it can accumulate <strong>tags</strong>, <strong>links</strong>
-to other memories, <strong>comments</strong> added later, <strong>references</strong> to
+to other entries, <strong>comments</strong> added later, <strong>references</strong> to
 outside sources, and a trail of <strong>revisions</strong> recording how it changed.</p>
 
 <p>The summary matters more than it looks. It is what semantic search actually matches
-against, so a memory stored without one is invisible to search and shows up as an isolated
+against, so an entry stored without one is invisible to search and shows up as an isolated
 node in <a href="archive-scope.html">Archive Scope</a>.</p>
 
 <h2><a name="how-search-works"></a>How search finds things</h2>
 
-<p>Every memory is converted into a vector — a numeric fingerprint of its meaning — by a
+<p>Every entry is converted into a vector — a numeric fingerprint of its meaning — by a
 model that runs entirely on this Mac (EmbeddingGemma, 768 dimensions, quantised to int4,
 executed through Core ML). Searching compares fingerprints rather than words, so a query
-finds a memory that means the same thing in different words.</p>
+finds an entry that means the same thing in different words.</p>
 
 <p>The model is multilingual across more than a hundred languages. A question asked in
-German can reach a memory written in English, and the reverse.</p>
+German can reach an entry written in English, and the reverse.</p>
 
 <div class="note">
 <span class="label">Nothing is sent away to be embedded</span>
@@ -69,7 +69,7 @@ German can reach a memory written in English, and the reverse.</p>
 and runs locally, offline, every time.</p>
 </div>
 
-<h2><a name="where-memories-live"></a>Where memories live</h2>
+<h2><a name="where-entries-live"></a>Where entries live</h2>
 
 <p>The archive is a Core Data (SQLite) store inside the app's own sandbox container on this
 Mac. If you are signed into iCloud it also syncs through <strong>your private CloudKit

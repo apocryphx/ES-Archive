@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="index">
-<meta name="description" content="Save the archive to an .esarchive file, merge one back in, and load the sample memories.">
-<meta name="keywords" content="backup, back up, restore, esarchive, archive, export, import, merge, sample memories, demo, move to another Mac">
+<meta name="description" content="Save the archive to an .esarchive file, merge one back in, and import the demo archive.">
+<meta name="keywords" content="backup, back up, restore, esarchive, archive, export, import, merge, sample entries, demo, move to another Mac">
 <meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
 <title>Backing up and restoring</title>
 <link rel="stylesheet" href="../shared/css/help.css">
@@ -17,7 +17,7 @@
 <h2><a name="back-up"></a>Backing up</h2>
 
 <p>Choose <span class="ui">File ▸ Back Up…</span> (<kbd>⇧⌘B</kbd>) and pick a location. You get
-one <span class="path">.esarchive</span> file holding every memory, tag and link, named with
+one <span class="path">.esarchive</span> file holding every entry, tag and link, named with
 today's date — for example <span class="path">ES_Backup-2026-08-07.esarchive</span>.</p>
 
 <p>Vectors are deliberately left out. They are derived data, they are large, and they are
@@ -33,15 +33,15 @@ anything irreversible: a restore, a persona merge, a large clean-up.</p>
 <h2><a name="restore"></a>Restoring</h2>
 
 <p>Choose <span class="ui">File ▸ Restore…</span> (<kbd>⇧⌘R</kbd>), confirm, and choose the
-file. When it finishes you are told how many memories were processed, how many links were
-inserted, how many were already present, and how many were dropped because the memory at one
+file. When it finishes you are told how many entries were processed, how many links were
+inserted, how many were already present, and how many were dropped because the entry at one
 end was not in the archive.</p>
 
 <p><strong>Restoring merges — it does not replace.</strong> The archive you have is kept, and
 the file's contents are added to it. Where the same record exists on both sides, the one with
 the newer modification date wins. Restoring the same file twice is harmless.</p>
 
-<p>Vectors for the restored memories are regenerated in the background, so semantic search
+<p>Vectors for the restored entries are regenerated in the background, so semantic search
 over them sharpens over the following moments rather than being ready instantly.</p>
 
 <h2><a name="another-mac"></a>Moving to another Mac</h2>
@@ -49,14 +49,14 @@ over them sharpens over the following moments rather than being ready instantly.
 <p>If you use iCloud, do nothing: the archive is already there. Otherwise back up on the first
 Mac, copy the <span class="path">.esarchive</span> file across, and restore on the second.</p>
 
-<h2><a name="sample-memories"></a>Sample memories</h2>
+<h2><a name="sample-entries"></a>The demo archive</h2>
 
 <p>An empty archive demonstrates very little. Open <span class="ui">Help ▸ Connect ES Archive…</span>
-and click <span class="ui">Add Sample Memories…</span> to merge in a prepared set of memories,
+and click <span class="ui">Import Demo Archive…</span> to merge in a prepared set of entries,
 tags and links you can search, follow and look at in
 <a href="archive-scope.html">Archive Scope</a>.</p>
 
-<p>They arrive as ordinary memories. Nothing marks them as samples afterwards, so removing them
+<p>They arrive as ordinary entries. Nothing marks them as samples afterwards, so removing them
 later means deleting them individually — worth knowing before you add them to an archive you
 already care about. Adding them twice does no harm; matching records are recognised rather than
 duplicated.</p>

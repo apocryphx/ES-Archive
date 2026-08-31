@@ -29,8 +29,8 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     [NSApp activateIgnoringOtherApps:YES];
 
     NSSavePanel *panel = [NSSavePanel savePanel];
-    panel.title = @"Back Up Memory Archive";
-    panel.message = @"Save a snapshot of every memory, tag, and link. "
+    panel.title = @"Back Up Archive";
+    panel.message = @"Save a snapshot of every entry, tag, and link. "
                     @"Vectors are excluded and regenerate after restore.";
     panel.prompt = @"Back Up";
     panel.canCreateDirectories = YES;
@@ -69,7 +69,7 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
 
     NSAlert *confirm = [NSAlert new];
     confirm.messageText = @"Restore from backup?";
-    confirm.informativeText = @"The selected archive will be merged into the current memory store. "
+    confirm.informativeText = @"The selected archive will be merged into the current archive. "
                               @"On UUID conflicts, the record with the newer last-modified date wins. "
                               @"Vectors will be regenerated in the background.";
     [confirm addButtonWithTitle:@"Choose Backup…"];
@@ -77,7 +77,7 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     if ([confirm runModal] != NSAlertFirstButtonReturn) return;
 
     NSOpenPanel *panel = [NSOpenPanel openPanel];
-    panel.title = @"Restore Memory Archive";
+    panel.title = @"Restore Archive";
     panel.prompt = @"Restore";
     panel.canChooseFiles = YES;
     panel.canChooseDirectories = NO;
@@ -105,7 +105,7 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     NSAlert *done = [NSAlert new];
     done.messageText = @"Restore complete";
     done.informativeText = [NSString stringWithFormat:
-                            @"Memories processed: %lu\n"
+                            @"Entries processed: %lu\n"
                             @"Links inserted: %lu  (already present: %lu)\n"
                             @"Orphan links dropped: %lu",
                             (unsigned long)summary.memoriesRestored,
@@ -133,17 +133,17 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     if (!archive) return NO;   // the section is hidden in this case; belt and braces
 
     NSAlert *confirm = [NSAlert new];
-    confirm.messageText = @"Add sample memories?";
+    confirm.messageText = @"Import the demo archive?";
     // Say plainly that this is a merge into the real archive and that it is not
     // a mode the user can switch back off — the memories are ordinary ones
     // afterwards, carrying no marker that would let the app find them again.
     confirm.informativeText =
-        @"A set of example memories, tags and links will be added to your archive so there is "
+        @"A set of example entries, tags and links will be added to your archive so there is "
         @"something to search, connect and explore straight away.\n\n"
-        @"They become ordinary memories: nothing marks them as samples, so removing them later "
+        @"They become ordinary entries: nothing marks them as samples, so removing them later "
         @"means deleting them individually. Adding them twice is harmless — matching records "
         @"are recognised rather than duplicated.";
-    [confirm addButtonWithTitle:@"Add Sample Memories"];
+    [confirm addButtonWithTitle:@"Import"];
     [confirm addButtonWithTitle:@"Cancel"];
     if ([confirm runModal] != NSAlertFirstButtonReturn) return NO;
 
@@ -151,7 +151,7 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     ESBackupRestoreSummary *summary = [ESBackupManager restoreBackupFromURL:archive error:&err];
     if (!summary) {
         NSAlert *alert = [NSAlert new];
-        alert.messageText = @"Couldn’t add the sample memories";
+        alert.messageText = @"Couldn’t import the demo archive";
         alert.informativeText = err.localizedDescription ?: @"Unknown error.";
         alert.alertStyle = NSAlertStyleCritical;
         [alert runModal];
@@ -159,9 +159,9 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
     }
 
     NSAlert *done = [NSAlert new];
-    done.messageText = @"Sample memories added";
+    done.messageText = @"Demo archive imported";
     done.informativeText = [NSString stringWithFormat:
-                            @"%lu memories and %lu links are now in your archive. "
+                            @"%lu entries and %lu links are now in your archive. "
                             @"Vectors regenerate in the background, so search results improve "
                             @"over the next few moments.",
                             (unsigned long)summary.memoriesRestored,

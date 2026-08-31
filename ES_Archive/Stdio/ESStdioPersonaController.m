@@ -274,7 +274,7 @@ shouldEditTableColumn:(NSTableColumn *)tableColumn
     alert.alertStyle = NSAlertStyleCritical;
     alert.messageText = [NSString stringWithFormat:@"Delete persona “%@”?", name];
     alert.informativeText = [NSString stringWithFormat:
-        @"This permanently deletes %ld record%@ authored by “%@” — memories "
+        @"This permanently deletes %ld record%@ authored by “%@” — entries "
         @"(including revisions), comments, and attachments. This cannot be undone.",
         (long)count, count == 1 ? @"" : @"s", name];
     NSButton *del = [alert addButtonWithTitle:@"Delete Persona"];
@@ -346,7 +346,7 @@ shouldEditTableColumn:(NSTableColumn *)tableColumn
     NSAlert *alert = [[NSAlert alloc] init];
     alert.messageText = [NSString stringWithFormat:@"Merge persona “%@”", source];
     alert.informativeText = [NSString stringWithFormat:
-        @"All %ld record%@ authored by “%@” — memories (including revisions), "
+        @"All %ld record%@ authored by “%@” — entries (including revisions), "
         @"comments, and attachments — are re-stamped onto the persona you choose, "
         @"and “%@” disappears from the list.",
         (long)count, count == 1 ? @"" : @"s", source, source];

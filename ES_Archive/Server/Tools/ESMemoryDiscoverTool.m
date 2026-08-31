@@ -316,7 +316,7 @@ static const double kLambda = 0.693147 / kHalfLifeDays;
     return @{
         @"mode": mode,
         @"count": @(results.count),
-        @"memories": results
+        @"results": results
     };
 }
 
