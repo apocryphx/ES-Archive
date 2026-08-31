@@ -10,15 +10,11 @@ this repository) into a notarized `.mcpb` extension for Claude Desktop.
 
 ## ⚠️ The manifest `name` is the upgrade-continuity key
 
-`bundle/manifest.json` sets `"name": "es-archive-bridge"`. It is the identifier
-Claude Desktop keys extension *upgrades* on — changing it makes every existing
-install see a brand-new extension instead of an update, producing a duplicate
-with doubled tools. The August 2026 clean-cut rename (new bundle identifiers,
-fresh containers) changed the slug from `es-memory-bridge` deliberately:
-bridge-era installs appear as a separate extension and the old
-`es-memory-bridge` entry must be removed by hand. **Do not change the slug
-again.** Users never see it: the `display_name` is "ES Archive". The slug is an
-internal continuity key, not a user-facing name.
+`bundle/manifest.json` sets `"name": "es-archive-bridge"`. Claude Desktop keys
+extension *upgrades* on this slug — changing it makes an existing install see a
+brand-new extension instead of an update, producing a duplicate with doubled
+tools. **Do not change it.** Users never see it: the `display_name` is
+"ES Archive". The slug is an internal continuity key, not a user-facing name.
 
 ## Release process
 

@@ -4,7 +4,7 @@
 
 Persistent archive that the AI owns: store, retrieve, organize, curate, and forget across sessions. The Archive is the collection; an entry is what a session writes into it. Built natively in Objective-C with Core Data, on-device multilingual Core ML embeddings, and optional CloudKit sync. Designed and optimized for Claude; also runs with local models in LM Studio.
 
-ES Archive was known as **ES Memory** through version 3.3.3. The rename landed in two clean cuts, no aliases: first the MCP tools (`memory_*` → `archive_*`), then — as of 3.3.8 — the bundle identifiers and app group as well (`com.elarity.es-archive-mcp`, `com.elarity.es-archive-server`, `group.com.elarity.es-archive`). To macOS the renamed apps are new apps with fresh containers. The CloudKit container and sync schema did not change, so an archive that syncs via iCloud re-downloads on first launch; a local-only archive moves over via backup export/import (legacy `.esmemory` backups still open).
+ES Archive was known as **ES Memory** through version 3.3.3. The rename was a clean cut, no aliases: the MCP tools (`memory_*` → `archive_*`), bundle identifiers, and app group all changed. The CloudKit container and sync schema did not, so a synced archive re-downloads on first launch, and legacy `.esmemory` backups still open.
 
 Read more about the technology and philosophy behind ES Archive on [alpharecursion.com](https://alpharecursion.com).
 

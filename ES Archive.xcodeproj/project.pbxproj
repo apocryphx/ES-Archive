@@ -97,6 +97,11 @@
 			path = "ES Archive Tests";
 			sourceTree = "<group>";
 		};
+		153FC9333045062800B75B4A /* design-decisions */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "design-decisions";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +136,7 @@
 		15786DAB2F55F87F00E136DA = {
 			isa = PBXGroup;
 			children = (
+				153FC9333045062800B75B4A /* design-decisions */,
 				153FB1F63044FB4700B75B4A /* ES Archive Tests */,
 				153FB1F23044FB2B00B75B4A /* ES-Archive-Server-Info.plist */,
 				153FB1F03044FB1C00B75B4A /* ES-Archive-Info.plist */,
