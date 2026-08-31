@@ -1,0 +1,723 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 100;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		153FB7413044FD2000B75B4A /* ObjCTokenizer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */; };
+		153FB7423044FD2000B75B4A /* ObjCTokenizer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		151E6E402F9C15DE00369DC2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = Frameworks;
+			files = (
+				153FB7423044FD2000B75B4A /* ObjCTokenizer.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+		};
+		EE75F6AD2FF74BDD00279212 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = Frameworks;
+			files = (
+			);
+			name = "Embed Frameworks";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		153E91822FFF49CE00108E93 /* ES Archive Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ES Archive Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		153FB1F03044FB1C00B75B4A /* ES-Archive-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ES-Archive-Info.plist"; sourceTree = "<group>"; };
+		153FB1F23044FB2B00B75B4A /* ES-Archive-Server-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ES-Archive-Server-Info.plist"; sourceTree = "<group>"; };
+		153FB73D3044FD1C00B75B4A /* GCDWebServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GCDWebServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ObjCTokenizer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		15786DB42F55F87F00E136DA /* ES Archive MCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ES Archive MCP.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE75F6B32FF74BDD00279212 /* ES Archive Server.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ES Archive Server.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1572997F2F5643B800CDBC0D /* Exceptions for "ES_Archive" folder in "ES Archive MCP" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppDelegate.m,
+				main.m,
+				MemoryScope/MEMORY_SCOPE.md,
+				Onboarding/ESHTTPConnectController.m,
+				Server/MCPServer.m,
+				Settings/ESAuthorConfigController.m,
+				Settings/ESMenuBarController.m,
+				Settings/ESPortConfigController.m,
+				Settings/ESServerConfig.m,
+				Settings/ESSettingsTabViewController.m,
+				SystemPulse/ESSystemPulseViewController.m,
+				"VectorEngine/docs/curve-visualizer.html",
+			);
+			target = 15786DB32F55F87F00E136DA /* ES Archive MCP */;
+		};
+		EE75F6B52FF74BDE00279212 /* Exceptions for "ES_Archive" folder in "ES Archive Server" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MemoryScope/MEMORY_SCOPE.md,
+				Onboarding/ESStdioConnectController.m,
+				"Resources/Demo-Data.esarchive",
+				Stdio/ESBridgeCLI.m,
+				Stdio/ESEngine.m,
+				Stdio/ESStdioAppDelegate.m,
+				Stdio/ESStdioMain.m,
+				Stdio/ESStdioPersonaController.m,
+				Stdio/ESStdioSettingsController.m,
+				Stdio/ESStdioStatusItemController.m,
+				Stdio/MCPFraming.m,
+				Stdio/MCPSocketClient.m,
+				Stdio/MCPStdioServer.m,
+				"VectorEngine/docs/curve-visualizer.html",
+			);
+			target = EE75F6A32FF74BDD00279212 /* ES Archive Server */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		153FB0803044FB0200B75B4A /* ES_Archive */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1572997F2F5643B800CDBC0D /* Exceptions for "ES_Archive" folder in "ES Archive MCP" target */,
+				EE75F6B52FF74BDE00279212 /* Exceptions for "ES_Archive" folder in "ES Archive Server" target */,
+			);
+			path = ES_Archive;
+			sourceTree = "<group>";
+		};
+		153FB1F63044FB4700B75B4A /* ES Archive Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "ES Archive Tests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		153E917F2FFF49CE00108E93 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		15786DB12F55F87F00E136DA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				153FB7413044FD2000B75B4A /* ObjCTokenizer.framework in Frameworks */,
+			);
+		};
+		EE75F6A92FF74BDD00279212 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		153FB73C3044FD1C00B75B4A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */,
+				153FB73D3044FD1C00B75B4A /* GCDWebServer.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		15786DAB2F55F87F00E136DA = {
+			isa = PBXGroup;
+			children = (
+				153FB1F63044FB4700B75B4A /* ES Archive Tests */,
+				153FB1F23044FB2B00B75B4A /* ES-Archive-Server-Info.plist */,
+				153FB1F03044FB1C00B75B4A /* ES-Archive-Info.plist */,
+				153FB0803044FB0200B75B4A /* ES_Archive */,
+				153FB73C3044FD1C00B75B4A /* Frameworks */,
+				15786DB52F55F87F00E136DA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		15786DB52F55F87F00E136DA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				15786DB42F55F87F00E136DA /* ES Archive MCP.app */,
+				EE75F6B32FF74BDD00279212 /* ES Archive Server.app */,
+				153E91822FFF49CE00108E93 /* ES Archive Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		153E91812FFF49CE00108E93 /* ES Archive Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 153E91932FFF49CE00108E93 /* Build configuration list for PBXNativeTarget "ES Archive Tests" */;
+			buildPhases = (
+				153E917E2FFF49CE00108E93 /* Sources */,
+				153E917F2FFF49CE00108E93 /* Frameworks */,
+				153E91802FFF49CE00108E93 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				153FB1F63044FB4700B75B4A /* ES Archive Tests */,
+			);
+			name = "ES Archive Tests";
+			productName = "ES Memory Tests";
+			productReference = 153E91822FFF49CE00108E93 /* ES Archive Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		15786DB32F55F87F00E136DA /* ES Archive MCP */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 15786DDF2F55F87F00E136DA /* Build configuration list for PBXNativeTarget "ES Archive MCP" */;
+			buildPhases = (
+				15786DB02F55F87F00E136DA /* Sources */,
+				15786DB12F55F87F00E136DA /* Frameworks */,
+				15786DB22F55F87F00E136DA /* Resources */,
+				151E6E402F9C15DE00369DC2 /* Embed Frameworks */,
+				FACADE000000000000000C01 /* Verify embedder model */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				153FB0803044FB0200B75B4A /* ES_Archive */,
+			);
+			name = "ES Archive MCP";
+			productName = "Electric Sheep";
+			productReference = 15786DB42F55F87F00E136DA /* ES Archive MCP.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EE75F6A32FF74BDD00279212 /* ES Archive Server */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EE75F6B02FF74BDD00279212 /* Build configuration list for PBXNativeTarget "ES Archive Server" */;
+			buildPhases = (
+				EE75F6A82FF74BDD00279212 /* Sources */,
+				EE75F6A92FF74BDD00279212 /* Frameworks */,
+				EE75F6AC2FF74BDD00279212 /* Resources */,
+				EE75F6AD2FF74BDD00279212 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				153FB0803044FB0200B75B4A /* ES_Archive */,
+			);
+			name = "ES Archive Server";
+			productName = "Electric Sheep";
+			productReference = EE75F6B32FF74BDD00279212 /* ES Archive Server.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		15786DAC2F55F87F00E136DA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				CLASSPREFIX = ES;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					153E91812FFF49CE00108E93 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 15786DB32F55F87F00E136DA;
+					};
+					15786DB32F55F87F00E136DA = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = 15786DAF2F55F87F00E136DA /* Build configuration list for PBXProject "ES Archive" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 15786DAB2F55F87F00E136DA;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 100;
+			productRefGroup = 15786DB52F55F87F00E136DA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				15786DB32F55F87F00E136DA /* ES Archive MCP */,
+				EE75F6A32FF74BDD00279212 /* ES Archive Server */,
+				153E91812FFF49CE00108E93 /* ES Archive Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		153E91802FFF49CE00108E93 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		15786DB22F55F87F00E136DA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		EE75F6AC2FF74BDD00279212 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		FACADE000000000000000C01 /* Verify embedder model */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+				"$(SRCROOT)/scripts/check-embedder-model.sh",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/EmbeddingGemmaEncoder.mlmodelc",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/embeddinggemma.tokenizer.json",
+			);
+			name = "Verify embedder model";
+			shellPath = /bin/sh;
+			shellScript = (
+				"\"${SRCROOT}/scripts/check-embedder-model.sh\"",
+				"",
+			);
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		153E917E2FFF49CE00108E93 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		15786DB02F55F87F00E136DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		EE75F6A82FF74BDD00279212 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		153E91882FFF49CE00108E93 /* Debug configuration for PBXNativeTarget "ES Archive Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ES_Archive",
+					"$(SRCROOT)/ES_Archive/Server",
+					"$(SRCROOT)/ES_Archive/Stdio",
+				);
+				INFOPLIST_KEY_NSHumanReadableCopyright = "(C) Kolja Wawrowsky";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.ES-Archive-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Debug;
+		};
+		153E91892FFF49CE00108E93 /* Release configuration for PBXNativeTarget "ES Archive Tests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ES_Archive",
+					"$(SRCROOT)/ES_Archive/Server",
+					"$(SRCROOT)/ES_Archive/Stdio",
+				);
+				INFOPLIST_KEY_NSHumanReadableCopyright = "(C) Kolja Wawrowsky";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.ES-Archive-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Release;
+		};
+		15786DDD2F55F87F00E136DA /* Debug configuration for PBXProject "ES Archive" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				COREML_CODEGEN_LANGUAGE = "Objective-C";
+				COREML_CODEGEN_SWIFT_GLOBAL_MODULE = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+			};
+			name = Debug;
+		};
+		15786DDE2F55F87F00E136DA /* Release configuration for PBXProject "ES Archive" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				COREML_CODEGEN_LANGUAGE = "Objective-C";
+				COREML_CODEGEN_SWIFT_GLOBAL_MODULE = YES;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+			};
+			name = Release;
+		};
+		15786DE02F55F87F00E136DA /* Debug configuration for PBXNativeTarget "ES Archive MCP" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = ES_Archive/ES_Archive.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 48;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ES-Archive-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ES Archive MCP";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.3.8;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-mcp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		15786DE12F55F87F00E136DA /* Release configuration for PBXNativeTarget "ES Archive MCP" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = ES_Archive/ES_Archive.Release.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 48;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ES-Archive-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ES Archive MCP";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.3.8;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-mcp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		EE75F6B12FF74BDD00279212 /* Debug configuration for PBXNativeTarget "ES Archive Server" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = ES_Archive/ES_Archive.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 45;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ES-Archive-Server-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ES Archive Server";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Provides an on-device MCP server for AI archive indexing. All data remains local or syncs via your private iCloud.";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.3.5;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-server";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		EE75F6B22FF74BDD00279212 /* Release configuration for PBXNativeTarget "ES Archive Server" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = ES_Archive/ES_Archive.Release.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 45;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 2PYWYF3C55;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ES-Archive-Server-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ES Archive Server";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Provides an on-device MCP server for AI archive indexing. All data remains local or syncs via your private iCloud.";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 3.3.5;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-server";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		153E91932FFF49CE00108E93 /* Build configuration list for PBXNativeTarget "ES Archive Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				153E91882FFF49CE00108E93 /* Debug configuration for PBXNativeTarget "ES Archive Tests" */,
+				153E91892FFF49CE00108E93 /* Release configuration for PBXNativeTarget "ES Archive Tests" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		15786DAF2F55F87F00E136DA /* Build configuration list for PBXProject "ES Archive" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15786DDD2F55F87F00E136DA /* Debug configuration for PBXProject "ES Archive" */,
+				15786DDE2F55F87F00E136DA /* Release configuration for PBXProject "ES Archive" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		15786DDF2F55F87F00E136DA /* Build configuration list for PBXNativeTarget "ES Archive MCP" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				15786DE02F55F87F00E136DA /* Debug configuration for PBXNativeTarget "ES Archive MCP" */,
+				15786DE12F55F87F00E136DA /* Release configuration for PBXNativeTarget "ES Archive MCP" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		EE75F6B02FF74BDD00279212 /* Build configuration list for PBXNativeTarget "ES Archive Server" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE75F6B12FF74BDD00279212 /* Debug configuration for PBXNativeTarget "ES Archive Server" */,
+				EE75F6B22FF74BDD00279212 /* Release configuration for PBXNativeTarget "ES Archive Server" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 15786DAC2F55F87F00E136DA /* Project object */;
+}

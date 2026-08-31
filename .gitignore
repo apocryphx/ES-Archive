@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Xcode — user-specific state
+xcuserdata/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+
+# Xcode — build products
+build/
+DerivedData/
+
+# Embedder assets — large binary model + tokenizer, restored from disk or the
+# conversion scripts (embedding-trajectories), not committed.
+*.mlpackage/
+embeddinggemma.tokenizer.json
+
+# mcpb packaging — the staged app and the built artifact live on GitHub
+# releases, not in the tree.
+packaging/bundle/server/
+packaging/*.mcpb

@@ -1,0 +1,28 @@
+{
+  "manifest_version": "0.3",
+  "name": "es-memory-bridge",
+  "display_name": "ES Archive",
+  "version": "3.1.0",
+  "description": "Self-contained ES Archive server. Hosts the engine in-process: Core Data archive, multilingual semantic vector search (EmbeddingGemma, 100+ languages), line-level grep, and a Unix-pipeline-style search surface (archive_cli), speaking MCP over stdio. Provides Claude with persistent memory: store, retrieve, organize, curate, and chain entries across sessions. No companion app required; all data stays on your machine or syncs via your private iCloud.",
+  "author": {
+    "name": "Kolja Wawrowsky"
+  },
+  "icon": "icon.png",
+  "privacy_policies": [
+    "https://github.com/apocryphx/ES-Memory/blob/main/PRIVACY.md"
+  ],
+  "server": {
+    "type": "binary",
+    "entry_point": "server/ES Memory MCP.app/Contents/MacOS/ES Memory MCP",
+    "mcp_config": {
+      "command": "${__dirname}/server/ES Memory MCP.app/Contents/MacOS/ES Memory MCP",
+      "args": []
+    }
+  },
+  "tools_generated": true,
+  "keywords": ["archive", "memory", "persistence", "knowledge"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin"]
+  }
+}

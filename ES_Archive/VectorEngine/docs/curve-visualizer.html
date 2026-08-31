@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ES Memory — Recency Curves</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Mono", monospace;
+    background: #1a1a1a; color: #e0e0e0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px;
+  }
+  h1 { font-size: 16px; font-weight: 500; margin-bottom: 4px; color: #fff; }
+  .subtitle { font-size: 11px; color: #888; margin-bottom: 20px; }
+  canvas { background: #111; border-radius: 8px; border: 1px solid #333; }
+  .controls {
+    display: flex; gap: 32px; margin-top: 20px; align-items: flex-start;
+  }
+  .control-group {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .control-group label {
+    font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .control-group .value {
+    font-size: 22px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums;
+  }
+  input[type=range] {
+    -webkit-appearance: none; width: 240px; height: 4px;
+    background: #444; border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: #fff; border-radius: 50%; cursor: pointer;
+  }
+  .legend {
+    display: flex; gap: 24px; margin-top: 16px; font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 24px; height: 3px; border-radius: 1px;
+  }
+  .formula {
+    font-size: 11px; color: #666; margin-top: 12px; text-align: center; line-height: 1.6;
+  }
+  .preset-row {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .preset-btn, .horizon-btn {
+    background: #2a2a2a; border: 1px solid #444; color: #ccc;
+    padding: 4px 10px; border-radius: 4px; font-size: 11px;
+    cursor: pointer; font-family: inherit;
+  }
+  .preset-btn:hover, .horizon-btn:hover { background: #333; border-color: #666; }
+  .preset-btn.active, .horizon-btn.active { background: #444; border-color: #888; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>ES Memory — Recency Curves</h1>
+<div class="subtitle">score = pow(1+t, -d) vs sigmoid(d, t)</div>
+
+<canvas id="graph" width="800" height="440"></canvas>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background: #ff6b35;"></div>
+    <span>Power-law: pow(1+t, -d)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background: #4ecdc4;"></div>
+    <span>Sigmoid: floor + (1-floor) / (1+exp(k*(t-mid))), k=d*slope</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background: #666; border-top: 2px dashed #666;"></div>
+    <span>Exponential: exp(-d*t) [old]</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label>d (decay rate)</label>
+    <div class="value" id="d-value">0.10</div>
+    <input type="range" id="d-slider" min="0" max="1" step="0.005" value="0.1">
+    <div class="preset-row">
+      <button class="horizon-btn" data-d="0.855" data-s="3.19" data-sh="-10">day</button>
+      <button class="horizon-btn" data-d="0.7" data-s="2.15" data-sh="-9">week</button>
+      <button class="horizon-btn" data-d="0.3" data-s="1.0" data-sh="3">month</button>
+      <button class="horizon-btn" data-d="0" data-s="0" data-sh="0">none</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Time range (days)</label>
+    <div class="value" id="t-value">365</div>
+    <input type="range" id="t-slider" min="7" max="1095" step="1" value="365">
+  </div>
+  <div class="control-group">
+    <label>Sigmoid slope</label>
+    <div class="value" id="s-value">1.00</div>
+    <input type="range" id="s-slider" min="0.01" max="4" step="0.01" value="1.0">
+    <div class="preset-row">
+      <button class="slope-btn" data-s="0.1">gentle</button>
+      <button class="slope-btn" data-s="0.3">soft</button>
+      <button class="slope-btn" data-s="1.0">normal</button>
+      <button class="slope-btn" data-s="2.0">steep</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Sigmoid shift (days)</label>
+    <div class="value" id="sh-value">0</div>
+    <input type="range" id="sh-slider" min="-100" max="100" step="1" value="0">
+  </div>
+  <div class="control-group">
+    <label>Sigmoid floor</label>
+    <div class="value" id="f-value">0.20</div>
+    <input type="range" id="f-slider" min="0" max="0.5" step="0.01" value="0.20">
+  </div>
+</div>
+
+<div class="formula">
+  power-law: pow(1 + t, -d) &nbsp;|&nbsp;
+  sigmoid: floor + (1 - floor) / (1 + exp(k * (t - 10/d))), k = d * slope &nbsp;|&nbsp;
+  exponential: exp(-d * t)
+</div>
+
+<script>
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+canvas.width = 800 * dpr;
+canvas.height = 440 * dpr;
+canvas.style.width = '800px';
+canvas.style.height = '440px';
+ctx.scale(dpr, dpr);
+
+const W = 800, H = 440;
+const pad = { top: 20, right: 20, bottom: 40, left: 56 };
+const gW = W - pad.left - pad.right;
+const gH = H - pad.top - pad.bottom;
+
+const dSlider = document.getElementById('d-slider');
+const tSlider = document.getElementById('t-slider');
+const sSlider = document.getElementById('s-slider');
+const shSlider = document.getElementById('sh-slider');
+const fSlider = document.getElementById('f-slider');
+const dVal = document.getElementById('d-value');
+const tVal = document.getElementById('t-value');
+const sVal = document.getElementById('s-value');
+const shVal = document.getElementById('sh-value');
+const fVal = document.getElementById('f-value');
+
+function powerLaw(t, d) {
+  return Math.pow(1 + t, -d);
+}
+
+function sigmoid(t, d, slope, shift, floor) {
+  if (d < 0.001) return 1.0;
+  const mid = 10.0 / Math.max(d, 0.001) + shift;
+  const k = d * slope;
+  const s = 1.0 / (1.0 + Math.exp(k * (t - mid)));
+  return floor + (1.0 - floor) * s;
+}
+
+function exponential(t, d) {
+  return Math.exp(-d * t);
+}
+
+function draw() {
+  const d = parseFloat(dSlider.value);
+  const maxT = parseFloat(tSlider.value);
+  const slope = parseFloat(sSlider.value);
+  const shift = parseFloat(shSlider.value);
+  const floor = parseFloat(fSlider.value);
+
+  dVal.textContent = d.toFixed(3);
+  tVal.textContent = maxT.toFixed(0);
+  sVal.textContent = slope.toFixed(2);
+  shVal.textContent = (shift >= 0 ? '+' : '') + shift.toFixed(0);
+  fVal.textContent = floor.toFixed(2);
+
+  // highlight active presets
+  document.querySelectorAll('.horizon-btn').forEach(btn => {
+    btn.classList.toggle('active',
+      parseFloat(btn.dataset.d) === d &&
+      parseFloat(btn.dataset.s) === slope &&
+      parseFloat(btn.dataset.sh) === shift);
+  });
+  document.querySelectorAll('.slope-btn').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.dataset.s) === slope);
+  });
+
+  ctx.clearRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const y = pad.top + (i / 10) * gH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + gW, y); ctx.stroke();
+  }
+  for (let i = 0; i <= 10; i++) {
+    const x = pad.left + (i / 10) * gW;
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
+  }
+
+  // axes
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, pad.top);
+  ctx.lineTo(pad.left, pad.top + gH);
+  ctx.lineTo(pad.left + gW, pad.top + gH);
+  ctx.stroke();
+
+  // y-axis labels
+  ctx.fillStyle = '#888';
+  ctx.font = '10px -apple-system, monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 10; i++) {
+    const v = 1.0 - i / 10;
+    const y = pad.top + (i / 10) * gH;
+    ctx.fillText(v.toFixed(1), pad.left - 8, y + 3);
+  }
+
+  // x-axis labels
+  ctx.textAlign = 'center';
+  const steps = maxT <= 14 ? maxT : maxT <= 90 ? 10 : maxT <= 365 ? 8 : 6;
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * maxT;
+    const x = pad.left + (i / steps) * gW;
+    ctx.fillText(Math.round(t) + 'd', x, pad.top + gH + 16);
+  }
+
+  // axis titles
+  ctx.fillStyle = '#666';
+  ctx.font = '11px -apple-system, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('days since last access', pad.left + gW / 2, H - 4);
+  ctx.save();
+  ctx.translate(14, pad.top + gH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('recency factor', 0, 0);
+  ctx.restore();
+
+  const N = 400;
+
+  // draw exponential (dashed, dim)
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * maxT;
+    const v = exponential(t, d);
+    const x = pad.left + (i / N) * gW;
+    const y = pad.top + (1 - Math.max(0, Math.min(1, v))) * gH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // draw sigmoid
+  ctx.strokeStyle = '#4ecdc4';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * maxT;
+    const v = sigmoid(t, d, slope, shift, floor);
+    const x = pad.left + (i / N) * gW;
+    const y = pad.top + (1 - Math.max(0, Math.min(1, v))) * gH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // draw power-law
+  ctx.strokeStyle = '#ff6b35';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = (i / N) * maxT;
+    const v = powerLaw(t, d);
+    const x = pad.left + (i / N) * gW;
+    const y = pad.top + (1 - Math.max(0, Math.min(1, v))) * gH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // crosshair info at d=0 guard
+  if (d === 0) {
+    ctx.fillStyle = '#666';
+    ctx.font = '12px -apple-system, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('d = 0 → all curves = 1.0 (no decay)', pad.left + gW / 2, pad.top + gH / 2);
+  }
+
+  // score readout at 7, 30, 90, 365 days
+  const markers = [7, 30, 90, 365].filter(t => t <= maxT);
+  ctx.font = '9px -apple-system, monospace';
+  ctx.textAlign = 'left';
+  markers.forEach(t => {
+    const x = pad.left + (t / maxT) * gW;
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const pv = powerLaw(t, d);
+    const sv = sigmoid(t, d, slope, shift, floor);
+    ctx.fillStyle = '#ff6b35';
+    ctx.fillText(pv.toFixed(3), x + 3, pad.top + 12);
+    ctx.fillStyle = '#4ecdc4';
+    ctx.fillText(sv.toFixed(3), x + 3, pad.top + 24);
+  });
+}
+
+dSlider.addEventListener('input', draw);
+tSlider.addEventListener('input', draw);
+sSlider.addEventListener('input', draw);
+shSlider.addEventListener('input', draw);
+fSlider.addEventListener('input', draw);
+
+document.querySelectorAll('.horizon-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    dSlider.value = btn.dataset.d;
+    sSlider.value = btn.dataset.s;
+    shSlider.value = btn.dataset.sh;
+    draw();
+  });
+});
+
+document.querySelectorAll('.slope-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    sSlider.value = btn.dataset.s;
+    draw();
+  });
+});
+
+draw();
+</script>
+</body>
+</html>
