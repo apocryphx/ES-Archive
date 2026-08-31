@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="What to do when the memory tools do not appear, search comes back thin, or the app quits on launch.">
+<meta name="keywords" content="troubleshooting, problem, not working, tools missing, no results, empty, quits, sync, iCloud, reindex, isolated, help">
+<meta name="AppleIcon" content="ES Archive MCP.help/Contents/Resources/shared/images/help-icon.png">
+<title>Troubleshooting</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="troubleshooting"></a>Troubleshooting</h1>
+
+<h2><a name="no-tools"></a>The memory tools do not appear in my assistant</h2>
+
+<p>For <strong>Claude Desktop</strong>:</p>
+
+<ol>
+<li>Check the extension is installed and enabled: Claude Desktop ▸ Settings ▸ Extensions should
+list <strong>ES Archive</strong>, switched on.</li>
+<li>If it is missing, reconnect: choose <span class="ui">Help ▸ Connect ES Archive…</span> here,
+click <span class="ui">Connect</span>, and approve the install when Claude Desktop asks.</li>
+<li>The tools arrive when a conversation starts — begin a fresh conversation after installing.</li>
+<li>If you had the app under its old name, remove any leftover <strong>ES Memory</strong>
+extension so only one archive is connected.</li>
+</ol>
+
+<p>For <strong>LM Studio</strong>, confirm the configuration was pasted into
+<span class="ui">Program ▸ Edit mcp.json</span> unchanged, and that the loaded model supports
+tool use — one that does not will never call the tools, however well it is connected. If you have
+moved the app since connecting, copy the configuration afresh: it names the app's path at the
+moment you copied it.</p>
+
+<h2><a name="thin-search"></a>Search finds nothing, or the wrong things</h2>
+
+<p>Semantic search matches a memory's <strong>summary</strong>, not its body. A memory stored
+without one has no vector, so it is invisible to search and appears as an isolated dot in
+<a href="archive-scope.html">Archive Scope</a>. Open Archive Scope and read the
+<strong>Isolated</strong> count in the status line: if it is more than a handful, that is your
+answer. Ask your assistant to add summaries to those memories.</p>
+
+<p>Right after a restore, or after memories arrive from another Mac through iCloud, vectors are
+still being computed — the app fills in any that are missing each time a session starts. Search
+over those memories sharpens over the next few moments. Watch the similarity edges appear in
+Archive Scope.</p>
+
+<p>If you are searching for an exact string — a path, an error message, a name — ask for a pattern
+search instead. See <a href="tools.html">What your AI can do</a>.</p>
+
+<h2><a name="quits-on-launch"></a>The app quits the moment I open it</h2>
+
+<p>That is the app declining to run twice. An assistant session is already hosting the archive,
+and the copy you launched found nothing left to do — the running host owns the windows. Reach the
+app through that host instead: its status item in the menu bar, or its Dock icon if you use Dock
+mode. When no session is active, opening the app from Finder keeps it open as usual.</p>
+
+<h2><a name="wrong-author"></a>Memories are attributed to the wrong persona</h2>
+
+<p>Authorship comes from how the client launched the app. Reconnect the client so it carries the
+author you intend, then fold the mis-attributed records into the right persona with
+<span class="ui">Merge…</span> in <span class="ui">Manage Personas…</span>. Back up first.</p>
+
+<h2><a name="sync"></a>My other Mac does not have the same memories</h2>
+
+<ul>
+<li>Both Macs must be signed into the same Apple Account with iCloud Drive on.</li>
+<li>Sync is not instantaneous. Leave both awake and connected for a few minutes.</li>
+<li>Memories that arrive from another Mac need their vectors computed locally before search
+reaches them.</li>
+</ul>
+
+<p>If it still will not sync, back up on one Mac and restore on the other —
+<a href="backup-restore.html">Backing up and restoring</a>. That works with no iCloud at all.</p>
+
+<h2><a name="scope-empty"></a>Archive Scope says "No memories yet"</h2>
+
+<p>The archive is empty for the persona you have selected. Check the persona picker at the bottom
+right and try <strong>All (witness)</strong>. If that is empty too, nothing has been stored yet —
+add the sample memories from <span class="ui">Help ▸ Connect ES Archive…</span> to have something to
+look at.</p>
+
+<h2><a name="still-stuck"></a>Still stuck</h2>
+
+<p>Report it at
+<a href="https://github.com/apocryphx/ES-Archive/issues">github.com/apocryphx/ES-Archive/issues</a>.
+Include your macOS version, the ES Archive MCP version, and which client you are connecting.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="getting-started.html">Getting started</a>
+<a href="archive-scope.html">Archive Scope</a>
+</div>
+
+</body>
+</html>

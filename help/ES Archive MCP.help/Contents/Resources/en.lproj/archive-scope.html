@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Reading the Archive Scope graph and the Tag Cloud: nodes, edges, colours, the status line and the detail panel.">
+<meta name="keywords" content="Archive Scope, graph, tag cloud, visualisation, nodes, edges, zoom, pan, isolated, settled, persona, witness">
+<meta name="AppleIcon" content="ES Archive MCP.help/Contents/Resources/shared/images/help-icon.png">
+<title>Archive Scope</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="archive-scope"></a>Archive Scope</h1>
+<p class="lede">A live picture of the archive — what it holds, and how it hangs together.</p>
+
+<p>Choose <span class="ui">Window ▸ Show Archive Scope</span> to open it. The window has two
+tabs: the force-directed <strong>Archive Scope</strong> graph and the <strong>Tag Cloud</strong>.
+Both redraw as the archive changes, so you can leave the window open while you talk to your
+assistant and watch memories arrive.</p>
+
+<figure>
+<img class="window" src="../shared/images/archive-scope-graph.png"
+     alt="The Archive Scope window: memories drawn as coloured dots joined by solid and faint lines, one dot ringed to show it is selected, its full text open in a panel on the right, and a status line reading Nodes 32 of 32, Links 24, Sim 32, Isolated 0, Settled.">
+<figcaption>Thirty-two memories, one selected. Solid lines are authored links; faint ones are
+similarity.</figcaption>
+</figure>
+
+<h2><a name="reading-the-graph"></a>Reading the graph</h2>
+
+<table>
+<tr><th>What you see</th><th>What it means</th></tr>
+<tr><td>A dot</td><td>One memory.</td></tr>
+<tr><td>A solid line</td><td>An explicit link — the assistant deliberately connected these two.</td></tr>
+<tr><td>A faint line</td><td>A similarity edge. Every memory draws one to its single nearest neighbour in meaning; the fainter the line, the weaker the resemblance.</td></tr>
+<tr><td>Dot colour</td><td>How often that memory has been read — cool blue for rarely, through green and yellow, to red for the most-consulted. (When you pick <strong>All (witness)</strong>, colour switches to identifying the persona instead.)</td></tr>
+<tr><td>A brief white flash</td><td>A tool call just touched that memory.</td></tr>
+<tr><td>A ring</td><td>The memory you have selected.</td></tr>
+</table>
+
+<p>Small clusters that would otherwise drift off on their own are bridged back into the main
+body, so the archive reads as one connected shape rather than scattered fragments. A memory
+that sits genuinely alone is telling you something — see <em>Isolated</em> below.</p>
+
+<h2><a name="moving-around"></a>Moving around</h2>
+
+<table>
+<tr><th>To do this</th><th>Do this</th></tr>
+<tr><td>Zoom</td><td>Pinch on a trackpad, or scroll. The point under the pointer stays put.</td></tr>
+<tr><td>Pan</td><td>Drag anywhere in the graph.</td></tr>
+<tr><td>See a title</td><td>Rest the pointer on a dot.</td></tr>
+<tr><td>Open a memory</td><td>Click it. The detail panel slides in from the right.</td></tr>
+<tr><td>Close the panel</td><td>Click empty space.</td></tr>
+<tr><td>Centre on a memory</td><td>Double-click it.</td></tr>
+<tr><td>Fit everything back on screen</td><td>Double-click empty space.</td></tr>
+</table>
+
+<h2><a name="detail-panel"></a>The detail panel</h2>
+
+<p>Selecting a memory opens the panel on the right — it is the one shown in the picture above.
+It shows the memory's title, then a line reading <em>type · persona · N views</em>,
+its creation date, and its full text. If the assistant has added <strong>comments</strong> to
+the memory over time, they appear below the body under a <em>marginalia</em> divider, each
+with its author and date. The panel is read-only — this is a window onto the archive, not an
+editor.</p>
+
+<h2><a name="status-line"></a>The status line</h2>
+
+<p>Along the bottom:</p>
+
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Nodes</td><td>Memories drawn, out of the total in this view.</td></tr>
+<tr><td>Links</td><td>Explicit links between them.</td></tr>
+<tr><td>Sim</td><td>Similarity edges.</td></tr>
+<tr><td>Isolated</td><td>Memories with no neighbour at all.</td></tr>
+<tr><td>Settled / Simulating…</td><td>Whether the layout has come to rest.</td></tr>
+</table>
+
+<div class="note">
+<span class="label">Isolated is a health check</span>
+<p>Every memory that can be embedded gets at least one similarity edge, so a non-zero
+<em>Isolated</em> count means those memories have no vector — almost always because they were
+stored without a summary. They are invisible to semantic search too. If the number is large
+and stays large, see <a href="troubleshooting.html">Troubleshooting</a>.</p>
+</div>
+
+<h2><a name="persona-picker"></a>The persona picker</h2>
+
+<p>At the right of the status line, a pop-up menu lists every persona that has written to this
+archive, plus <strong>All (witness)</strong>. Picking one persona shows only its memories, with
+colour meaning read-frequency. Picking <strong>All (witness)</strong> shows every persona at
+once, with colour identifying who wrote what.</p>
+
+<h2><a name="tag-cloud"></a>The Tag Cloud</h2>
+
+<p>The second tab lays the archive's tags out along a spiral, the most-used at the centre and
+largest. Rest the pointer on a tag to see how many memories carry it. Tags with no memories
+left are not drawn — they are cleaned up automatically. See
+<a href="tags-and-links.html">Types, tags and links</a>.</p>
+
+<figure>
+<img class="window" src="../shared/images/archive-scope-tag-cloud.png"
+     alt="The Tag Cloud tab, with tag names laid out along a spiral and sized by how many memories carry them.">
+<figcaption>Size follows frequency, so what the archive is actually about reads at a glance.</figcaption>
+</figure>
+
+<h2><a name="empty-scope"></a>If it says "No memories yet"</h2>
+
+<p>The archive is empty. Either connect a client and talk to your assistant, or load the sample
+set — <span class="ui">Help ▸ Connect ES Archive…</span>, then <span class="ui">Add Sample
+Memories…</span> — to have something to look at. See
+<a href="backup-restore.html">Backing up and restoring</a>.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="tags-and-links.html">Tags and links</a>
+<a href="troubleshooting.html">Troubleshooting</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Personas are the authors in the archive. How to see them, merge them, and tidy the list.">
+<meta name="keywords" content="personas, authors, identity, merge, delete persona, witness, author">
+<meta name="AppleIcon" content="ES Archive MCP.help/Contents/Resources/shared/images/help-icon.png">
+<title>Personas</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="personas"></a>Personas</h1>
+<p class="lede">Who wrote what, in one shared archive.</p>
+
+<p>Every memory carries the name of the persona that wrote it. A persona is not an account and
+has no password — it is an authorship stamp, and it is what lets several assistants share this
+Mac without reading each other's notes. Each persona sees and writes only its own memories.</p>
+
+<p>Any name that appears as an author in the archive is a persona. There is no separate list to
+maintain: a persona exists exactly as long as it has records.
+<a href="archive-scope.html">Archive Scope</a>'s persona picker lists all of them, plus
+<strong>All (witness)</strong> for the view across everything.</p>
+
+<h2><a name="how-persona-is-set"></a>How the persona is chosen</h2>
+
+<p>Authorship travels with the connection. The connector this app builds for Claude Desktop
+launches it writing as <strong>Claude</strong>; another client can pass a different author name
+on its command line, and its records are stamped accordingly. Two assistants connected two
+different ways keep two cleanly separated slices of the same archive.</p>
+
+<h2><a name="managing"></a>Manage Personas</h2>
+
+<p>Choose <span class="ui">ES Archive MCP ▸ Manage Personas…</span> (or the same item in the
+menu-bar status item). The window lists every author in the archive, with the number of records
+a delete or merge would touch — memories, their revisions, comments and attachments.</p>
+
+<table>
+<tr><th>Button</th><th>What it does</th></tr>
+<tr><td>–</td><td>Deletes the persona <strong>and every record it wrote</strong>.</td></tr>
+<tr><td>Merge…</td><td>Folds its records into another persona, and removes it.</td></tr>
+</table>
+
+<div class="note">
+<span class="label">Deleting and merging cannot be undone</span>
+<p>Deleting a persona destroys its memories along with it, and merging rewrites authorship on
+every record it touches. Take a backup first — <span class="ui">File ▸ Back Up…</span>. If you use
+iCloud, remember that the deletion syncs to your other Macs.</p>
+</div>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="backup-restore.html">Backing up and restoring</a>
+<a href="archive-scope.html">Archive Scope</a>
+</div>
+
+</body>
+</html>
