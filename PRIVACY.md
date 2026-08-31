@@ -36,4 +36,4 @@ No data is shared with any third party.
 ## Contact
 
 For questions about this privacy policy, open an issue at:
-https://github.com/apocryphx/ES-Memory/issues
+https://github.com/apocryphx/ES-Archive/issues

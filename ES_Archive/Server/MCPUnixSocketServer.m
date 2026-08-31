@@ -30,7 +30,7 @@
 #import <fcntl.h>
 #import <poll.h>
 
-NSString * const MCPUnixAuthorHandshakeMethod = @"$/esmemory/author";
+NSString * const MCPUnixAuthorHandshakeMethod = @"$/esarchive/author";
 
 @implementation MCPUnixSocketServer {
     NSString             *_socketPath;
@@ -53,8 +53,8 @@ NSString * const MCPUnixAuthorHandshakeMethod = @"$/esmemory/author";
 - (instancetype)init {
     if ((self = [super init])) {
         _listenFD = -1;
-        _acceptQ = dispatch_queue_create("com.elarity.esmemory.uds.accept", DISPATCH_QUEUE_SERIAL);
-        _connQ   = dispatch_queue_create("com.elarity.esmemory.uds.conns", DISPATCH_QUEUE_CONCURRENT);
+        _acceptQ = dispatch_queue_create("com.elarity.es-archive.uds.accept", DISPATCH_QUEUE_SERIAL);
+        _connQ   = dispatch_queue_create("com.elarity.es-archive.uds.conns", DISPATCH_QUEUE_CONCURRENT);
         _connSources = [NSMutableSet set];
         signal(SIGPIPE, SIG_IGN);
     }

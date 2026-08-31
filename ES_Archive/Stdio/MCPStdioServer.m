@@ -55,7 +55,7 @@ static int gRPCFileDescriptor = -1;
 }
 
 - (void)start {
-    fprintf(stderr, "[es-memory-mcp] stdio server starting (pid=%d)\n", getpid());
+    fprintf(stderr, "[es-archive-mcp] stdio server starting (pid=%d)\n", getpid());
 
     [self installSIGTERMSource];
 
@@ -67,13 +67,13 @@ static int gRPCFileDescriptor = -1;
         NSData *chunk = nil;
         @try { chunk = [h availableData]; }
         @catch (NSException *e) {
-            fprintf(stderr, "[es-memory-mcp] stdin read exception: %s\n",
+            fprintf(stderr, "[es-archive-mcp] stdin read exception: %s\n",
                     e.reason.UTF8String ?: "?");
         }
 
         if (!chunk.length) {
             h.readabilityHandler = nil;
-            fprintf(stderr, "[es-memory-mcp] stdin EOF — draining and terminating\n");
+            fprintf(stderr, "[es-archive-mcp] stdin EOF — draining and terminating\n");
             [s drainAndTerminate];
             return;
         }
@@ -95,7 +95,7 @@ static int gRPCFileDescriptor = -1;
                                                 self.readQueue);
     __weak typeof(self) weak = self;
     dispatch_source_set_event_handler(self.sigtermSource, ^{
-        fprintf(stderr, "[es-memory-mcp] SIGTERM — draining and terminating\n");
+        fprintf(stderr, "[es-archive-mcp] SIGTERM — draining and terminating\n");
         __strong typeof(weak) s = weak;
         [s drainAndTerminate];
     });
@@ -152,7 +152,7 @@ static int gRPCFileDescriptor = -1;
         NSData *out = [[line stringByAppendingString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding];
         NSError *err = nil;
         if (![self.rpcOutHandle writeData:out error:&err]) {
-            fprintf(stderr, "[es-memory-mcp] rpc write failed: %s\n",
+            fprintf(stderr, "[es-archive-mcp] rpc write failed: %s\n",
                     err.localizedDescription.UTF8String ?: "?");
         }
     });

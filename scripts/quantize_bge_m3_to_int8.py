@@ -15,7 +15,7 @@ Why int8 not 4-bit palettization: the kmeans-based 4-bit palettization path
 (coremltools' OpPalettizerConfig with mode="kmeans") produces sklearn k-means
 overflow warnings on this XLMRoberta variant and lands at cosine ~0.91 — far
 worse than the documented 0.95+ target. int4 linear quant is honest but the
-~0.05 cosine drift recalibrates ES Memory's score thresholds. int8 is the
+~0.05 cosine drift recalibrates ES Archive's score thresholds. int8 is the
 clean win: 13 s wallclock, no numerical issues, basically lossless.
 
 Requires: coremltools >= 9.0  (no torch needed; this is post-training

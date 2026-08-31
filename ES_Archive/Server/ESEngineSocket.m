@@ -11,8 +11,8 @@
 
 // The group id must match the `com.apple.security.application-groups`
 // entitlement in BOTH ES-Memory.entitlements and ES-Memory-Server.entitlements.
-NSString * const ESEngineAppGroupIdentifier = @"group.com.elarity.esmemory";
-NSString * const ESEngineSocketFileName     = @"es-memory-engine.sock";
+NSString * const ESEngineAppGroupIdentifier = @"group.com.elarity.es-archive";
+NSString * const ESEngineSocketFileName     = @"es-archive-engine.sock";
 
 NSString * _Nullable ESEngineSocketPath(void) {
     // Test / tooling override: point both host and client at an arbitrary path

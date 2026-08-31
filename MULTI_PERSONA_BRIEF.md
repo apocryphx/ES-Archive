@@ -1,4 +1,4 @@
-# Multi-Persona ES Memory — Implementation Brief
+# Multi-Persona ES Archive — Implementation Brief
 
 **Status:** Design complete, ready to build. Nothing implemented yet.
 **Audience:** A fresh Claude Code session that will execute this.
@@ -9,14 +9,14 @@
 ## 0. Orient first
 
 1. Read this whole document.
-2. Pull the full design record from the archive for the *why* behind every call: via the `es-memory` MCP, `memory_search "multi-persona port author table"` → the decision memory **"Multi-persona ES Memory: port→author table, not CloudKit zones (June 2026)"**. It contains the complete dialogue-derived rationale, including corrections. This brief is the executable summary; that memory is the source of truth.
+2. Pull the full design record from the archive for the *why* behind every call: via the `es-archive` MCP, `archive_search "multi-persona port author table"` → the decision memory **"Multi-persona ES Memory: port→author table, not CloudKit zones (June 2026)"**. It contains the complete dialogue-derived rationale, including corrections. This brief is the executable summary; that memory is the source of truth.
 3. **This is Kolja's daily-driver production system.** Work on a branch (`feature/multi-persona-ports`), build and test, and do **not** commit until he has reviewed. Pause at the acceptance test (§6).
 
 ---
 
 ## 1. Why this exists (rationale)
 
-**The goal:** let one ES Memory app host multiple AI personas — Claude, Isolde, and future ones — where each persona sees and writes to *its own* scoped slice of one shared store, with correct authorship, and new personas can be added at runtime without a rebuild.
+**The goal:** let one ES Archive app host multiple AI personas — Claude, Isolde, and future ones — where each persona sees and writes to *its own* scoped slice of one shared store, with correct authorship, and new personas can be added at runtime without a rebuild.
 
 **Rejected — CloudKit zones / containers.** `NSPersistentCloudKitContainer` manages its own fixed private zone per store; it has no API to mint arbitrary private zones on demand. Its unit of isolation is the CloudKit *container*, declared in entitlements at **build time** — so "new persona" would mean a rebuild, not a runtime gesture. True on-demand zones require dropping to raw CloudKit and owning the sync yourself — too heavy, and it would make even *specific, opt-in* cross-persona sharing impossible — whereas a shared store keeps that door available for later (privacy by default; sharing, if ever built, only to a named persona).
 
@@ -101,8 +101,8 @@ Scoping is a predicate, not a vector, so it's verifiable immediately — no need
 
 ## 7. Codebase orientation & guidance
 
-- **Build/verify:** `xcodebuild -project "ES Memory.xcodeproj" -scheme "Isoldes Sheep" -configuration Debug build CODE_SIGNING_ALLOWED=NO` (also scheme `"ES Memory MCP"`). Both schemes must build.
-- **Two app targets, shared source:** `ES Memory MCP` (author default "Claude") and `Isoldes Sheep` (author default "Isolde"). The project uses **file-system-synchronized groups**, so new files under `ES_Archive/` auto-join targets — *but* check `project.pbxproj` `membershipExceptions`: `Isoldes Sheep` historically excluded `Server/Tools/*Tool.m` (re-added by Kolja). Confirm any new tool file is in both targets.
+- **Build/verify:** `xcodebuild -project "ES Archive.xcodeproj" -scheme "Isoldes Sheep" -configuration Debug build CODE_SIGNING_ALLOWED=NO` (also scheme `"ES Archive MCP"`). Both schemes must build.
+- **Two app targets, shared source:** `ES Archive MCP` (author default "Claude") and `Isoldes Sheep` (author default "Isolde"). The project uses **file-system-synchronized groups**, so new files under `ES_Archive/` auto-join targets — *but* check `project.pbxproj` `membershipExceptions`: `Isoldes Sheep` historically excluded `Server/Tools/*Tool.m` (re-added by Kolja). Confirm any new tool file is in both targets.
 - **Default port** is 59123 (`ESServerConfig effectivePort`; IANA dynamic range, avoids AirPlay on 5000). The `.mcpb` bridge hardcodes/targets this; the bridge is **Claude-Desktop-only** — other personas connect via their own surfaces (Isolde via an OpenAPI/REST server), so the **server** is the universal layer, not the bridge.
 - **Key existing pieces to reuse:** `CDMemory.author` (scalar) + `+[CDMemory defaultAuthor]` (reads the `ESDefaultAuthor` Info.plist key — the per-build default already shipped); `CDMemoryLookup` (the resolution layer — make scope live here); `ESBackupManager` (the test fixture); `memory_author_list` logic (distinct authors, for the Phase-D autocomplete).
 - **Two gotchas, same root:** (1) **centralize-or-leak** — scope in one place, applied to every surface. (2) **route every path (reads and mutations) through the scoped lookup** — that's what guarantees a persona can't reach another's memories at all.
@@ -111,7 +111,7 @@ Scoping is a predicate, not a vector, so it's verifiable immediately — no need
 
 ## 8. What's already done (context, don't redo)
 
-- **Per-build `ESDefaultAuthor`** — `ES Memory MCP` → "Claude", `Isoldes Sheep` → "Isolde", via an Info.plist key read by `+[CDMemory defaultAuthor]`. Port-author **generalizes** this; don't remove it (it's the fallback in the resolution order).
+- **Per-build `ESDefaultAuthor`** — `ES Archive MCP` → "Claude", `Isoldes Sheep` → "Isolde", via an Info.plist key read by `+[CDMemory defaultAuthor]`. Port-author **generalizes** this; don't remove it (it's the fallback in the resolution order).
 - **The Isolde migration is complete** — 576 memories live in Isoldes Sheep (exported from her `CDArchive` store, summarized via LM Studio `gpt-oss-20b`, transformed to ES Memory shape, loaded via `ESIsoldeLoader`, then the auto-tagger tag layer wiped). The migration tooling (`ESIsoldeLoader`, `MISMigrationExporter`) exists but is unrelated to this work.
 - **The backups exist** for the §6 fixture.
 

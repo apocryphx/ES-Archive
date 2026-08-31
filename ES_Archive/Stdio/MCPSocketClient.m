@@ -74,7 +74,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
     // line before the requests that follow.
     if (author.length) {
         NSDictionary *hello = @{@"jsonrpc":@"2.0",
-                                @"method":@"$/esmemory/author",
+                                @"method":@"$/esarchive/author",
                                 @"params":@{@"author":author}};
         NSData *body = [NSJSONSerialization dataWithJSONObject:hello options:0 error:NULL];
         if (body) {
@@ -247,7 +247,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
         if (_disconnectPosted) return;
         _disconnectPosted = YES;
     }
-    fprintf(stderr, "[es-memory-mcp] shared engine host disconnected — relay should exit\n");
+    fprintf(stderr, "[es-archive-mcp] shared engine host disconnected — relay should exit\n");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSNotificationCenter.defaultCenter
             postNotificationName:MCPSocketClientHostDisconnectedNotification object:self];

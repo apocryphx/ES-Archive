@@ -60,7 +60,7 @@ static NSArray<NSString *> *ESUUIDLeafEntities(void) {
 - (instancetype)init {
     self = [super init];
     if (!self) return nil;
-    _hintQueue = dispatch_queue_create("com.elarity.es-memory.deduplicator",
+    _hintQueue = dispatch_queue_create("com.elarity.es-archive.deduplicator",
                                        dispatch_queue_attr_make_with_qos_class(
                                            DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
     _pending = [NSMutableSet set];

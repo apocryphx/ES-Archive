@@ -36,7 +36,7 @@
     NSString *exe = [self serverExecutablePath];
     NSDictionary *manifest = @{
         @"manifest_version": @"0.3",
-        @"name": @"es-memory-bridge",
+        @"name": @"es-archive-bridge",
         @"display_name": @"ES Archive",
         @"version": @"3.1.0",
         @"description": @"Connector for the installed ES Archive app — Claude Desktop talks "
@@ -87,7 +87,7 @@
                           appropriateForURL:nil create:YES error:NULL];
     NSURL *folder = [appSupport URLByAppendingPathComponent:@"ES Archive" isDirectory:YES];
     [fm createDirectoryAtURL:folder withIntermediateDirectories:YES attributes:nil error:NULL];
-    NSURL *handoff = [folder URLByAppendingPathComponent:@"ES-Memory-MCP-connector.mcpb"];
+    NSURL *handoff = [folder URLByAppendingPathComponent:@"ES-Archive-MCP-connector.mcpb"];
 
     NSError *writeErr = nil;
     if (![mcpb writeToURL:handoff options:NSDataWritingAtomic error:&writeErr]) {
@@ -130,7 +130,7 @@
     // once the engine ships --author; the user can add @[ @"--author", @"<model>" ].
     NSDictionary *config = @{
         @"mcpServers": @{
-            @"es-memory": @{
+            @"es-archive": @{
                 @"command": [self serverExecutablePath],
                 @"args": @[]
             }

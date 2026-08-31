@@ -123,7 +123,7 @@
         if (component.length == 0) continue;
         [slug appendFormat:@"%@%@", (slug.length ? @"-" : @""), component];
     }
-    return slug.length ? [NSString stringWithFormat:@"es-memory-%@", slug] : @"es-memory";
+    return slug.length ? [NSString stringWithFormat:@"es-archive-%@", slug] : @"es-archive";
 }
 
 - (NSString *)configJSONForSelectedPort {

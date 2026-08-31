@@ -24,12 +24,12 @@ import argparse, sys
 DEFAULT_TOKENIZER = "ES_Archive/BGEM3Embedder/bge-m3.tokenizer.json"
 MAX_LEN = 512  # matches the BGEM3Encoder.mlpackage's fixed input shape
 
-# Representative coverage: short English, prose English, ES Memory archive
+# Representative coverage: short English, prose English, ES Archive
 # style, German, mixed multilingual.
 DEFAULT_TEXTS = [
     "hello world",
     "The Cross-Substrate Dialogue between Gemma and GPT.",
-    "ES Memory's vector engine uses cosine similarity over BGE-M3 embeddings.",
+    "ES Archive's vector engine uses cosine similarity over BGE-M3 embeddings.",
     "Die Sprache ist ein Werkzeug, das wir nicht ohne weiteres durchschauen.",
     ("Sentiment scoring removed from Electric Sheep schema after a paragraph-mode "
      "probe of NLTagger's classifier returned -0.6 for five distinct inputs and "
@@ -99,7 +99,7 @@ def main():
     print(f"  max cos:   {cosines.max():.5f}")
 
     # Retrieval-quality gate: the threshold below which score distribution
-    # shifts enough to recalibrate ES Memory's verbatim/paraphrase bands.
+    # shifts enough to recalibrate ES Archive's verbatim/paraphrase bands.
     if cosines.mean() < 0.99:
         print(f"\nWARNING: mean cosine {cosines.mean():.5f} is below 0.99 — variant "
               f"shifts score distribution enough to recalibrate thresholds.")

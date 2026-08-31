@@ -19,7 +19,7 @@ static NSString * const kSampleArchiveExtension = @"esarchive";
 
 /// Matches UTExportedTypeDeclarations in ES-Memory-Info.plist.
 + (nullable UTType *)archiveType {
-    return [UTType typeWithIdentifier:@"com.elarity.es-memory.backup"]
+    return [UTType typeWithIdentifier:@"com.elarity.es-archive.backup"]
         ?: [UTType typeWithFilenameExtension:@"esarchive" conformingToType:UTTypeData];
 }
 

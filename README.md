@@ -4,7 +4,7 @@
 
 Persistent archive that the AI owns: store, retrieve, organize, curate, and forget across sessions. The Archive is the collection; an entry is what a session writes into it. Built natively in Objective-C with Core Data, on-device multilingual Core ML embeddings, and optional CloudKit sync. Designed and optimized for Claude; also runs with local models in LM Studio.
 
-ES Archive was known as **ES Memory** through version 3.3.3. The name changed, and the MCP tools were renamed with it (`memory_*` → `archive_*`, one clean cut, no aliases); the bundle identifiers, data store, and sync schema did not change. An existing install upgrades in place, and existing data needs no migration.
+ES Archive was known as **ES Memory** through version 3.3.3. The rename landed in two clean cuts, no aliases: first the MCP tools (`memory_*` → `archive_*`), then — as of 3.3.8 — the bundle identifiers and app group as well (`com.elarity.es-archive-mcp`, `com.elarity.es-archive-server`, `group.com.elarity.es-archive`). To macOS the renamed apps are new apps with fresh containers. The CloudKit container and sync schema did not change, so an archive that syncs via iCloud re-downloads on first launch; a local-only archive moves over via backup export/import (legacy `.esmemory` backups still open).
 
 Read more about the technology and philosophy behind ES Archive on [alpharecursion.com](https://alpharecursion.com).
 
@@ -79,7 +79,7 @@ The practical consequence: the contributor surface is small by design. This is n
 
 ## Status
 
-ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.3** (ES Archive MCP, stdio) and **1.7** (ES Archive Server, HTTP). The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
+ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.8** (ES Archive MCP, stdio) and **3.3.5** (ES Archive Server, HTTP). The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
 
 ## License
 

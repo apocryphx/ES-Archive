@@ -45,7 +45,7 @@
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)note {
-    fprintf(stderr, "[es-memory-mcp] applicationDidFinishLaunching\n");
+    fprintf(stderr, "[es-archive-mcp] applicationDidFinishLaunching\n");
 
     // Engine first — it runs the socket election, which decides our role.
     [[ESEngine shared] start];
@@ -71,7 +71,7 @@
     BOOL servesLocally = [ESEngine shared].servesLocally;
 
     if (servesLocally) {
-        fprintf(stderr, "[es-memory-mcp] serving locally — raising the GUI (%s)\n",
+        fprintf(stderr, "[es-archive-mcp] serving locally — raising the GUI (%s)\n",
                 [ESAppConfig activationMode] == ESActivationModeMenuBar ? "Minimal" : "Full");
         // Mutually exclusive surfaces, keyed to the persisted UI mode: Full drives
         // everything from the main menu (a Dock app), Minimal from the menu-bar status
@@ -117,7 +117,7 @@
         // invariant holds.
         [[ESVectorEngine shared] backfillMissingVectorsWithCompletion:^(NSUInteger count) {
             if (count > 0) {
-                fprintf(stderr, "[es-memory-mcp] backfilled %lu memories missing a vector\n",
+                fprintf(stderr, "[es-archive-mcp] backfilled %lu memories missing a vector\n",
                         (unsigned long)count);
             }
         }];
@@ -125,11 +125,11 @@
         // A user launched us, but a host is already running and there is no stdin
         // client to serve: nothing to host, nothing to relay, and the running host
         // owns the one GUI. Exit rather than linger as an invisible process.
-        fprintf(stderr, "[es-memory-mcp] a host is already running — nothing to do, exiting\n");
+        fprintf(stderr, "[es-archive-mcp] a host is already running — nothing to do, exiting\n");
         [NSApp terminate:nil];
         return;
     } else {
-        fprintf(stderr, "[es-memory-mcp] relay — headless client of the running host\n");
+        fprintf(stderr, "[es-archive-mcp] relay — headless client of the running host\n");
     }
 
     // Run the stdin read-loop only when a client is actually on the pipe. A user
@@ -276,14 +276,14 @@
 // Our host (the shared engine) closed the connection. Posted on the main queue by
 // MCPSocketClient, so we're already on main — terminate the relay now.
 - (void)hostDisconnected:(NSNotification *)note {
-    fprintf(stderr, "[es-memory-mcp] host disconnected — terminating relay\n");
+    fprintf(stderr, "[es-archive-mcp] host disconnected — terminating relay\n");
     [NSApp terminate:nil];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)note {
     // Belt and braces — the EOF/SIGTERM drain already saved. Idempotent.
     [[ESEngine shared] flushAndSave];
-    fprintf(stderr, "[es-memory-mcp] applicationWillTerminate\n");
+    fprintf(stderr, "[es-archive-mcp] applicationWillTerminate\n");
 }
 
 @end

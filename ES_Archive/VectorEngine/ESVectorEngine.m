@@ -67,12 +67,12 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
     self = [super init];
     if (self) {
         _vectorDataDictionary = [NSMutableDictionary dictionary];
-        _isolationQueue = dispatch_queue_create("com.esmemory.vectorengine.isolation", DISPATCH_QUEUE_CONCURRENT);
+        _isolationQueue = dispatch_queue_create("com.esarchive.vectorengine.isolation", DISPATCH_QUEUE_CONCURRENT);
         _dimension = 0;
 
         _vectorQueue = [[NSOperationQueue alloc] init];
         _vectorQueue.maxConcurrentOperationCount = 1;
-        _vectorQueue.name = @"com.esmemory.vectorengine.vectorqueue";
+        _vectorQueue.name = @"com.esarchive.vectorengine.vectorqueue";
         _vectorQueue.qualityOfService = NSQualityOfServiceUtility;
 
         // Pick the summary embedder for the device locale. Bundled assets

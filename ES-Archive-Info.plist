@@ -13,7 +13,7 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.elarity.es-memory.backup</string>
+				<string>com.elarity.es-archive.backup</string>
 			</array>
 		</dict>
 	</array>
@@ -31,7 +31,7 @@
 			<key>UTTypeIcons</key>
 			<dict/>
 			<key>UTTypeIdentifier</key>
-			<string>com.elarity.es-memory.backup</string>
+			<string>com.elarity.es-archive.backup</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>

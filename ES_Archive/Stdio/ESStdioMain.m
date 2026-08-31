@@ -59,13 +59,13 @@ int main(int argc, const char *argv[]) {
         rl.rlim_cur = (rl.rlim_max == RLIM_INFINITY) ? 8192 : rl.rlim_max;
         setrlimit(RLIMIT_NOFILE, &rl);
     }
-    fprintf(stderr, "[es-memory-mcp] main() pid=%d\n", getpid());
+    fprintf(stderr, "[es-archive-mcp] main() pid=%d\n", getpid());
 
     // The pipe tells us only whether there is an MCP client on stdin to serve.
     // It does NOT decide the UI: that follows the socket election — the instance
     // that ends up running the engine in-process raises the GUI (see the delegate).
     BOOL launchedByAI = ESLaunchedByAIHost();
-    fprintf(stderr, "[es-memory-mcp] launch context: %s — UI role is decided by the socket election\n",
+    fprintf(stderr, "[es-archive-mcp] launch context: %s — UI role is decided by the socket election\n",
             launchedByAI ? "MCP client on the pipe" : "user launch");
 
     // Persona for this session: --author <name>. Set on the engine before it
@@ -76,7 +76,7 @@ int main(int argc, const char *argv[]) {
             NSString *author = [NSString stringWithUTF8String:argv[i + 1]];
             if (author.length) {
                 [ESEngine shared].authorOverride = author;
-                fprintf(stderr, "[es-memory-mcp] persona: %s\n", argv[i + 1]);
+                fprintf(stderr, "[es-archive-mcp] persona: %s\n", argv[i + 1]);
             }
             break;
         }

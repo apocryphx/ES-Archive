@@ -40,7 +40,7 @@ static NSString *const kEGQueryPrefix = @"task: search result | query: ";
     self = [super init];
     if (!self) return nil;
     _maxLen = maxLength;
-    _predictionQueue = dispatch_queue_create("com.esmemory.embgemma.prediction", DISPATCH_QUEUE_SERIAL);
+    _predictionQueue = dispatch_queue_create("com.esarchive.embgemma.prediction", DISPATCH_QUEUE_SERIAL);
 
     OCTTokenizer *t = [OCTTokenizer tokenizerWithJSONFileURL:tokenizerJSONURL error:error];
     if (!t) return nil;

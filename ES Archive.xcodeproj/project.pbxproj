@@ -167,7 +167,7 @@
 				153FB1F63044FB4700B75B4A /* ES Archive Tests */,
 			);
 			name = "ES Archive Tests";
-			productName = "ES Memory Tests";
+			productName = "ES Archive Tests";
 			productReference = 153E91822FFF49CE00108E93 /* ES Archive Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};

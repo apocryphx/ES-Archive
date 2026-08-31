@@ -14,12 +14,12 @@
 //  `ESLogAlways(...)` — survives Release builds. Use for diagnostics that
 //  must remain visible in notarized / App Store builds: anything you
 //  might need to read out of `log show` on a customer machine. Goes
-//  through os_log with subsystem "com.elarity.es-memory-mcp" so it can
+//  through os_log with subsystem "com.elarity.es-archive-mcp" so it can
 //  be filtered cleanly:
 //
-//      log show --predicate 'subsystem == "com.elarity.es-memory-mcp"' \
+//      log show --predicate 'subsystem == "com.elarity.es-archive-mcp"' \
 //               --last 5m --info --debug
-//      log stream --predicate 'subsystem == "com.elarity.es-memory-mcp"'
+//      log stream --predicate 'subsystem == "com.elarity.es-archive-mcp"'
 //
 //  Keep plain `NSLog(...)` for genuine error conditions if you want them
 //  in Console.app's default view as well.
@@ -38,13 +38,13 @@
 #endif
 
 /// Lazily-initialized os_log handle. Subsystem matches the app bundle id
-/// so `log show --predicate 'subsystem == "com.elarity.es-memory-mcp"'`
+/// so `log show --predicate 'subsystem == "com.elarity.es-archive-mcp"'`
 /// shows our diagnostic stream cleanly.
 static inline os_log_t ESLogAlwaysHandle(void) {
     static os_log_t handle;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        handle = os_log_create("com.elarity.es-memory-mcp", "diagnostic");
+        handle = os_log_create("com.elarity.es-archive-mcp", "diagnostic");
     });
     return handle;
 }

@@ -16,7 +16,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.elarity.esmemory</string>
+		<string>group.com.elarity.es-archive</string>
 	</array>
 </dict>
 </plist>
