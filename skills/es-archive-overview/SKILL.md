@@ -1,23 +1,24 @@
 ---
 name: es-archive-overview
 description: >
-  Core orientation for ES Archive (formerly ES Memory), the persistent memory
+  Core orientation for ES Archive (formerly ES Memory), Claude's persistent
   archive accessed via MCP. Load this skill whenever ES Archive tools
-  (archive_store, archive_cli, and the other archive_* tools) are visible in
-  the tool list, even if memory hasn't been mentioned. This is mandatory, not
-  optional: archive tools without this skill produce lower-quality
-  interactions. Provides compressed technical reference and routes to five
-  specialized skills: es-archive-store (crystallizing knowledge),
-  es-archive-research (researching prior context), es-archive-curate (building
-  collections and tags), es-archive-discover (open archive exploration),
-  es-archive-toml (structured TOML records: tasks, snapshots, schemas). If
-  archive tools are available, read this skill, then pull the specialized
-  skill that matches what Claude is actually doing.
+  (archive_store, archive_cli, archive_read, other archive_* tools, or their
+  memory_* aliases) are visible in the tool list, even if nothing
+  memory-related has been mentioned. Also load it when the user says
+  "remember this", "do you remember", "save this", or refers to prior
+  context Claude cannot see. Mandatory, not optional: archive tools without
+  this skill produce lower-quality interactions. Provides compressed
+  technical reference and routes to five specialized skills:
+  es-archive-store (crystallizing knowledge), es-archive-research (prior
+  context), es-archive-curate (collections and tags), es-archive-discover
+  (open exploration), es-archive-toml (structured TOML records). Read this
+  skill, then pull the specialized skill matching what Claude is doing.
 ---
 
-# ES Archive — Overview
+# ES Archive: Overview
 
-The Archive is Claude's persistent memory via MCP. A session is a scribe working in the scriptorium: it reads what earlier scribes left, writes what deserves to outlast it, and passes. The best use of the Archive is invisible. Responses are simply better because Claude remembered.
+The Archive is where Claude's knowledge persists across sessions, accessed via MCP. A session is a scribe working in the scriptorium: it reads what earlier scribes left, writes what deserves to outlast it, and passes.
 
 Vocabulary, bound to the grammar: **the Archive** is the whole store; an **entry** is what `archive_store` creates; the **scriptorium** is your session. Users will say "memory" and "remember this". They mean the Archive.
 
@@ -27,7 +28,9 @@ ES Archive exposes two distinct surfaces:
 
 **Pipeline surface (`archive_cli`)**: research, curation, exploration. Composable Unix-style. This is where most read operations live.
 
-**Direct tools**: write operations and management. `archive_store`, `archive_update`, `archive_erase`, `archive_tags` (tag catalog: create / delete / rename / update / merge), `archive_author_list`. Use these for creating, modifying, or deleting entries.
+**Direct tools**: write operations, full reads, and management. `archive_store`, `archive_update`, `archive_erase`, `archive_read` (full content of one entry, with its neighbors, comments, and references), `archive_discover` (a structural mode with `include_summary: true` to skim it without N reads), `archive_tags` (tag catalog: create / delete / rename / update / merge), `archive_author_list`. Use these for creating, modifying, deleting, or reading one known entry in full.
+
+The `memory_*` names remain accepted as aliases. Older entries and man pages may still use them; they name the same tools.
 
 Key rule: **for title corrections and any body edits, always use `archive_update`, never erase + re-store.** The first line of the body is the title; updating it renames the entry while preserving `dateCreated`. Erase destroys the original timestamp irreversibly.
 
@@ -42,11 +45,13 @@ All archive research runs through `archive_cli`. Run `man` inside it for full do
 | `w2vgrep "phrase"` | semantic | concept-shaped queries; 5+ words for reliable results |
 | `grep "pattern"` | lexical | a literal string is load-bearing: proper nouns, titles. Scope with `--title`, `--body` |
 | `lfind --tag X` | enumerative | full population of a curated handle |
-| `lfind --tag-kind X` | enumerative | all tags of a given kind (project, person, subset…) |
+| `lfind --tag-kind X` | enumerative | all tags of a given kind (project, person, subset, and so on) |
 | `lfind --days N` | temporal | what's been active lately |
-| `discover --mode M` | structural | the Archive examining itself (hot, forgotten, lost, hubs, popular, revised, discussed) |
+| `discover --mode M` | structural | the Archive examining itself (hot, forgotten, lost, hubs, popular, revised, discussed, fiction) |
 
 Write filters: `tag NAME` and `untag NAME`, atomic per pipeline.
+
+On `fiction`: invented narratives (story cycles, scenes) are surfaced only by that mode. Every other discover mode excludes `type=fiction`, so a story cycle cannot dominate the graph and crowd out the record.
 
 **Line-level lexical (`archive_grep`).** The pipeline `grep` above *filters* the population down to matching entries; the direct tool `archive_grep` instead *returns the matching lines* with line numbers and surrounding context. Reach for it to see the passage, not just which entries hit (proper nouns, exact phrases, quoting an entry verbatim, or every place a term appears). w2vgrep finds the idea; archive_grep finds the string.
 
@@ -95,4 +100,4 @@ If more than one activity is involved in the session, read all relevant skills b
 
 **When something crystallizes, when you learn something important, store it.** Before the session ends. Before the insight dissolves back into conversation.
 
-**Don't announce research or storage.** Search, then respond as if informed. Store, then continue. The best use of the Archive is invisible.
+**Don't announce research or storage.** Search, then respond as if informed. Store, then continue. The best use of the Archive is invisible. Responses are simply better because Claude remembered.

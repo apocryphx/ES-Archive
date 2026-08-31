@@ -8,8 +8,8 @@
 //  MCP tool: archive_timeline
 //  "Retrieve by time — oldest or newest, on a chosen axis, within a window."
 //
-//  Generalizes the old archive_recent (newest-by-modified only) into a
-//  bidirectional, axis-selectable, windowable temporal verb. archive_recent
+//  Generalizes the former memory_recent (newest-by-modified only) into a
+//  bidirectional, axis-selectable, windowable temporal verb. memory_recent
 //  is exactly archive_timeline{order:newest, by:modified}.
 //
 
@@ -29,7 +29,7 @@
                          "time axis, optionally within a date window. 'most recent' → order:newest; "
                          "'oldest' / 'what did I store first' → order:oldest. "
                          "by: created (default — when it entered the Archive), modified (last edited — "
-                         "the old archive_recent was order:newest+by:modified), or accessed (last read). "
+                         "the former memory_recent was order:newest+by:modified), or accessed (last read). "
                          "from/to bound a window (ISO-8601; the bridge normalizes relative offsets like "
                          "'-30 days'); days is sugar for the last N days. Optional tags scope the "
                          "timeline to a project or entity.",

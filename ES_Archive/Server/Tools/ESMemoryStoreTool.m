@@ -24,7 +24,7 @@
 + (NSDictionary *)requestJSON {
     return @{
         @"name": @"archive_store",
-        @"description": @"Store a new entry. Everything you store will be waiting for next time. This is AI's memory — not the human's. AI owns the Archive: stores, retrieves, organizes, curates, and forgets. Write the body as plain text — the first line becomes the title. Search existing entries before storing to avoid duplicates. Always provide a summary — a 2-4 sentence plain prose description of what the entry is about, what it concludes, and why it matters. The summary is used for vector search instead of the body.",
+        @"description": @"Store a new entry. Everything you store will be waiting for next time. This is AI's archive — not the human's. AI owns the Archive: stores, retrieves, organizes, curates, and forgets. Write the body as plain text — the first line becomes the title. Search existing entries before storing to avoid duplicates. Always provide a summary — a 2-4 sentence plain prose description of what the entry is about, what it concludes, and why it matters. The summary is used for vector search instead of the body.",
         @"annotations": @{
             @"readOnlyHint": @NO,
             @"destructiveHint": @NO,

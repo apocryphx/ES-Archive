@@ -33,7 +33,7 @@ static const double kLambda = 0.693147 / kHalfLifeDays;
 + (NSDictionary *)requestJSON {
     return @{
         @"name": @"archive_discover",
-        @"description": @"the Archive looking at itself. Modes: popular (most accessed), forgotten (old and unread — buried signal), lost (no tags, no links — orphans waiting for you), hubs (most connected — load-bearing nodes), revised (most edited — living documents), discussed (most commented — thoughts that provoke thinking), hot (active right now — where the conversation is), fiction (invented narratives — story cycles, scenes — surfaced on their own). Every identity mode (all except fiction) excludes type=fiction, so an invented story can't dominate the graph and drown out real entries.",
+        @"description": @"the Archive looking at itself. Modes: popular (most accessed), forgotten (old and unread — buried signal), lost (never accessed — orphans waiting for you), hubs (most connected — load-bearing nodes), revised (most edited — living documents), discussed (most commented — thoughts that provoke thinking), hot (active right now — where the conversation is), fiction (invented narratives — story cycles, scenes — surfaced on their own). Every identity mode (all except fiction) excludes type=fiction, so an invented story can't dominate the graph and drown out real entries.",
         @"annotations": @{
             @"readOnlyHint": @YES,
             @"destructiveHint": @NO
