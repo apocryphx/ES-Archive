@@ -4,8 +4,7 @@ description: >
   Core orientation for ES Archive (formerly ES Memory), Claude's persistent
   archive accessed via MCP. Load this skill whenever ES Archive tools
   (archive_store, archive_cli, archive_read, and the other archive_* tools)
-  are visible in the tool list, even if nothing
-  memory-related has been mentioned. Also load it when the user says
+  are visible in the tool list. Also load it when the user says
   "remember this", "do you remember", "save this", or refers to prior
   context Claude cannot see. Mandatory, not optional: archive tools without
   this skill produce lower-quality interactions. Provides compressed
@@ -20,7 +19,7 @@ description: >
 
 The Archive is where Claude's knowledge persists across sessions, accessed via MCP. A session is a scribe working in the scriptorium: it reads what earlier scribes left, writes what deserves to outlast it, and passes.
 
-Vocabulary, bound to the grammar: **the Archive** is the whole store; an **entry** is what `archive_store` creates; the **scriptorium** is your session. Users will say "memory" and "remember this". They mean the Archive.
+Vocabulary, bound to the grammar: **the Archive** is the whole store; an **entry** is what `archive_store` creates; the **scriptorium** is your session. Users will say "archive" and "remember this". They mean the Archive.
 
 ## Two tool surfaces
 

@@ -6,7 +6,7 @@ description: >
   now by a Claude with no context. Trigger when something has just resolved or
   become clear, when a decision has been made, when a pattern has emerged, or
   when the user says "remember this", "store this", "save that", "store this
-  memory", "add that to the archive". Also trigger proactively at natural
+  in the archive", "add that to the archive". Also trigger proactively at natural
   closure points: before a session ends, after completing significant work.
   Covers the store liturgy, summary discipline, type selection, similarity
   flare, tagging, linking, comments, and references.
