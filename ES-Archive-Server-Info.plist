@@ -17,6 +17,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleHelpBookFolder</key>
+	<string>ES Archive Server.help</string>
+	<key>CFBundleHelpBookName</key>
+	<string>ES Archive Server Help</string>
 	<key>ESDefaultAuthor</key>
 	<string>Claude</string>
 	<key>UTExportedTypeDeclarations</key>

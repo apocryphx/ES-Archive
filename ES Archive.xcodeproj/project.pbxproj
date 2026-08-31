@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		153FB7413044FD2000B75B4A /* ObjCTokenizer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */; };
 		153FB7423044FD2000B75B4A /* ObjCTokenizer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 153FB7403044FD2000B75B4A /* ObjCTokenizer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		15AE1F0230450002000000B1 /* ES Archive Server.help in Resources */ = {isa = PBXBuildFile; fileRef = 15AE1F0130450001000000B1 /* ES Archive Server.help */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -40,6 +41,7 @@
 		153FC9343045069C00B75B4A /* PRIVACY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PRIVACY.md; sourceTree = "<group>"; };
 		153FC9353045069C00B75B4A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		15786DB42F55F87F00E136DA /* ES Archive MCP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ES Archive MCP.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		15AE1F0130450001000000B1 /* ES Archive Server.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "help/ES Archive Server.help"; sourceTree = "<group>"; };
 		EE75F6B32FF74BDD00279212 /* ES Archive Server.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ES Archive Server.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -161,6 +163,7 @@
 				153FC9343045069C00B75B4A /* PRIVACY.md */,
 				153FC9353045069C00B75B4A /* README.md */,
 				153FC9333045062800B75B4A /* design-decisions */,
+				15AE1F0130450001000000B1 /* ES Archive Server.help */,
 				153FB1F63044FB4700B75B4A /* ES Archive Tests */,
 				153FB1F23044FB2B00B75B4A /* ES-Archive-Server-Info.plist */,
 				153FB1F03044FB1C00B75B4A /* ES-Archive-Info.plist */,
@@ -231,6 +234,7 @@
 			buildPhases = (
 				EE75F6A82FF74BDD00279212 /* Sources */,
 				EE75F6A92FF74BDD00279212 /* Frameworks */,
+				15AE1F0330450003000000B2 /* Index Help Book */,
 				EE75F6AC2FF74BDD00279212 /* Resources */,
 				EE75F6AD2FF74BDD00279212 /* Embed Frameworks */,
 			);
@@ -298,11 +302,44 @@
 		EE75F6AC2FF74BDD00279212 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				15AE1F0230450002000000B1 /* ES Archive Server.help in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		15AE1F0330450003000000B2 /* Index Help Book */ = {
+			isa = PBXShellScriptBuildPhase;
+			inputPaths = (
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/archive-scope.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/backup-restore.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/getting-started.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/how-it-works.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/index.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/personas.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/privacy.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/settings.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/shortcuts.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/tags-and-links.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/tools.html",
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/troubleshooting.html",
+			);
+			name = "Index Help Book";
+			outputPaths = (
+				"$(SRCROOT)/help/ES Archive Server.help/Contents/Resources/en.lproj/ES Archive Server.helpindex",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"# Regenerate the help-book search index in the source tree whenever a page",
+				"# changes; the Resources phase then copies the fresh index with the book.",
+				"# The en.lproj directory itself is an input so adding/removing a page also",
+				"# reindexes (directory mtime changes); new pages should be added to the",
+				"# input list above for content-edit tracking.",
+				"hiutil -Caf \"${SRCROOT}/help/ES Archive Server.help/Contents/Resources/en.lproj/ES Archive Server.helpindex\" \"${SRCROOT}/help/ES Archive Server.help/Contents/Resources/en.lproj\"",
+				"",
+			);
+		};
 		FACADE000000000000000C01 /* Verify embedder model */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Personas are the authors in the archive. How to see them, tidy them, and — in the Server app — bind each to a port.">
+<meta name="keywords" content="personas, authors, identity, merge, rename, delete persona, ports, JWT, Cloudflare Access, witness, author">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Personas</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="personas"></a>Personas</h1>
+<p class="lede">Who wrote what, in one shared archive.</p>
+
+<p>Every memory carries the name of the persona that wrote it. A persona is not an account and
+has no password — it is an authorship stamp, and it is what lets several assistants share this
+Mac without reading each other's notes. Each persona sees and writes only its own memories.</p>
+
+<p>Any name that appears as an author in the archive is a persona, including one that no client
+currently uses. <a href="archive-scope.html">Archive Scope</a>'s persona picker lists all of them,
+plus <strong>All (witness)</strong> for the view across everything.</p>
+
+
+
+<h2><a name="how-persona-is-set"></a>How the persona is chosen</h2>
+
+<p>ES Archive Server binds one listening port per persona, and <strong>the port a request arrives on is its
+identity</strong>. The client never asserts who it is, so it cannot claim to be someone else, and
+names cannot drift. Point a client at port 3111 and it writes as whoever holds port 3111.</p>
+
+<h2><a name="managing"></a>Settings ▸ Personas</h2>
+
+<p>The pane lists every persona in the archive with its record count.</p>
+
+<table>
+<tr><th>Button</th><th>What it does</th></tr>
+<tr><td>+</td><td>Creates a persona. The name is what gets stamped on its records.</td></tr>
+<tr><td>–</td><td>Deletes the persona <strong>and every record it wrote</strong>.</td></tr>
+<tr><td>Rename…</td><td>Re-stamps every one of its records under a new name.</td></tr>
+<tr><td>Merge…</td><td>Folds its records into another persona, and removes it.</td></tr>
+</table>
+
+<h2><a name="ports"></a>Settings ▸ Ports</h2>
+
+<p>Each row binds a port to a persona. Add rows with <span class="ui">+</span>, remove them with
+<span class="ui">–</span>, then click <span class="ui">Apply &amp; Relaunch</span> — port bindings
+only take effect when the server restarts.</p>
+
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Port</td><td>The localhost port this persona listens on. Each port may appear once.</td></tr>
+<tr><td>Persona (author)</td><td>Who requests on that port are attributed to.</td></tr>
+<tr><td>Require JWT</td><td>Refuse requests without a valid <span class="path">Cf-Access-Jwt-Assertion</span> header.</td></tr>
+</table>
+
+<p>Above the table, a separate checkbox switches the fixed-port Claude bridge on and off. Its port
+is not editable — the bridge hard-codes it — and stays reserved even while the bridge is off.</p>
+
+<h2><a name="remote-access"></a>Reaching a persona from elsewhere</h2>
+
+<p>The server binds to <span class="path">127.0.0.1</span> only and accepts nothing from outside
+this Mac. If you want a persona reachable remotely, put it behind a
+<a href="https://www.cloudflare.com/products/tunnel/">cloudflared</a> tunnel of your own and turn
+on <strong>Require JWT</strong> for that port, so Cloudflare Access authenticates at the edge
+before anything reaches the archive. Because the setting is per port, one persona can be exposed
+while another stays strictly local.</p>
+
+
+<div class="note">
+<span class="label">Deleting and merging cannot be undone</span>
+<p>Deleting a persona destroys its memories along with it, and merging rewrites authorship on
+every record it touches. Take a backup first — <span class="ui">File ▸ Back Up…</span>. If you use
+iCloud, remember that the deletion syncs to your other Macs.</p>
+</div>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="backup-restore.html">Backing up and restoring</a>
+<a href="archive-scope.html">Archive Scope</a>
+</div>
+
+</body>
+</html>

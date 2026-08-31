@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="What to do when the memory tools do not appear, search comes back thin, or the window will not show.">
+<meta name="keywords" content="troubleshooting, problem, not working, tools missing, no results, empty, window, sync, iCloud, port in use, reindex, isolated, help">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Troubleshooting</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="troubleshooting"></a>Troubleshooting</h1>
+
+<h2><a name="no-tools"></a>The memory tools do not appear in my assistant</h2>
+
+
+<ol>
+<li>Check the server is running: the traffic light in <span class="ui">Window ▸ Show Dashboard</span>
+should be green.</li>
+<li>Check a port is actually bound to the persona you are pointing the client at —
+<span class="ui">Settings ▸ Ports</span>. A row that has never been applied is not listening.</li>
+<li>Confirm the client's configuration names the same port. Reopen
+<span class="ui">Help ▸ Connect ES Archive…</span>, pick the persona, and copy the configuration
+afresh.</li>
+<li>If the port has <strong>Require JWT</strong> switched on, a client that does not send a
+Cloudflare Access token will be refused. Turn it off for local use.</li>
+</ol>
+
+<p>For LM Studio, also confirm the loaded model supports tool use — one that does not will never
+call the tools, however well it is connected.</p>
+
+<h2><a name="thin-search"></a>Search finds nothing, or the wrong things</h2>
+
+<p>Semantic search matches a memory's <strong>summary</strong>, not its body. A memory stored
+without one has no vector, so it is invisible to search and appears as an isolated dot in
+<a href="archive-scope.html">Archive Scope</a>. Open Archive Scope and read the
+<strong>Isolated</strong> count in the status line: if it is more than a handful, that is your
+answer. Ask your assistant to add summaries to those memories.</p>
+
+<p>Right after a restore, or after memories arrive from another Mac through iCloud, vectors are
+still being computed. Search over those memories sharpens over the next few moments. Watch the
+similarity edges appear in Archive Scope.</p>
+
+<p>If it never settles, choose <span class="ui">Reindex Vectors</span> from the menu-bar item to
+rebuild them all.</p>
+
+<p>If you are searching for an exact string — a path, an error message, a name — ask for a pattern
+search instead. See <a href="tools.html">What your AI can do</a>.</p>
+
+
+<h2><a name="port-problems"></a>A port will not bind</h2>
+
+<p>Something else on this Mac is already using it. Pick another number in
+<span class="ui">Settings ▸ Ports</span> and click <span class="ui">Apply &amp; Relaunch</span>.
+The same applies if you assigned one port twice — the pane will tell you which.</p>
+
+<p>Port changes never take effect until you relaunch. If a new binding seems ignored, that is
+almost always why.</p>
+
+<h2><a name="wrong-author"></a>Memories are attributed to the wrong persona</h2>
+
+<p>Authorship comes from the port, so this means the client is pointed at the wrong one. Correct
+the client's configuration, then fold the mis-attributed records into the right persona with
+<span class="ui">Merge…</span> in <span class="ui">Settings ▸ Personas</span>. Back up first.</p>
+
+<h2><a name="sync"></a>My other Mac does not have the same memories</h2>
+
+<ul>
+<li>Both Macs must be signed into the same Apple Account with iCloud Drive on.</li>
+<li>Sync is not instantaneous. Leave both awake and connected for a few minutes.</li>
+<li>Memories that arrive from another Mac need their vectors computed locally before search
+reaches them.</li>
+</ul>
+
+<p>If it still will not sync, back up on one Mac and restore on the other —
+<a href="backup-restore.html">Backing up and restoring</a>. That works with no iCloud at all.</p>
+
+<h2><a name="scope-empty"></a>Archive Scope says "No memories yet"</h2>
+
+<p>The archive is empty for the persona you have selected. Check the persona picker at the bottom
+right and try <strong>All (witness)</strong>. If that is empty too, nothing has been stored yet —
+add the sample memories from <span class="ui">Help ▸ Connect ES Archive…</span> to have something to
+look at.</p>
+
+<h2><a name="still-stuck"></a>Still stuck</h2>
+
+<p>Report it at
+<a href="https://github.com/apocryphx/ES-Archive/issues">github.com/apocryphx/ES-Archive/issues</a>.
+Include your macOS version, the ES Archive Server version, and which client you are connecting.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="getting-started.html">Getting started</a>
+<a href="archive-scope.html">Archive Scope</a>
+</div>
+
+</body>
+</html>

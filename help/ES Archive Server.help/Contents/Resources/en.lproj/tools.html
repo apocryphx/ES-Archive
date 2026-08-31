@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="The capabilities ES Archive gives an assistant, and how to ask for them in plain language.">
+<meta name="keywords" content="tools, MCP tools, capabilities, archive_store, archive_search, archive_cli, pipeline, discover, grep, timeline, what can it do">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>What your AI can do</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="tools"></a>What your AI can do</h1>
+<p class="lede">The capabilities ES Archive Server hands to a connected assistant.</p>
+
+<p>Once a client is <a href="getting-started.html">connected</a>, your assistant gains a set of
+memory tools it can call mid-conversation. You never invoke these yourself — but knowing the
+shape of them tells you what is reasonable to ask for.</p>
+
+<h2><a name="capabilities"></a>The capabilities</h2>
+
+<table>
+<tr><th>It can…</th><th>Tools</th></tr>
+<tr><td class="wrap">Write something down, read it back, revise it, or forget it</td>
+    <td><code>archive_store</code> <code>archive_read</code> <code>archive_update</code> <code>archive_erase</code></td></tr>
+<tr><td class="wrap">Find memories by meaning, by pattern, by date, or by tag</td>
+    <td><code>archive_search</code> <code>archive_grep</code> <code>archive_timeline</code> <code>archive_tagged</code></td></tr>
+<tr><td class="wrap">Compose several of those into one query</td>
+    <td><code>archive_cli</code> <code>archive_pipeline</code></td></tr>
+<tr><td class="wrap">Survey the archive's own structure — its hubs, its orphans, what it has stopped visiting</td>
+    <td><code>archive_discover</code></td></tr>
+<tr><td class="wrap">Connect and classify: link two memories, tag them, list what exists</td>
+    <td><code>archive_link</code> <code>archive_unlink</code> <code>archive_links</code> <code>archive_tag</code> <code>archive_untag</code> <code>archive_tags</code></td></tr>
+<tr><td class="wrap">Annotate after the fact and see how a memory has changed</td>
+    <td><code>archive_comment</code> <code>archive_reference</code> <code>archive_revisions</code></td></tr>
+<tr><td class="wrap">Check who has written to the archive, and keep it tidy</td>
+    <td><code>archive_author_list</code> <code>archive_maintenance</code></td></tr>
+</table>
+
+<h2><a name="asking-for-it"></a>Asking for it in plain language</h2>
+
+<p>You do not need any of those names. In conversation, this is enough:</p>
+
+<ul>
+<li>"Remember that — I'll want it next time."</li>
+<li>"What do we already have on this?"</li>
+<li>"Store this as a decision, and say why."</li>
+<li>"Link that back to what we concluded in March."</li>
+<li>"Tag everything from this project."</li>
+<li>"What haven't we touched in months?"</li>
+<li>"That memory is wrong now — correct it."</li>
+</ul>
+
+<h2><a name="search-vs-grep"></a>Two different searches</h2>
+
+<p>It is worth knowing the difference, because asking for the wrong one gives disappointing
+results.</p>
+
+<ul>
+<li><strong>Semantic search</strong> matches meaning. Ask for it when you remember the gist but
+not the words: "find where we worked out the licensing question."</li>
+<li><strong>Pattern search</strong> matches text, and returns the matching passages with their
+surrounding lines rather than just naming the memories. Ask for it when you know an exact
+string: a file path, an error message, a name.</li>
+</ul>
+
+<div class="note">
+<span class="label">Duplication is discouraged, not blocked</span>
+<p>When your assistant stores something, ES Archive Server answers with how closely it resembles what is
+already there. That nudge is what keeps an archive from filling with five versions of the same
+note — but the decision stays with the assistant.</p>
+</div>
+
+<h2><a name="what-it-cannot-do"></a>What it cannot do</h2>
+
+<p>The tools reach the memory archive and nothing else. They cannot read your files, your mail,
+or anything else on this Mac, and they cannot send memories anywhere. See
+<a href="privacy.html">Privacy</a>.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="tags-and-links.html">Types, tags and links</a>
+<a href="privacy.html">Privacy</a>
+</div>
+
+</body>
+</html>

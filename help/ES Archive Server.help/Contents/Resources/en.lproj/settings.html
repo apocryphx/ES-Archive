@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Dock or menu-bar mode, launch at login, and what appears when the app starts.">
+<meta name="keywords" content="settings, preferences, dock, menu bar, minimal, launch at login, login items, startup, relaunch, appearance">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Settings</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="settings"></a>Settings</h1>
+<p class="lede">Choose <span class="ui">ES Archive Server ▸ Settings…</span> (<kbd>⌘,</kbd>). Three
+panes: <strong>UI Settings</strong>, <strong>Personas</strong> and <strong>Ports</strong>.</p>
+
+<h2><a name="appearance"></a>Appearance</h2>
+
+<p>Two mutually exclusive ways for the app to present itself. Only one is ever active.</p>
+
+<table>
+<tr><th>Mode</th><th>What you get</th></tr>
+<tr><td>Dock app</td><td>A Dock icon and the full menu bar. Everything is reachable from the menus.</td></tr>
+<tr><td>Menu bar only</td><td>No Dock icon, no app menus — just a status item in the menu bar carrying the same commands.</td></tr>
+</table>
+
+<p>Pick <strong>Menu bar only</strong> if you want the archive available but out of the way.
+Everything you need — Archive Scope, Back Up, Restore, Personas, Settings, Connect, Quit — is in
+the status-item menu.</p>
+
+<div class="note">
+<span class="label">Switching modes needs a relaunch</span>
+<p>After you click <span class="ui">Apply</span>, the app offers to quit and reopen itself. Choose
+<span class="ui">Later</span> and the change waits until you next start it.</p>
+</div>
+
+<h2><a name="startup"></a>Startup</h2>
+
+<table>
+<tr><th>Setting</th><th>Effect</th></tr>
+<tr><td class="wrap">Launch at login</td><td>Starts the server when you log in, so its ports are
+listening before any client asks. Registered as a macOS login item — you can also see it in System
+Settings ▸ General ▸ Login Items.</td></tr>
+<tr><td class="wrap">Show main window at launch</td><td>Opens the Dashboard automatically at
+startup. Turn it off to start straight to the menu bar. You can always reach it later with
+<span class="ui">Window ▸ Show Dashboard</span>.</td></tr>
+</table>
+
+<p>Changes take effect when you click <span class="ui">Apply</span>. The button stays dimmed until
+something has actually changed.</p>
+
+<h2><a name="connect-window"></a>The Connect window at startup</h2>
+
+<p><span class="ui">Help ▸ Connect ES Archive…</span> opens by itself when the app starts, which is
+useful until you have connected a client and unhelpful afterwards. Its own
+<span class="ui">Show at next startup</span> checkbox, at the bottom of that window, turns the
+behaviour off. The window stays available from the Help menu either way.</p>
+
+<h2><a name="other-panes"></a>Personas and Ports</h2>
+
+<p>The other two panes are covered in <a href="personas.html">Personas</a>.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="personas.html">Personas</a>
+<a href="shortcuts.html">Keyboard shortcuts</a>
+</div>
+
+</body>
+</html>

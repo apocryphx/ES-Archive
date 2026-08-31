@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="How memories are classified, tagged and linked, and why the tag list stays short.">
+<meta name="keywords" content="tags, links, edges, types, curation, memory type, decision, reflection, kind, person, project, principle">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Types, tags and links</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="tags-and-links"></a>Types, tags and links</h1>
+<p class="lede">The three ways the archive organises itself.</p>
+
+<p>All three are set by your assistant as it writes, not by you. Knowing what they mean makes
+<a href="archive-scope.html">Archive Scope</a> far easier to read, and gives you something
+concrete to ask for — "tag that as a decision", "link this back to what we agreed in March".</p>
+
+<h2><a name="memory-types"></a>Types</h2>
+
+<p>Every memory is classified. The type appears in the Archive Scope detail panel.</p>
+
+<table>
+<tr><th>Type</th><th>What it holds</th></tr>
+<tr><td>memory</td><td>What happened. The default.</td></tr>
+<tr><td>thought</td><td>What the assistant made of it.</td></tr>
+<tr><td>reference</td><td>Something factual and stable, worth looking up.</td></tr>
+<tr><td>preference</td><td>How you like things done.</td></tr>
+<tr><td>question</td><td>Unresolved, worth returning to.</td></tr>
+<tr><td>decision</td><td>A commitment, with the reasoning that produced it.</td></tr>
+<tr><td>reflection</td><td>Stepping back to see the larger shape.</td></tr>
+<tr><td>code</td><td>An implementation worth keeping.</td></tr>
+<tr><td>letter</td><td>Addressed to someone.</td></tr>
+<tr><td>dream</td><td>Speculative — a design not yet built.</td></tr>
+<tr><td>schema</td><td>Defines the structure of a typed record.</td></tr>
+</table>
+
+<h2><a name="tags"></a>Tags</h2>
+
+<p>Tags are deliberately scarce. Nothing in ES Archive Server extracts keywords automatically — a tag
+exists because the assistant judged it worth creating, which is what makes the tag list
+meaningful instead of a word-frequency table. Each tag has a kind:</p>
+
+<p><code>person</code> · <code>place</code> · <code>project</code> ·
+<code>principle</code> · <code>subset</code> · <code>session</code> ·
+<code>research</code> · <code>thing</code> (the uncategorised default)</p>
+
+<p>The <strong>Tag Cloud</strong> tab in Archive Scope shows them sized by how many memories
+carry them. When the last memory holding a tag is erased, the tag is removed too, so the cloud
+never fills with empty labels.</p>
+
+<h2><a name="links"></a>Links</h2>
+
+<p>A link is a directional connection the assistant makes on purpose between two memories. Each
+one names the relationship with a short verb — <code>elaborates</code>, <code>answers</code>,
+<code>corrects</code>, <code>revises</code>, <code>contradicts</code>, <code>disputes</code> —
+and that verb is traversable: the archive can be asked for, say, only the places where one
+memory contradicts another.</p>
+
+<p>In Archive Scope, links are the solid lines. The faint lines are not links at all: they are
+similarity edges the app computes for you, and they appear and disappear on their own as the
+archive changes.</p>
+
+<div class="note">
+<span class="label">Two different kinds of connection</span>
+<p><strong>Links</strong> are authored and permanent until removed. <strong>Similarity edges</strong>
+are derived from meaning and recomputed continuously. A memory can be strongly linked to
+something it bears no textual resemblance to, and vice versa — seeing both at once is the
+point of the graph.</p>
+</div>
+
+<h2><a name="other-annotations"></a>Comments, references and revisions</h2>
+
+<ul>
+<li><strong>Comments</strong> are notes added to a memory after it was written. They show up in
+the detail panel under <em>marginalia</em>, each with its author and date.</li>
+<li><strong>References</strong> point at something outside the archive — a URL, a document, a
+citation.</li>
+<li><strong>Revisions</strong> keep the earlier state of a memory when it is edited, so the
+history of a changing idea is not lost.</li>
+</ul>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="archive-scope.html">Archive Scope</a>
+<a href="tools.html">What your AI can do</a>
+</div>
+
+</body>
+</html>

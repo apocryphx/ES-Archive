@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Where your memories are stored, what leaves this Mac, and what ES Archive collects.">
+<meta name="keywords" content="privacy, security, data, iCloud, CloudKit, sandbox, telemetry, analytics, offline, local, encryption, network">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Privacy</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="privacy"></a>Privacy</h1>
+<p class="lede">ES Archive Server collects nothing. Here is exactly where everything goes.</p>
+
+<h2><a name="where-stored"></a>Where your memories are stored</h2>
+
+<p>In a database inside ES Archive Server's own sandbox container on this Mac. The app is sandboxed, so it
+reaches its own container and the files you explicitly hand it through a Save or Open panel — and
+nothing else on your disk.</p>
+
+<h2><a name="what-leaves"></a>What leaves this Mac</h2>
+
+<p>In normal use, one thing: <strong>iCloud sync, if you are signed in</strong>. The archive syncs
+through your own private CloudKit database
+(<span class="path">iCloud.com.elarity.electric-sheep</span>) under your Apple Account, which is
+what makes the same memories available on your other Macs. It goes to Apple, under your account,
+and nowhere else. If you are not signed into iCloud, nothing leaves at all and the app works
+exactly the same.</p>
+
+<p>There is no other network activity. No analytics, no telemetry, no crash reporting, no update
+check, no third-party service.</p>
+
+<h2><a name="local-connection"></a>How your AI reaches the archive</h2>
+
+
+<p>ES Archive Server listens on <span class="path">127.0.0.1</span> — the loopback interface — and nowhere
+else. Only processes on this Mac can connect, one listener per persona. Nothing on your local
+network, and nothing on the internet, can reach it.</p>
+
+<p>The one exception is one you create deliberately: if you put a persona behind a
+<a href="https://www.cloudflare.com/products/tunnel/">cloudflared</a> tunnel of your own, that
+traffic travels under your Cloudflare account and its authentication. ES Archive Server opens no remote
+access on its own, and you can require a Cloudflare Access token per port — see
+<a href="personas.html">Personas</a>.</p>
+
+<h2><a name="embedding"></a>Semantic search runs here</h2>
+
+<p>The model that turns memories into searchable vectors is bundled inside the app and runs on
+this Mac's own hardware. No text is ever sent anywhere to be embedded, searched, or indexed — not
+even to Apple.</p>
+
+<h2><a name="collection"></a>What is collected</h2>
+
+<p>Nothing. Specifically:</p>
+
+<ul>
+<li>No analytics or telemetry are sent anywhere.</li>
+<li>No data is shared with the developer or with any third party.</li>
+<li>No third-party servers are contacted.</li>
+<li>Diagnostic messages are written only to this Mac's own system log.</li>
+</ul>
+
+<h2><a name="your-copy"></a>Keeping your own copy</h2>
+
+<p><span class="ui">File ▸ Back Up…</span> writes the whole archive to a single
+<span class="path">.esarchive</span> file wherever you choose. It is an ordinary file — store it,
+encrypt it, or delete it as you see fit. See
+<a href="backup-restore.html">Backing up and restoring</a>.</p>
+
+<div class="note">
+<span class="label">Removing everything</span>
+<p>Deleting the app removes its container and the archive with it. If iCloud sync is on, the copy
+in your private CloudKit database is removed through iCloud settings for your Apple Account, the
+same as any other app's iCloud data. Back up first if you want to keep anything.</p>
+</div>
+
+<p>The full privacy policy is at
+<a href="https://github.com/apocryphx/ES-Archive/blob/main/PRIVACY.md">github.com/apocryphx/ES-Archive</a>.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="how-it-works.html">How it works</a>
+<a href="backup-restore.html">Backing up and restoring</a>
+</div>
+
+</body>
+</html>

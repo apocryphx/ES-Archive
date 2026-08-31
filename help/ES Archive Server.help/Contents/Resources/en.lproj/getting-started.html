@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="index">
+<meta name="description" content="Connect the app you chat with to ES Archive Server, then check that the memory tools arrived.">
+<meta name="keywords" content="getting started, setup, connect, Claude Desktop, Claude Code, LM Studio, mcp.json, extension, connector, first run, install">
+<meta name="AppleIcon" content="ES Archive Server.help/Contents/Resources/shared/images/help-icon.png">
+<title>Getting started</title>
+<link rel="stylesheet" href="../shared/css/help.css">
+</head>
+<body>
+
+<h1><a name="getting-started"></a>Getting started</h1>
+<p class="lede">Connect a client once. After that it is invisible.</p>
+
+
+
+<p>ES Archive Server runs as an app you keep open. It serves the archive over HTTP on this Mac only,
+binding one port per persona, and accepts no connections from outside the machine.</p>
+
+<h2><a name="bind-a-port"></a>1. Give a persona a port</h2>
+
+<p>A request's identity comes from the port it arrives on, so every client needs a port bound to
+the persona it should write as. Choose <span class="ui">ES Archive Server ▸ Settings…</span>, open
+the <span class="ui">Ports</span> tab, add a row, pick the persona, and click
+<span class="ui">Apply &amp; Relaunch</span>. See <a href="personas.html">Personas</a>.</p>
+
+<h2><a name="connect-a-client"></a>2. Point a client at it</h2>
+
+<ol>
+<li>Choose <span class="ui">Help ▸ Connect ES Archive…</span>.</li>
+<li>Pick the persona you want this client to write as — the menu lists each one with its port.</li>
+<li>Click <span class="ui">Copy Configuration</span>.</li>
+<li>In LM Studio, choose <span class="ui">Program ▸ Edit mcp.json</span> and paste it in. Then load
+a model that supports tool use.</li>
+</ol>
+
+<p>The configuration names the server after the persona, so configurations for two personas can
+live in the same <span class="path">mcp.json</span> without overwriting each other.</p>
+
+<h2><a name="endpoints"></a>The endpoints</h2>
+
+<table>
+<tr><th>Address</th><th>For</th></tr>
+<tr><td><span class="path">http://localhost:&lt;port&gt;/mcp</span></td><td>MCP over HTTP. The usual choice.</td></tr>
+<tr><td><span class="path">http://localhost:&lt;port&gt;/sse</span></td><td>Clients that want server-sent events.</td></tr>
+<tr><td><span class="path">http://localhost:&lt;port&gt;/personas</span></td><td>Read-only: which port serves which persona.</td></tr>
+</table>
+
+<div class="note">
+<span class="label">If the port requires a token</span>
+<p>A port set to require a Cloudflare Access JWT will refuse a client that does not send the
+<span class="path">Cf-Access-Jwt-Assertion</span> header — the pasted configuration alone will not
+connect. The Connect window warns you in orange when the persona you picked is gated.</p>
+</div>
+
+
+<h2><a name="check-it-worked"></a>Check it worked</h2>
+
+<p>Ask your assistant to store something, then start a fresh conversation and ask it to recall
+the same thing. If it comes back, you are set.</p>
+
+<p>To watch it happen, open <span class="ui">Window ▸ Show Archive Scope</span> and leave it in
+view: a new dot appears as each memory is stored, and dots flash as the assistant reads them.</p>
+
+<p>The <span class="ui">Window ▸ Show Dashboard</span> window logs every tool call as it arrives,
+alongside live memory and vector counts.</p>
+
+<p>If the memory tools never turn up, see <a href="troubleshooting.html">Troubleshooting</a>.</p>
+
+<h2><a name="something-to-look-at"></a>Give it something to look at</h2>
+
+<p>A brand-new archive is empty, which makes it hard to tell whether anything is working. In the
+<span class="ui">Connect ES Archive</span> window, click <span class="ui">Add Sample Memories…</span>
+to merge in a prepared set with tags and links already in place. See
+<a href="backup-restore.html">Backing up and restoring</a> for what that does and does not do.</p>
+
+<div class="footer">
+<a href="index.html">Contents</a>
+<a href="how-it-works.html">How it works</a>
+<a href="troubleshooting.html">Troubleshooting</a>
+</div>
+
+</body>
+</html>
