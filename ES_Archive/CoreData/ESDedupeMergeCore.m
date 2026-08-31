@@ -5,7 +5,7 @@
 //  Copyright © 2026 Kolja Wawrowsky. All rights reserved.
 //  Licensed under the MIT License. See LICENSE file in the project root.
 //
-//  Extracted verbatim from ESMemoryMaintenanceTool's dedupeMemories loop
+//  Extracted verbatim from ESMemoryMaintenanceTool's dedupeEntries loop
 //  (July 2026) so the automatic deduplicator and the maintenance action
 //  share one merge implementation.
 //

@@ -337,7 +337,7 @@ static NSString *LineContent(NSString *text, NSArray<NSNumber *> *starts, NSUInt
     envelope[@"status"]       = @"ok";
     envelope[@"mode"]         = corpusMode ? @"corpus" : @"single";
     if (!corpusMode) envelope[@"entry_title"] = memoryTitle;
-    if (corpusMode)  envelope[@"scanned_memories"] = @(corpusMemoryCount);
+    if (corpusMode)  envelope[@"scanned_entries"] = @(corpusMemoryCount);
     if (tagNames)    envelope[@"tags"] = tagNames;
     envelope[@"pattern"]      = pattern;
     envelope[@"regex"]        = @(useRegex);

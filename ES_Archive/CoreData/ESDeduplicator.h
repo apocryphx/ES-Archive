@@ -50,7 +50,7 @@
 //    3. ACTOR — a block on the main queue (the engine's single writer). It
 //       re-derives everything from live data: does the group still exist,
 //       which row survives, what moves. Memory merges go through the same
-//       ESDedupeMergeCore as archive_maintenance's dedupeMemories action.
+//       ESDedupeMergeCore as archive_maintenance's dedupeEntries action.
 //
 //    4. SWEEP — a full re-derivation across all entity classes. Runs at
 //       launch (covers duplicates that arrived while the app was dead) and,

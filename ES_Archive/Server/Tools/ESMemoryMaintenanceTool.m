@@ -7,7 +7,7 @@
 //
 //  MCP tool: archive_maintenance
 //  Status (no params) and bulk actions (backfill /
-//  reindexSummaries / erase / clean / pruneTags / dedupeTags / dedupeMemories /
+//  reindexSummaries / erase / clean / pruneTags / dedupeTags / dedupeEntries /
 //  dedupeEmbedders). Each call does one thing.
 //
 
@@ -36,7 +36,7 @@
         @"description":
             @"Control panel for the summary embedder and Archive housekeeping. Two modes:\n\n"
             @"1. STATUS — call with no parameters. Returns active embedder, Archive counts "
-            @"(memoryCount, activeVectorCount, memoriesWithoutActiveVector), pending vector ops, "
+            @"(entryCount, activeVectorCount, entriesWithoutActiveVector), pending vector ops, "
             @"and the stale-vector report. Always safe.\n\n"
             @"2. ACTIONS — set `action` to one of:\n"
             @"   - `backfill`: encode summaries for entries that lack a vector under the active "
@@ -58,7 +58,7 @@
             @"diacritic-folded name; for each collision it keeps one canonical (most memberships, then "
             @"permanent, then oldest), moves the others' memberships onto it, and deletes them. "
             @"Synchronous and independent of vector state.\n"
-            @"   - `dedupeMemories`: merge byte-identical duplicate entries (same title, body, and "
+            @"   - `dedupeEntries`: merge byte-identical duplicate entries (same title, body, and "
             @"author) left by historical double-writes and backdated re-imports. The oldest copy "
             @"survives with its original dateCreated; the duplicates' tags, links, comments, "
             @"references, revision history, and access stats fold onto it before they are deleted. "
@@ -71,7 +71,7 @@
             @"the most vectors survives, every other row's vectors are re-pointed onto it, and the "
             @"emptied rows are deleted. Retrieval is identifier-based and unaffected either way.\n\n"
             @"Every action except pruneTags and dedupeTags (pure tag-store ops) refuses with status "
-            @"\"action_refused\" while `pendingVectorOperations > 0` — that includes dedupeMemories "
+            @"\"action_refused\" while `pendingVectorOperations > 0` — that includes dedupeEntries "
             @"and dedupeEmbedders, which fold or re-point vectors. "
             @"Wait for pending to reach zero, then retry.",
         @"annotations": @{
@@ -86,7 +86,7 @@
                 @"action": @{
                     @"type": @"string",
                     @"description": @"Bulk operation to fire. `backfill` = encode summaries for entries missing the active vector (background). `reindexSummaries` = wipe + re-encode every entry's summary under the active embedder (synchronous). `erase` = delete all active-embedder vectors (synchronous). `clean` = remove stale vectors + empty entries (synchronous). `pruneTags` = hard-delete ephemeral tags expired more than `graceDays` ago. `dedupeTags` = merge same-name tag duplicates left by CloudKit sync. (Both tag actions are synchronous and independent of vector state.)",
-                    @"enum": @[@"backfill", @"reindexSummaries", @"erase", @"clean", @"pruneTags", @"dedupeTags", @"dedupeMemories", @"dedupeEmbedders"],
+                    @"enum": @[@"backfill", @"reindexSummaries", @"erase", @"clean", @"pruneTags", @"dedupeTags", @"dedupeEntries", @"dedupeEmbedders"],
                 },
                 @"graceDays": @{
                     @"type": @"integer",
@@ -94,7 +94,7 @@
                 },
                 @"dryRun": @{
                     @"type": @"boolean",
-                    @"description": @"dedupeMemories only: when true, return the full merge plan (groups, survivor, drop dates) without modifying the Archive. Default false.",
+                    @"description": @"dedupeEntries only: when true, return the full merge plan (groups, survivor, drop dates) without modifying the Archive. Default false.",
                 },
             },
         },
@@ -160,9 +160,9 @@
     NSDictionary *staleReport = [engine staleVectorReport];
 
     NSMutableDictionary *archive = [@{
-        @"memoryCount":                 @(memoryCount),
+        @"entryCount":                 @(memoryCount),
         @"activeVectorCount":           @(activeVectorCount),
-        @"memoriesWithoutActiveVector": @(missingActive),
+        @"entriesWithoutActiveVector": @(missingActive),
         @"pendingVectorOperations":     @(engine.pendingVectorOperations),
         @"pendingEmbedder":             (engine.pendingEmbedderIdentifier ?: [NSNull null]),
         @"staleVectorCount":            staleReport[@"count"] ?: @0,
@@ -250,9 +250,9 @@
     else if ([action isEqualToString:@"dedupeTags"]) {
         actionResult = [self dedupeTags];
     }
-    else if ([action isEqualToString:@"dedupeMemories"]) {
+    else if ([action isEqualToString:@"dedupeEntries"]) {
         BOOL dryRun = [ESMemoryToolBase boolFromArgs:arguments key:@"dryRun" default:NO];
-        actionResult = [self dedupeMemoriesDryRun:dryRun];
+        actionResult = [self dedupeEntriesDryRun:dryRun];
     }
     else if ([action isEqualToString:@"dedupeEmbedders"]) {
         actionResult = [self dedupeEmbedders];
@@ -374,7 +374,7 @@
 /// `clean`'s locked handling. Same-title memories whose bodies differ are
 /// never touched — those are revisions, and merging them is curation, not
 /// maintenance.
-+ (NSDictionary *)dedupeMemoriesDryRun:(BOOL)dryRun {
++ (NSDictionary *)dedupeEntriesDryRun:(BOOL)dryRun {
     NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
     NSError *ferr = nil;
     NSFetchRequest *req = [NSFetchRequest fetchRequestWithEntityName:@"CDMemory"];
@@ -450,7 +450,7 @@
 
     if (!dryRun && deleted > 0) [[ESCoreDataStack shared] saveContext];
 
-    NSString *deletedKey = dryRun ? @"memoriesToDelete" : @"memoriesDeleted";
+    NSString *deletedKey = dryRun ? @"entriesToDelete" : @"entriesDeleted";
     NSMutableDictionary *out = [@{
         @"status":              dryRun ? @"dedupe_dry_run" : @"dedupe_complete",
         @"duplicateGroups":     @(groupsMerged),

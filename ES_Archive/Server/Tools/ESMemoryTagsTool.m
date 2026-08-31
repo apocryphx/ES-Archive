@@ -135,7 +135,7 @@
         NSMutableDictionary *entry = [@{
             @"name": t.name ?: @"",
             @"kind": t.kind ?: @"thing",
-            @"memoryCount": @(memoryCount)
+            @"entryCount": @(memoryCount)
         } mutableCopy];
         if (t.dateCreated) entry[@"dateCreated"] = [df stringFromDate:t.dateCreated];
         if (t.dateExpired) {

@@ -1437,8 +1437,8 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
     return @{
         @"staleVectorsRemoved": @(orphRemoved),
         @"staleEmbedderIDs":    reportedIDs,
-        @"emptyMemoriesRemoved": @(emptyRemoved),
-        @"emptyMemoryTitles":    [titles copy],
+        @"emptyEntriesRemoved": @(emptyRemoved),
+        @"emptyEntryTitles":    [titles copy],
     };
 }
 

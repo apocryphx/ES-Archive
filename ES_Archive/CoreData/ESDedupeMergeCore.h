@@ -6,7 +6,7 @@
 //  Licensed under the MIT License. See LICENSE file in the project root.
 //
 //  The one place duplicate CDMemory rows are merged. Two callers:
-//  archive_maintenance's dedupeMemories action (content-grouped, on demand)
+//  archive_maintenance's dedupeEntries action (content-grouped, on demand)
 //  and ESDeduplicator (uuid-grouped, automatic on CloudKit import).
 //
 //  The caller owns two decisions this function deliberately does not make:
