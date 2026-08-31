@@ -20,36 +20,32 @@
 @implementation ESHTTPConnectController
 
 - (void)addSectionsToStack:(NSStackView *)stack {
-    [self beginSectionInStack:stack];
-    [stack addArrangedSubview:[self sectionHeader:@"LM Studio & other MCP clients"]];
-    [stack addArrangedSubview:[self bodyLabel:
-        @"ES Archive listens on this Mac over HTTP. Pick the persona you want the client to "
-        @"write as — each persona has its own port, and the port a request arrives on is what "
-        @"stamps authorship, so the client never asserts an identity. Ports and personas are "
-        @"managed in Settings ▸ Ports. Paste this into LM Studio’s mcp.json "
-        @"(Program ▸ Edit mcp.json), then load a tool-capable model:"]];
+    NSTextField *manualCopy = [self bodyLabel:
+        @"Choose the persona this client writes as, then copy its local HTTP configuration. "
+        @"Manage personas and ports in Settings ▸ Ports."];
 
     NSPopUpButton *popup = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
     popup.target = self;
     popup.action = @selector(personaChanged:);
     self.personaPopup = popup;
-    [stack addArrangedSubview:popup];
-
     [self reloadPersonaChoices];
-    [stack addArrangedSubview:[self jsonBoxWithString:[self configJSONForSelectedPort]]];
+    NSScrollView *json = [self jsonBoxWithString:[self configJSONForSelectedPort]];
 
     // Only shown when the chosen port is gated — the config alone will not
     // connect in that case, and the failure is otherwise silent.
     NSTextField *caption = [self bodyLabel:@""];
     caption.textColor = NSColor.systemOrangeColor;
     self.jwtCaption = caption;
-    [stack addArrangedSubview:caption];
-
-    NSButton *copy = [NSButton buttonWithTitle:@"Copy Configuration"
+    NSButton *copy = [NSButton buttonWithTitle:@"Copy MCP Configuration"
                                         target:self action:@selector(copyConfiguration:)];
     copy.bezelStyle = NSBezelStyleRounded;
     self.configCopyButton = copy;
-    [stack addArrangedSubview:copy];
+    NSView *manualCard = [self cardWithEyebrow:@"LOCAL HTTP"
+                                        title:@"Connect an MCP client"
+                                   symbolName:@"network"
+                                  accentColor:NSColor.systemTealColor
+                                 contentViews:@[manualCopy, popup, json, caption, copy]];
+    [stack addArrangedSubview:manualCard];
 
     [self refreshForSelectedPort];
 }

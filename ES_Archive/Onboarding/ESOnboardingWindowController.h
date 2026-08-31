@@ -47,6 +47,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSTextField *)bodyLabel:(NSString *)string;
 - (NSBox *)separator;
 
+/// A visually distinct onboarding card. The eyebrow is a short orienting label
+/// such as "STEP 1" or "OPTIONAL"; the supplied views become the card body.
+- (NSView *)cardWithEyebrow:(NSString *)eyebrow
+                      title:(NSString *)title
+                 symbolName:(NSString *)symbolName
+                accentColor:(NSColor *)accentColor
+               contentViews:(NSArray<NSView *> *)contentViews;
+
 /// A read-only monospaced box for a configuration snippet. The text view is
 /// held in -jsonTextView so a subclass can re-render it (the HTTP pane rewrites
 /// its JSON when the persona changes).

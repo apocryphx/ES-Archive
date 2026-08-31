@@ -77,7 +77,6 @@
 			membershipExceptions = (
 				MemoryScope/MEMORY_SCOPE.md,
 				Onboarding/ESStdioConnectController.m,
-				"Resources/Demo-Data.esarchive",
 				Stdio/ESBridgeCLI.m,
 				Stdio/ESEngine.m,
 				Stdio/ESStdioAppDelegate.m,
