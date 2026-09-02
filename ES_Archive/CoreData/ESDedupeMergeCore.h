@@ -19,7 +19,7 @@
 
 #import <CoreData/CoreData.h>
 
-@class CDMemory;
+@class CDMemory, CDTag;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,5 +29,23 @@ NS_ASSUME_NONNULL_BEGIN
 /// locked flag — the survivor inherits it).
 NSDictionary<NSString *, NSNumber *> *ESDedupeMergeSortedGroup(NSArray<CDMemory *> *sorted,
                                                                NSManagedObjectContext *ctx);
+
+/// Merge a group of same-folded-name CDTag rows into one canonical row.
+/// The one tag-merge rule, shared by the automatic deduplicator and
+/// archive_maintenance's dedupeTags action (the two previously disagreed:
+/// oldest-wins vs most-memberships-wins, which under concurrent multi-store
+/// dedup could elect different survivors on different devices).
+///
+/// Canonical = most memberships, then permanent over expiring, then oldest
+/// dateCreated, then the permanent objectID URI as a stable local tiebreak.
+/// Metadata folds onto the canonical: it becomes permanent when any twin
+/// was (a curated tag must not vanish via expiry), and a canonical carrying
+/// no kind — or the connect-or-create default "thing" — adopts the
+/// best-ranked twin's more specific kind, so a deliberately provisioned
+/// kind never loses to an accidental mint. Memberships union; twins are
+/// deleted. No save — the caller commits. Returns: deleted (NSNumber),
+/// membershipsMoved (NSNumber), canonicalName (NSString).
+NSDictionary *ESTagDedupeMergeGroup(NSArray<CDTag *> *group,
+                                    NSManagedObjectContext *ctx);
 
 NS_ASSUME_NONNULL_END

@@ -9,6 +9,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ESUUIDStampedObject.h"
 
 @class CDLink, CDMemoryRevision, CDTag, CDVector, CDMarginalia, CDReference;
 
@@ -23,7 +24,7 @@ typedef NS_ENUM(NSInteger, CDMemoryErrorCode) {
 };
 
 
-@interface CDMemory : NSManagedObject <NSSecureCoding>
+@interface CDMemory : ESUUIDStampedObject <NSSecureCoding>
 
 #pragma mark - Identity
 

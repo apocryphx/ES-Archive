@@ -10,12 +10,13 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ESUUIDStampedObject.h"
 
 @class CDMemory;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CDTag : NSManagedObject
+@interface CDTag : ESUUIDStampedObject
 
 /// Lookup by name. Case-insensitive. Returns nil if not found.
 + (nullable CDTag *)findByName:(NSString *)name

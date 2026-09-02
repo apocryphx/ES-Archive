@@ -110,3 +110,66 @@ NSDictionary<NSString *, NSNumber *> *ESDedupeMergeSortedGroup(NSArray<CDMemory 
         @"lockedGroup":     @(anyLocked ? 1 : 0),
     };
 }
+
+// "thing" is the connect-or-create default, not an authored choice; only a
+// kind someone deliberately set counts as specific.
+static BOOL ESTagKindIsSpecific(NSString *kind) {
+    return kind.length > 0 && ![kind isEqualToString:@"thing"];
+}
+
+NSDictionary *ESTagDedupeMergeGroup(NSArray<CDTag *> *group,
+                                    NSManagedObjectContext *ctx) {
+    NSArray<CDTag *> *sorted = [group sortedArrayUsingComparator:^NSComparisonResult(CDTag *a, CDTag *b) {
+        if (a.memories.count != b.memories.count)
+            return a.memories.count > b.memories.count ? NSOrderedAscending : NSOrderedDescending;
+        BOOL pa = (a.dateExpired == nil), pb = (b.dateExpired == nil);
+        if (pa != pb) return pa ? NSOrderedAscending : NSOrderedDescending;
+        NSDate *da = a.dateCreated ?: NSDate.distantFuture;
+        NSDate *db = b.dateCreated ?: NSDate.distantFuture;
+        NSComparisonResult r = [da compare:db];
+        if (r != NSOrderedSame) return r;
+        // Same-name tags minted independently carry DISTINCT uuids, so the
+        // uuid is a synced, globally deterministic tiebreak — every device
+        // elects the same canonical, closing the divergent-survivor race.
+        NSString *ka = [a valueForKey:@"uuid"] ? [(NSUUID *)[a valueForKey:@"uuid"] UUIDString] : nil;
+        NSString *kb = [b valueForKey:@"uuid"] ? [(NSUUID *)[b valueForKey:@"uuid"] UUIDString] : nil;
+        if (ka && kb) return [ka compare:kb];
+        if (ka || kb) return ka ? NSOrderedAscending : NSOrderedDescending;
+        // Legacy rows not yet backfilled: fall back to the objectID URI —
+        // deterministic per device only (see ESDeduplicator's scope note).
+        NSString *ua = a.objectID.URIRepresentation.absoluteString;
+        NSString *ub = b.objectID.URIRepresentation.absoluteString;
+        return [ua compare:ub];
+    }];
+
+    CDTag *canonical = sorted.firstObject;
+
+    BOOL anyPermanent = NO;
+    for (CDTag *t in sorted) { if (t.dateExpired == nil) { anyPermanent = YES; break; } }
+
+    if (!ESTagKindIsSpecific(canonical.kind)) {
+        for (CDTag *t in sorted) {
+            if (t == canonical) continue;
+            if (ESTagKindIsSpecific(t.kind)) { canonical.kind = t.kind; break; }
+        }
+    }
+
+    NSUInteger deleted = 0, membershipsMoved = 0;
+    for (CDTag *dup in sorted) {
+        if (dup == canonical) continue;
+        for (CDMemory *m in dup.memories.allObjects) {
+            [m removeTagsObject:dup];
+            [m addTagsObject:canonical];
+            membershipsMoved++;
+        }
+        [ctx deleteObject:dup];
+        deleted++;
+    }
+    if (anyPermanent) canonical.dateExpired = nil;
+
+    return @{
+        @"deleted":           @(deleted),
+        @"membershipsMoved":  @(membershipsMoved),
+        @"canonicalName":     canonical.name ?: @"",
+    };
+}

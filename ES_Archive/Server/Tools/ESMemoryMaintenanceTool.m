@@ -292,11 +292,12 @@
 /// Reconcile same-name tag duplicates. Name-uniqueness is enforced only at
 /// creation (CDTag findByName) and CloudKit cannot enforce it across devices, so
 /// offline/multi-device creation can leave two CDTags with the same name. This
-/// groups tags by case- and diacritic-folded name (matching findByName's ==[cd]);
-/// for each collision it keeps one canonical tag, moves every other tag's
-/// memberships onto it, and deletes the rest. Canonical = most memberships, then
-/// permanent over expiring, then oldest. If any tag in the group was permanent,
-/// the survivor is made permanent — a curated tag must not vanish via expiry.
+/// groups tags by case- and diacritic-folded name (matching findByName's ==[cd])
+/// and hands each collision to ESTagDedupeMergeGroup — the one merge rule,
+/// shared with the automatic deduplicator: canonical = most memberships, then
+/// permanent over expiring, then oldest (stable tiebreak); the canonical is made
+/// permanent when any twin was, and adopts a twin's deliberately provisioned
+/// kind when its own is the connect-or-create default.
 + (NSDictionary *)dedupeTags {
     NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
     NSError *ferr = nil;
@@ -322,31 +323,11 @@
         NSArray<CDTag *> *g = groups[key];
         if (g.count < 2) continue;
 
-        CDTag *canonical = [[g sortedArrayUsingComparator:^NSComparisonResult(CDTag *a, CDTag *b) {
-            if (a.memories.count != b.memories.count)
-                return a.memories.count > b.memories.count ? NSOrderedAscending : NSOrderedDescending;
-            BOOL pa = (a.dateExpired == nil), pb = (b.dateExpired == nil);
-            if (pa != pb) return pa ? NSOrderedAscending : NSOrderedDescending;
-            NSDate *da = a.dateCreated ?: NSDate.distantFuture, *db = b.dateCreated ?: NSDate.distantFuture;
-            return [da compare:db];
-        }] firstObject];
-
-        BOOL anyPermanent = NO;
-        for (CDTag *t in g) { if (t.dateExpired == nil) { anyPermanent = YES; break; } }
-
-        for (CDTag *dup in g) {
-            if (dup == canonical) continue;
-            for (CDMemory *m in dup.memories.allObjects) {
-                [m removeTagsObject:dup];
-                [m addTagsObject:canonical];
-                membershipsMoved++;
-            }
-            [ctx deleteObject:dup];
-            tagsDeleted++;
-        }
-        if (anyPermanent) canonical.dateExpired = nil;
+        NSDictionary *counts = ESTagDedupeMergeGroup(g, ctx);
+        tagsDeleted       += [counts[@"deleted"] unsignedIntegerValue];
+        membershipsMoved  += [counts[@"membershipsMoved"] unsignedIntegerValue];
         groupsMerged++;
-        [merged addObject:@{ @"name": canonical.name ?: @"", @"foldedIn": @(g.count - 1) }];
+        [merged addObject:@{ @"name": counts[@"canonicalName"] ?: @"", @"foldedIn": @(g.count - 1) }];
     }
 
     if (tagsDeleted > 0) [[ESCoreDataStack shared] saveContext];

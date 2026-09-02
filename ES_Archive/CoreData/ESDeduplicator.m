@@ -8,6 +8,7 @@
 
 #import "ESDeduplicator.h"
 #import "ESDedupeMergeCore.h"
+#import "ESUUIDStampedObject.h"
 #import "ESCoreDataStack.h"
 #import "ESMemoryMaintenanceTool.h"
 #import "ESVectorEngine.h"
@@ -109,6 +110,17 @@ static NSArray<NSString *> *ESUUIDLeafEntities(void) {
                                              selector:@selector(storeRemoteChange:)
                                                  name:NSPersistentStoreRemoteChangeNotification
                                                object:nil];
+
+    // One-shot uuid backfill for rows that predate the attribute (and
+    // legacy rows syncing in from old-schema devices), so the survivor
+    // tiebreak is available before the first sweep. Both blocks run on the
+    // main queue, so ordering ahead of the sweep below is guaranteed.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
+        if ([ESUUIDStampedObject backfillUUIDsInContext:ctx] > 0) {
+            [[ESCoreDataStack shared] saveContext];
+        }
+    });
 
     // Cold path: whatever synced in while the app was dead.
     [self sweep];
@@ -347,9 +359,10 @@ static NSArray<NSString *> *ESUUIDLeafEntities(void) {
 // Collapse CDTag rows that fold to the same name. findByName matches
 // case- and diacritic-insensitively, so the archive's notion of "same tag"
 // folds too — group by the same fold, or two devices that each created
-// "Family"/"family" before syncing would keep both rows forever. The survivor
-// absorbs every twin's memberships (a union; the relationship is a Set, so
-// re-adds are no-ops) before the twin is deleted (Nullify detaches the rest).
+// "Family"/"family" before syncing would keep both rows forever. The merge
+// itself is ESTagDedupeMergeGroup — the one rule shared with
+// archive_maintenance's dedupeTags, so the automatic and manual paths elect
+// the same canonical and fold permanence/kind identically.
 - (NSUInteger)collapseTagsInContext:(NSManagedObjectContext *)ctx {
     NSFetchRequest<CDTag *> *req = [NSFetchRequest fetchRequestWithEntityName:@"CDTag"];
     NSError *err = nil;
@@ -373,16 +386,8 @@ static NSArray<NSString *> *ESUUIDLeafEntities(void) {
     for (NSString *key in groups) {
         NSArray<CDTag *> *g = groups[key];
         if (g.count < 2) continue;
-        NSArray<NSManagedObject *> *sorted = [self sortedByCreationRule:g];
-        CDTag *survivor = (CDTag *)sorted.firstObject;
-        for (NSUInteger i = 1; i < sorted.count; i++) {
-            CDTag *dup = (CDTag *)sorted[i];
-            for (CDMemory *m in dup.memories.allObjects) {
-                [survivor addMemoriesObject:m];
-            }
-            [ctx deleteObject:dup];
-            deleted++;
-        }
+        NSDictionary *counts = ESTagDedupeMergeGroup(g, ctx);
+        deleted += [counts[@"deleted"] unsignedIntegerValue];
     }
     return deleted;
 }

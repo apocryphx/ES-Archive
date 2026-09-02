@@ -8,12 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "ESUUIDStampedObject.h"
 
 @class CDVector;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CDEmbedder : NSManagedObject
+@interface CDEmbedder : ESUUIDStampedObject
 
 #pragma mark - Lookup
 

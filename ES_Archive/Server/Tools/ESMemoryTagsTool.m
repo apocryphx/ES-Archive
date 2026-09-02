@@ -307,6 +307,18 @@
     if (!source) return @{@"status": @"source_not_found"};
     if (!target) return @{@"status": @"target_not_found"};
 
+    // findByName matches case- and diacritic-insensitively, so "family" and
+    // "Family" can resolve to the SAME row. Without this guard the merge
+    // below would move memberships onto the tag and then delete it — the
+    // exact call a user reaches for when they suspect a duplicate pair.
+    if (source == target) {
+        return @{@"status": @"same_tag",
+                 @"hint": @"Source and target are the same tag (names match "
+                          @"case- and diacritic-insensitively). Nothing to merge. "
+                          @"For CloudKit same-name twin rows, use "
+                          @"archive_maintenance dedupeTags instead."};
+    }
+
     // Move all memories from source to target
     for (CDMemory *m in source.memories.allObjects) {
         [m removeTagsObject:source];
