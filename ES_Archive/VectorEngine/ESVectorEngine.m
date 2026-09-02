@@ -466,8 +466,9 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
     NSManagedObjectID *memoryID = memory.objectID;
     NSString *title = memory.title ?: @"(untitled)";
 
-    // Summary-only input. Title is never included — summary is curated
-    // English prose; titles are user-authored and may be in any language.
+    // The embedded text is the summary — the body is never embedded. The
+    // title rides along in the document prompt ("title: … | text: …"),
+    // additive to the summary (see EmbeddingGemmaEmbedder.h).
     // A memory with no summary cannot be embedded — and must therefore hold
     // NO vector. Historically this branch just returned, so a memory that
     // lost (or never had) a summary kept whatever vectors it carried forever,
