@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="25241.1" systemVersion="26A5425a" minimumToolsVersion="Automatic" sourceLanguage="Objective-C" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="Electric_Sheep_1_1">
+    <entity name="CDEmbedder" versionHashModifier="byUUID-1" representedClassName="CDEmbedder" syncable="YES" codeGenerationType="category">
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateLastActivated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateLastUsed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="identifier" optional="YES" attributeType="String"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="vectorDimension" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="vectors" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDVector" inverseName="embedder" inverseEntity="CDVector"/>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDLink" versionHashModifier="byUUID-1" representedClassName="CDLink" syncable="YES" codeGenerationType="category">
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="edge" optional="YES" attributeType="String"/>
+        <attribute name="linkTitle" optional="YES" attributeType="String"/>
+        <attribute name="linkType" optional="YES" attributeType="String"/>
+        <attribute name="tone" optional="YES" attributeType="String"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="sourceMemory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="sourceLinks" inverseEntity="CDMemory"/>
+        <relationship name="targetMemory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="targetLinks" inverseEntity="CDMemory"/>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDMarginalia" versionHashModifier="byUUID-1" representedClassName="CDMarginalia" syncable="YES" codeGenerationType="category">
+        <attribute name="author" optional="YES" attributeType="String"/>
+        <attribute name="body" optional="YES" attributeType="String"/>
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="memory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="marginalia" inverseEntity="CDMemory"/>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDMemory" versionHashModifier="byUUID-1" representedClassName="CDMemory" syncable="YES" codeGenerationType="category">
+        <attribute name="accessCount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="author" optional="YES" attributeType="String"/>
+        <attribute name="body" optional="YES" attributeType="String"/>
+        <attribute name="dateAccessed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="language" optional="YES" attributeType="String"/>
+        <attribute name="locked" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="private" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="marginalia" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDMarginalia" inverseName="memory" inverseEntity="CDMarginalia"/>
+        <relationship name="references" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDReference" inverseName="memory" inverseEntity="CDReference"/>
+        <relationship name="revisions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDMemoryRevision" inverseName="memory" inverseEntity="CDMemoryRevision"/>
+        <relationship name="sourceLinks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDLink" inverseName="sourceMemory" inverseEntity="CDLink"/>
+        <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDTag" inverseName="memories" inverseEntity="CDTag"/>
+        <relationship name="targetLinks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDLink" inverseName="targetMemory" inverseEntity="CDLink"/>
+        <relationship name="vectors" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDVector" inverseName="memory" inverseEntity="CDVector"/>
+        <fetchIndex name="byAuthorModified">
+            <fetchIndexElement property="author" type="Binary" order="ascending"/>
+            <fetchIndexElement property="dateModified" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byAuthorAccessed">
+            <fetchIndexElement property="author" type="Binary" order="ascending"/>
+            <fetchIndexElement property="dateAccessed" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDMemoryRevision" representedClassName="CDMemoryRevision" parentEntity="CDMemory" syncable="YES" codeGenerationType="category">
+        <attribute name="reason" optional="YES" attributeType="String"/>
+        <relationship name="memory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="revisions" inverseEntity="CDMemory"/>
+    </entity>
+    <entity name="CDReference" versionHashModifier="byUUID-1" representedClassName="CDReference" syncable="YES" codeGenerationType="category">
+        <attribute name="author" optional="YES" attributeType="String"/>
+        <attribute name="bookmark" optional="YES" attributeType="Binary"/>
+        <attribute name="contentType" optional="YES" attributeType="String"/>
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateLastResolved" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="handle" optional="YES" attributeType="String"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="textContent" optional="YES" attributeType="String"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="memory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="references" inverseEntity="CDMemory"/>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDTag" versionHashModifier="byUUID-1" representedClassName="CDTag" syncable="YES" codeGenerationType="category">
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateExpired" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="kind" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="memories" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="tags" inverseEntity="CDMemory"/>
+        <fetchIndex name="byUUID">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CDVector" representedClassName="CDVector" syncable="YES" codeGenerationType="category">
+        <attribute name="accessCount" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="data" optional="YES" attributeType="Binary"/>
+        <attribute name="dateCreated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="embedderIdentifier" optional="YES" attributeType="String"/>
+        <attribute name="language" optional="YES" attributeType="String"/>
+        <attribute name="lastAccessed" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="embedder" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDEmbedder" inverseName="vectors" inverseEntity="CDEmbedder"/>
+        <relationship name="memory" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDMemory" inverseName="vectors" inverseEntity="CDMemory"/>
+    </entity>
+</model>

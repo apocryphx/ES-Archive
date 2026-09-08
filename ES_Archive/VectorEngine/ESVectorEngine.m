@@ -160,6 +160,24 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
          creationTimestamp:createTs];
 }
 
+#pragma mark - Cache Snapshot
+
+- (NSDictionary<NSManagedObjectID *, ESVectorCacheEntry *> *)cacheSnapshot {
+    __block NSDictionary *snapshot;
+    dispatch_sync(_isolationQueue, ^{
+        snapshot = [self.vectorDataDictionary copy];
+    });
+    return snapshot ?: @{};
+}
+
+- (NSUInteger)cacheDimension {
+    __block NSUInteger dim = 0;
+    dispatch_sync(_isolationQueue, ^{
+        dim = self.dimension;
+    });
+    return dim;
+}
+
 #pragma mark - Cache Warm
 
 - (void)warmCache {

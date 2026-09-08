@@ -34,7 +34,13 @@ extern NSNotificationName const ESGraphDidUpdateNotification;
 
 /// Rebuild the graph from scratch. Called at launch, explicit refresh,
 /// or automatically when a delta batch exceeds the fallback threshold.
+/// Rebuild the graph for the current persona. Returns immediately; nodes and
+/// edges arrive on the main queue as the background build produces them
+/// (ESGraphDidUpdateNotification fires for each delivery).
 - (void)buildGraph;
+
+/// YES while a background build is in flight.
+@property (nonatomic, readonly) BOOL isBuilding;
 
 /// Fetch full memory detail for a selected node.
 - (NSDictionary *)memoryDetailForNode:(ESGraphNode *)node;

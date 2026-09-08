@@ -18,7 +18,7 @@
 #import <Foundation/Foundation.h>
 #import "ESSummaryEmbedder.h"   // id<ESSummaryEmbedder>, ESEmbeddingTask
 
-@class CDMemory, ESVectorSearchResult, NSManagedObjectID;
+@class CDMemory, ESVectorSearchResult, NSManagedObjectID, ESVectorCacheEntry;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -62,6 +62,15 @@ extern NSNotificationName const ESVectorCacheReadyNotification;
 #pragma mark - Cache Management
 
 - (void)warmCache;
+
+/// Immutable copy of the retrieval cache (vector objectID -> entry), taken
+/// under the isolation queue. Safe to hand to any thread; entries are
+/// immutable value holders. For bulk consumers (the Archive Scope build)
+/// that would otherwise re-copy the cache once per query.
+- (NSDictionary<NSManagedObjectID *, ESVectorCacheEntry *> *)cacheSnapshot;
+
+/// Dimension of the vectors in the cache (0 while empty). Thread-safe.
+- (NSUInteger)cacheDimension;
 
 #pragma mark - Embedder
 

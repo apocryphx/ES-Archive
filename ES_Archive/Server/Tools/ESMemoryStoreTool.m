@@ -191,14 +191,19 @@
     // persona's memory.
     NSArray *similar = nil;
     if (vectorData) {
+        // Collect the persona's active-embedder vector IDs with an ID-only
+        // fetch on CDVector. The previous form fetched every CDMemory in scope
+        // with its vectors prefetched, which materialized the whole persona
+        // (and its vector blobs) on every store — O(n) object graph per call.
         NSMutableSet<NSManagedObjectID *> *scopedVectorIDs = [NSMutableSet set];
-        NSFetchRequest *vfetch = [CDMemory fetchRequest];
-        vfetch.predicate = [ESMemoryToolBase scopePredicateForAuthor:scope.author];
-        vfetch.includesSubentities = NO;
-        vfetch.relationshipKeyPathsForPrefetching = @[@"vectors"];
-        for (CDMemory *sm in ([ctx executeFetchRequest:vfetch error:nil] ?: @[])) {
-            CDVector *sv = [sm vectorForActiveEmbedder];
-            if (sv) [scopedVectorIDs addObject:sv.objectID];
+        NSString *activeID = [ESVectorEngine summaryEmbedder].identifier;
+        if ([scope.author isKindOfClass:NSString.class] && scope.author.length > 0 && activeID) {
+            NSFetchRequest *vfetch = [NSFetchRequest fetchRequestWithEntityName:@"CDVector"];
+            vfetch.resultType = NSManagedObjectIDResultType;
+            vfetch.includesSubentities = NO;
+            vfetch.predicate = [NSPredicate predicateWithFormat:
+                @"memory.author == %@ AND embedder.identifier == %@", scope.author, activeID];
+            [scopedVectorIDs addObjectsFromArray:([ctx executeFetchRequest:vfetch error:nil] ?: @[])];
         }
         similar = [[ESVectorEngine shared]
             topKSimilarToVector:vectorData

@@ -8,6 +8,7 @@
 
 #import "ESMemoryScopeDataSource.h"
 #import "ESForceGraph.h"
+#import "ESGraphBuilder.h"
 #import "ESCoreDataStack.h"
 #import "ESVectorEngine.h"
 #import "ESVectorSearchResult.h"
@@ -68,6 +69,10 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
 // within-persona. nil in All mode (unscoped, cross-persona edges allowed).
 // Recomputed per buildGraph.
 @property (nonatomic, strong, nullable) NSSet<NSManagedObjectID *> *allowedVectorIDs;
+// In-flight background build, if any. Replaced (and the old one cancelled)
+// by every buildGraph; deltas that arrive mid-build schedule a rebuild.
+@property (nonatomic, strong, nullable) ESGraphBuilder *builder;
+@property (nonatomic) BOOL rebuildPending;
 @end
 
 @implementation ESMemoryScopeDataSource
@@ -107,6 +112,10 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
     }
     return [[authors.allObjects
              sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] firstObject];
+}
+
+- (void)dealloc {
+    [_builder cancel];
 }
 
 #pragma mark - FRC Setup
@@ -150,19 +159,6 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
     self.linkFRC.delegate = nil;
     [self setupFRCs];
     [self buildGraph];
-}
-
-// Vector IDs of the current persona's memories — the allowed set for
-// within-persona similarity. Returns nil in All (witness) mode, so the
-// caller uses the unscoped similarity call and cross-persona edges appear.
-- (nullable NSSet<NSManagedObjectID *> *)computeAllowedVectorIDs {
-    if (!self.selectedPersona) return nil;
-    NSMutableSet<NSManagedObjectID *> *ids = [NSMutableSet set];
-    for (CDMemory *mem in self.memoryFRC.fetchedObjects) {
-        CDVector *v = [mem vectorForActiveEmbedder];
-        if (v) [ids addObject:v.objectID];
-    }
-    return ids;
 }
 
 // Nearest neighbors for a memory, scoped to the current persona's vectors
@@ -221,6 +217,13 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
     ESGraphDeltaBatch *batch = self.pendingDeltaBatch;
     self.pendingDeltaBatch = nil;
     if (!batch || batch.totalChanges == 0) return;
+
+    // A build is in flight: its snapshot predates this change. Rebuild once it
+    // lands rather than patching a graph that is still arriving.
+    if (self.builder) {
+        self.rebuildPending = YES;
+        return;
+    }
 
     if (batch.totalChanges > kDeltaFallbackThreshold) {
         [self buildGraph];
@@ -406,53 +409,87 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
 
 #pragma mark - Build Graph (Cold Load)
 
+- (BOOL)isBuilding {
+    return self.builder != nil;
+}
+
+// The cold build runs off the main thread (see ESGraphBuilder). Main only
+// receives value objects and turns them into nodes and edges:
+//   1. nodes + explicit links arrive first — the graph is visible at once;
+//   2. similarity edges stream in batches as the background pass completes;
+//   3. island bridges arrive last, then the build is done.
+// Every callback checks that it belongs to the current build.
 - (void)buildGraph {
+    [self.builder cancel];
+    self.rebuildPending = NO;
+
     [self.graph removeAllNodesAndEdges];
     [self.nodeMap removeAllObjects];
+    self.allowedVectorIDs = nil;
 
-    NSArray<CDMemory *> *memories = self.memoryFRC.fetchedObjects;
-    NSArray<CDLink *> *links = self.linkFRC.fetchedObjects;
-    if (memories.count == 0) {
+    ESGraphBuilder *builder = [[ESGraphBuilder alloc] initWithPersona:self.selectedPersona];
+    self.builder = builder;
+    __weak typeof(self) weakSelf = self;
+
+    [builder startWithNodes:^(NSArray<ESGraphBuildNode *> *nodes, NSArray<ESGraphBuildEdge *> *links, int64_t maxAccess) {
+        typeof(self) self = weakSelf;
+        if (!self || self.builder != builder) return;
+        [self applyBuildNodes:nodes links:links maxAccess:maxAccess];
+    } edges:^(NSArray<ESGraphBuildEdge *> *edges) {
+        typeof(self) self = weakSelf;
+        if (!self || self.builder != builder) return;
+        [self applyBuildEdges:edges];
+    } done:^{
+        typeof(self) self = weakSelf;
+        if (!self || self.builder != builder) return;
+        self.builder = nil;
+        if (self.rebuildPending) {
+            [self buildGraph];
+            return;
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:ESGraphDidUpdateNotification
+                                                            object:self];
+    }];
+}
+
+- (void)applyBuildNodes:(NSArray<ESGraphBuildNode *> *)buildNodes
+                  links:(NSArray<ESGraphBuildEdge *> *)links
+               maxAccess:(int64_t)maxAccess {
+    if (buildNodes.count == 0) {
         [[NSNotificationCenter defaultCenter] postNotificationName:ESGraphDidUpdateNotification
                                                             object:self];
         return;
     }
+    if (maxAccess < 1) maxAccess = 1;
 
-    // Scope similarity to the current persona's own vectors (nil = All mode).
-    self.allowedVectorIDs = [self computeAllowedVectorIDs];
+    // Persona scope for the delta path's similarity lookups (nil = All mode).
+    NSMutableSet<NSManagedObjectID *> *allowed = self.selectedPersona ? [NSMutableSet setWithCapacity:buildNodes.count] : nil;
 
-    // Compute max access count for heat normalization
-    int64_t maxAccess = 1;
-    for (CDMemory *mem in memories) {
-        if (mem.accessCount > maxAccess) maxAccess = mem.accessCount;
-    }
-
-    // Build link count map for seed ordering
+    // Link counts drive seed ordering, as before.
     NSCountedSet *linkCounts = [[NSCountedSet alloc] init];
-    for (CDLink *link in links) {
-        if (link.sourceMemory) [linkCounts addObject:link.sourceMemory.objectID];
-        if (link.targetMemory) [linkCounts addObject:link.targetMemory.objectID];
+    for (ESGraphBuildEdge *l in links) {
+        [linkCounts addObject:l.sourceID];
+        [linkCounts addObject:l.targetID];
     }
 
-    // Create all nodes — seeds first, then satellites
     CGFloat canvasW = 800, canvasH = 600;
     NSMutableArray<ESGraphNode *> *seeds = [NSMutableArray array];
     NSMutableArray<ESGraphNode *> *satellites = [NSMutableArray array];
 
-    for (CDMemory *mem in memories) {
+    for (ESGraphBuildNode *b in buildNodes) {
         ESGraphNode *node = [[ESGraphNode alloc] init];
-        node.memoryID = mem.objectID;
-        node.author = mem.author;
-        node.heat = (CGFloat)mem.accessCount / (CGFloat)maxAccess;
-        node.connectionCount = [linkCounts countForObject:mem.objectID];
+        node.memoryID = b.memoryID;
+        node.author = b.author;
+        node.heat = (CGFloat)b.accessCount / (CGFloat)maxAccess;
+        node.connectionCount = [linkCounts countForObject:b.memoryID];
         node.velocity = CGPointZero;
         node.visible = YES;
+        if (allowed && b.vectorID) [allowed addObject:b.vectorID];
 
-        self.nodeMap[mem.objectID] = node;
+        self.nodeMap[b.memoryID] = node;
         [self.graph addNode:node];
 
         if (node.connectionCount > 0) {
-            // Seeds: random position
             node.position = CGPointMake(
                 canvasW * 0.25 + arc4random_uniform((uint32_t)(canvasW * 0.5)),
                 canvasH * 0.25 + arc4random_uniform((uint32_t)(canvasH * 0.5))
@@ -462,46 +499,28 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
             [satellites addObject:node];
         }
     }
+    self.allowedVectorIDs = allowed;
 
-    // Position satellites at nearest visible neighbor
-    ESVectorEngine *engine = [ESVectorEngine shared];
-    NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
-
-    if (seeds.count == 0) {
-        // No seeds — place all randomly
-        for (ESGraphNode *sat in satellites) {
+    // Satellites start on a seed; the similarity edge that arrives later pulls
+    // each one toward its real neighbor. (The synchronous build placed them at
+    // the neighbor directly, which is exactly the pass now running in the
+    // background.)
+    for (ESGraphNode *sat in satellites) {
+        if (seeds.count > 0) {
+            sat.position = seeds[arc4random_uniform((uint32_t)seeds.count)].position;
+        } else {
             sat.position = CGPointMake(
                 canvasW * 0.25 + arc4random_uniform((uint32_t)(canvasW * 0.5)),
                 canvasH * 0.25 + arc4random_uniform((uint32_t)(canvasH * 0.5))
             );
         }
-    } else {
-        for (ESGraphNode *sat in satellites) {
-            CDMemory *satMem = (CDMemory *)[ctx objectWithID:sat.memoryID];
-            NSArray<ESVectorSearchResult *> *nearest = [self nearestNeighborsForMemory:satMem engine:engine];
-            BOOL placed = NO;
-            for (ESVectorSearchResult *nr in nearest) {
-                ESGraphNode *neighbor = self.nodeMap[nr.memory.objectID];
-                if (neighbor && neighbor != sat && neighbor.visible) {
-                    sat.position = neighbor.position;
-                    placed = YES;
-                    break;
-                }
-            }
-            if (!placed) {
-                // Fall back to random seed's position
-                ESGraphNode *randomSeed = seeds[arc4random_uniform((uint32_t)seeds.count)];
-                sat.position = randomSeed.position;
-            }
-        }
     }
 
-    // Create CDLink edges (explicit, user-authored connections — unlimited).
-    for (CDLink *link in links) {
-        ESGraphNode *src = self.nodeMap[link.sourceMemory.objectID];
-        ESGraphNode *tgt = self.nodeMap[link.targetMemory.objectID];
+    // Explicit link edges (user-authored connections — unlimited).
+    for (ESGraphBuildEdge *l in links) {
+        ESGraphNode *src = self.nodeMap[l.sourceID];
+        ESGraphNode *tgt = self.nodeMap[l.targetID];
         if (!src || !tgt || src == tgt) continue;
-
         ESGraphEdge *edge = [[ESGraphEdge alloc] init];
         edge.source = src;
         edge.target = tgt;
@@ -510,38 +529,29 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
         [self.graph addEdge:edge];
     }
 
-    // Similarity edges — exactly one per memory, to its single nearest
-    // neighbor. No dedup, no eviction: a memory contributes one outgoing edge;
-    // being a popular target (many incoming) is natural structure. Neighbors
-    // are scoped to the persona (nil allowed-set = All / cross-persona).
-    for (CDMemory *mem in memories) {
-        ESGraphNode *srcNode = self.nodeMap[mem.objectID];
-        if (!srcNode) continue;
-
-        for (ESVectorSearchResult *result in [self nearestNeighborsForMemory:mem engine:engine]) {
-            ESGraphNode *tgtNode = self.nodeMap[result.memory.objectID];
-            if (!tgtNode || tgtNode == srcNode) continue;
-
-            ESGraphEdge *edge = [[ESGraphEdge alloc] init];
-            edge.source = srcNode;
-            edge.target = tgtNode;
-            edge.weight = (CGFloat)result.score;
-            edge.isExplicitLink = NO;
-            [self.graph addEdge:edge];
-            break;  // one edge per memory
-        }
-    }
-
-    // One edge per memory builds a functional graph that fragments into a
-    // giant component plus small thematic islands (clusters whose members are
-    // all one another's nearest neighbor, so nothing outside points in). Bridge
-    // every island to the giant with a single edge, so the graph is one
-    // connected whole rather than a mass with detached pockets floating free.
-    [self bridgeIslandsToGiantWithEngine:engine context:ctx];
-
-    // Full energy — only place alpha is set to 1.0
+    // Full energy — the only place alpha is set to 1.0.
     self.graph.alpha = 1.0;
+    [[NSNotificationCenter defaultCenter] postNotificationName:ESGraphDidUpdateNotification
+                                                        object:self];
+}
 
+- (void)applyBuildEdges:(NSArray<ESGraphBuildEdge *> *)edges {
+    NSUInteger added = 0;
+    for (ESGraphBuildEdge *b in edges) {
+        ESGraphNode *src = self.nodeMap[b.sourceID];
+        ESGraphNode *tgt = self.nodeMap[b.targetID];
+        if (!src || !tgt || src == tgt) continue;
+        ESGraphEdge *edge = [[ESGraphEdge alloc] init];
+        edge.source = src;
+        edge.target = tgt;
+        edge.weight = b.score;
+        edge.isExplicitLink = b.isExplicitLink;
+        [self.graph addEdge:edge];
+        added++;
+    }
+    if (added == 0) return;
+    // New springs; keep the layout warm enough to follow them.
+    self.graph.alpha = fmax(self.graph.alpha, kAlphaNudgeInsert);
     [[NSNotificationCenter defaultCenter] postNotificationName:ESGraphDidUpdateNotification
                                                         object:self];
 }

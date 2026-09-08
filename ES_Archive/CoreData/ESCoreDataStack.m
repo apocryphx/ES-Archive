@@ -84,7 +84,10 @@ id _Nullable ExecuteOnMainThread(id _Nullable (^block)(void)) {
                     NSManagedObjectContext *context = self->_persistentContainer.viewContext;
                     context.automaticallyMergesChangesFromParent = YES;
                     context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
-                    context.undoManager = NSUndoManager.new;
+                    // No undo manager on the view context: nothing in the app undoes,
+                    // and an uncapped NSUndoManager retains every inserted object
+                    // for the life of the process (~140 KB per stored entry under
+                    // bulk import). Core Data's default is nil.
                 }];
             }];
         }

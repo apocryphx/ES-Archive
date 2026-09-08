@@ -535,7 +535,8 @@ static NSString * const kAllPersonasTitle = @"All (witness)";
                         (unsigned long)linkEdges,
                         (unsigned long)simEdges,
                         (unsigned long)isolated,
-                        g.isSettled ? @"Settled" : @"Simulating\u2026"];
+                        self.dataSource.isBuilding ? @"Building\u2026"
+                        : (g.isSettled ? @"Settled" : @"Simulating\u2026")];
     self.statusLabel.stringValue = status;
 }
 

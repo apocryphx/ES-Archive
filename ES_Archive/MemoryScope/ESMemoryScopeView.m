@@ -178,6 +178,9 @@ static const NSTimeInterval kCenteringDuration = 0.7;
 #pragma mark - Simulation Control
 
 - (void)startSimulation {
+    // Physics runs on the graph's own queue; this timer only redraws from the
+    // positions it publishes. Always poke the graph so a dirty structure syncs.
+    [self.graph startSimulation];
     if (self.animationTimer) return;
     self.animationTimer = [NSTimer scheduledTimerWithTimeInterval:kFrameInterval
                                                           target:self
@@ -192,12 +195,13 @@ static const NSTimeInterval kCenteringDuration = 0.7;
 - (void)stopSimulation {
     [self.animationTimer invalidate];
     self.animationTimer = nil;
+    [self.graph stopSimulation];
 }
 
 - (void)simulationStep {
     if (!self.graph) return;
 
-    [self.graph tick];
+    [self.graph decayFlash];
     [self rebuildDrawingCache];
     [self setNeedsDisplay:YES];
 
