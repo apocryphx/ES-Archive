@@ -16,9 +16,14 @@
 #import <fcntl.h>
 #import <poll.h>
 #import <stdio.h>
+#import <stdatomic.h>
 
 NSNotificationName const MCPSocketClientHostDisconnectedNotification =
     @"MCPSocketClientHostDisconnectedNotification";
+
+const NSInteger MCPSocketClientErrorTimeout        = -32000;
+const NSInteger MCPSocketClientErrorConnectionLost = -32001;
+const NSInteger MCPSocketClientErrorReplyLost      = -32002;
 
 // A generous default so a legitimately slow reply (a cold embedder is seconds)
 // never trips it — only a genuinely wedged or vanished host does. Overridable
@@ -34,18 +39,21 @@ static NSTimeInterval ESClientTimeout(void) {
 /// a dropped/timed-out relay used to return nil, indistinguishable from a
 /// notification, so the stdio writer sent nothing and the MCP client hung on that
 /// id forever. Notifications (no id) still return nil — there is nothing to answer.
-static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
+/// The code tells ESEngine whether a retry on a re-elected host is safe.
+static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString *message) {
     if (rpcId == nil) return nil;
     return @{@"jsonrpc":@"2.0", @"id":rpcId,
-             @"error":@{@"code":@(-32000), @"message":message}};
+             @"error":@{@"code":@(code), @"message":message}};
 }
 
 @implementation MCPSocketClient {
-    int               _fd;
-    NSLock           *_lock;
-    NSTimeInterval    _timeout;
-    dispatch_source_t _eofSource;       // fires when the host closes the connection
-    BOOL              _disconnectPosted; // guarded by @synchronized(self)
+    int                  _fd;                 // guarded by _lock once shared; -1 after close
+    NSLock              *_lock;               // serializes the wire (one request at a time)
+    NSTimeInterval       _timeout;
+    dispatch_source_t    _eofSource;          // idle EOF watcher; torn down by -closeConnection
+    dispatch_semaphore_t _eofSourceCancelled; // signalled by the watcher's cancel handler
+    atomic_bool          _dead;               // set the moment the connection is known unusable
+    BOOL                 _disconnectPosted;   // guarded by @synchronized(self)
 }
 
 + (nullable instancetype)connectWithAuthor:(nullable NSString *)author {
@@ -68,6 +76,8 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
     c->_fd = fd;
     c->_lock = [NSLock new];
     c->_timeout = ESClientTimeout();
+    c->_eofSourceCancelled = dispatch_semaphore_create(0);
+    atomic_init(&c->_dead, false);
 
     // Declare our persona once, before any request, so the host scopes this
     // whole connection to it. Ordering is guaranteed: the socket delivers this
@@ -86,26 +96,40 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
 
     // Proactively watch for the host closing the connection, even while this relay
     // sits idle between requests — the case the in-request EOF check below can't
-    // see. On a real EOF, -hostDisconnected posts a notification so the app exits
-    // (a CLI relay has no host to reconnect to). A reply on the wire also makes the
-    // fd readable, so the handler PEEKs to tell EOF (recv == 0) from data (> 0).
+    // see. On a real EOF, -hostDisconnected posts a notification so ESEngine can
+    // re-elect. A reply on the wire also makes the fd readable, so the handler
+    // PEEKs to tell EOF (recv == 0) from data (> 0).
+    //
+    // The watcher never closes the fd. Closing is -closeConnection's job, under
+    // _lock, after the watcher is cancelled: that way the fd is never closed under
+    // a request that is mid-poll on it, and its number can't be reused by the
+    // re-election's new socket while a stale reader still holds it.
     __block dispatch_source_t src =
         dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0,
                                dispatch_get_global_queue(QOS_CLASS_UTILITY, 0));
     if (src) {
         int watchedFD = fd;
         __weak MCPSocketClient *weakC = c;
+        dispatch_semaphore_t cancelled = c->_eofSourceCancelled;
         dispatch_source_set_event_handler(src, ^{
+            __strong MCPSocketClient *sc = weakC;
+            if (!sc || atomic_load(&sc->_dead)) {
+                // Closed elsewhere (a request hit EOF / timed out, or -close): the
+                // fd stays readable-at-EOF and a level source would re-fire forever.
+                dispatch_source_cancel(src);
+                return;
+            }
             char b;
             ssize_t n = recv(watchedFD, &b, 1, MSG_PEEK | MSG_DONTWAIT);
             if (n > 0) return;   // a reply is on the wire — sendRequest owns it
             if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) return;
-            // n == 0 (peer closed) or a hard error: the host is gone. Cancel first —
-            // the fd stays readable-at-EOF, so a level source would re-fire — then notify.
+            // n == 0 (peer closed) or a hard error: the host is gone. Mark dead so a
+            // request that races us short-circuits, cancel so we don't re-fire, notify.
+            atomic_store(&sc->_dead, true);
             dispatch_source_cancel(src);
-            [weakC hostDisconnected];
+            [sc hostDisconnected];
         });
-        dispatch_source_set_cancel_handler(src, ^{ close(watchedFD); });
+        dispatch_source_set_cancel_handler(src, ^{ dispatch_semaphore_signal(cancelled); });
         c->_eofSource = src;
         dispatch_resume(src);
     }
@@ -131,25 +155,33 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
     return ok;
 }
 
+- (BOOL)isConnected {
+    return !atomic_load(&_dead);
+}
+
 - (nullable NSDictionary *)sendRequest:(NSDictionary *)rpc {
     id rpcId = rpc[@"id"];
     BOOL isNotification = (rpcId == nil);   // no id => no response expected
 
     NSData *body = [NSJSONSerialization dataWithJSONObject:rpc options:0 error:NULL];
-    if (!body) return ESRelayError(rpcId, @"could not serialize request");
+    if (!body) return ESRelayError(rpcId, MCPSocketClientErrorTimeout, @"could not serialize request");
     NSMutableData *line = [body mutableCopy];
     [line appendBytes:"\n" length:1];
 
     [_lock lock];
-    if (_fd < 0) {   // a previous request already found the connection dead
+    if (atomic_load(&_dead) || _fd < 0) {
+        // The host already went away (EOF watcher, or a previous request found it
+        // dead). Nothing was sent: the caller may retry on a re-elected host.
         [_lock unlock];
-        return ESRelayError(rpcId, @"shared engine connection is closed");
+        return ESRelayError(rpcId, MCPSocketClientErrorConnectionLost,
+                            @"shared engine connection is closed");
     }
     if (![self writeAll:line]) {
         [self closeConnection];
-        [self hostDisconnected];   // the host is gone — the relay should exit
+        [self hostDisconnected];   // the host is gone — ESEngine re-elects
         [_lock unlock];
-        return ESRelayError(rpcId, @"shared engine connection lost while sending");
+        return ESRelayError(rpcId, MCPSocketClientErrorConnectionLost,
+                            @"shared engine connection lost while sending");
     }
     if (isNotification) { [_lock unlock]; return nil; }
 
@@ -158,15 +190,16 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
     if (!reply) {
         // Timed out or the host vanished mid-reply. Either way the connection is
         // now unusable — a late reply arriving later would desync the stream — so
-        // close it. Subsequent requests short-circuit to a clean error above until
-        // the session restarts and re-elects. (Mid-session reconnect is future
-        // work; see design-decisions/uds-adaptation-from-template.md.)
+        // close it. ESEngine notices (-isConnected is NO) and re-elects; the
+        // envelope's code tells it whether this particular request may be retried.
         [self closeConnection];
-        if (!timedOut) [self hostDisconnected];   // EOF (not a slow host) — exit
+        if (!timedOut) [self hostDisconnected];   // EOF (not a slow host)
         [_lock unlock];
-        return ESRelayError(rpcId, timedOut
-            ? [NSString stringWithFormat:@"no reply from shared engine within %.0fs; connection closed", _timeout]
-            : @"shared engine connection lost");
+        return timedOut
+            ? ESRelayError(rpcId, MCPSocketClientErrorTimeout,
+                  [NSString stringWithFormat:@"no reply from shared engine within %.0fs; connection closed", _timeout])
+            : ESRelayError(rpcId, MCPSocketClientErrorReplyLost,
+                  @"shared engine connection lost before it replied");
     }
     [_lock unlock];
     return reply;
@@ -229,25 +262,36 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
     return YES;
 }
 
+/// Tear down the connection. Caller holds _lock (or is dealloc). The ONE place the
+/// fd is closed: first mark dead (so the watcher and any new request stand down),
+/// cancel the watcher and wait for its cancel handler — libdispatch requires the
+/// fd to outlive the source — then close. Idempotent.
 - (void)closeConnection {
+    atomic_store(&_dead, true);
     if (_eofSource) {
-        dispatch_source_cancel(_eofSource);   // its cancel handler owns the fd close
+        dispatch_source_cancel(_eofSource);
+        dispatch_semaphore_wait(_eofSourceCancelled,
+                                dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC));
         _eofSource = nil;
-    } else if (_fd >= 0) {
-        close(_fd);
     }
-    _fd = -1;
+    if (_fd >= 0) { close(_fd); _fd = -1; }
+}
+
+- (void)close {
+    [_lock lock];
+    [self closeConnection];
+    [_lock unlock];
 }
 
 /// The host went away — from the idle EOF watcher, or an EOF hit mid-request. Post
-/// once, on the main queue, so ESStdioAppDelegate can terminate the relay. A slow
-/// host (a timeout) is NOT a disconnect and must not call this. Idempotent.
+/// once, on the main queue, so ESEngine can re-elect. A slow host (a timeout) is
+/// NOT a disconnect and must not call this. Idempotent.
 - (void)hostDisconnected {
     @synchronized (self) {
         if (_disconnectPosted) return;
         _disconnectPosted = YES;
     }
-    fprintf(stderr, "[es-archive-mcp] shared engine host disconnected — relay should exit\n");
+    fprintf(stderr, "[es-archive-mcp] shared engine host disconnected\n");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSNotificationCenter.defaultCenter
             postNotificationName:MCPSocketClientHostDisconnectedNotification object:self];
@@ -255,8 +299,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSString *message) {
 }
 
 - (void)dealloc {
-    if (_eofSource) { dispatch_source_cancel(_eofSource); _eofSource = nil; }
-    else if (_fd >= 0) { close(_fd); }
+    [self closeConnection];
 }
 
 @end

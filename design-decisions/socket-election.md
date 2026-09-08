@@ -139,11 +139,14 @@ engine); no author line means the connection scopes to the default author.
 ## Failure modes, honestly
 
 **Host exits cleanly (session ends).** Its socket is unlinked in `-stop`;
-surviving peers see EOF on their connection. Currently a relaying session does
-not re-elect mid-session — its requests fail until it restarts (Claude sessions
-are short-lived, so in practice the next session re-elects). Mid-session
-re-election on EOF is a straightforward future addition to
-`MCPSocketClient` (reconnect → re-run `ESEngine` election).
+surviving peers see EOF on their connection and **re-elect mid-session**: each
+re-runs the `ESEngine` election, connecting to whichever peer now binds the
+socket or binding it itself (since 2026-09-04; see `mid-session-reelection.md`).
+Before that a relay's requests failed until its session restarted — fine for
+short-lived Claude Code sessions, fatal under Claude Desktop, which closes its
+first-spawned (usually host) instance within a second of startup. A host whose
+own stdio session ends while peers remain also no longer exits: it lingers for
+them and goes when the last one leaves.
 
 **Host crashes.** The socket file remains as a corpse. The next process to
 start probes it, gets `ECONNREFUSED`, unlinks, and re-elects. Recovery is

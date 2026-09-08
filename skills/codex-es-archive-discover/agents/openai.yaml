@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Discover"
+  short_description: "Explore neglected regions and attention biases"
+  default_prompt: "Use $codex-es-archive-discover to show what my Archive has quietly become."

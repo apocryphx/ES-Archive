@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Research"
+  short_description: "Recover evidence and history from the Archive"
+  default_prompt: "Use $codex-es-archive-research to investigate what my Archive says about this topic."

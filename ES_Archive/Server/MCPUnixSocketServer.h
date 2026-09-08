@@ -42,6 +42,13 @@ typedef NSDictionary * _Nullable (^MCPUnixRequestHandler)(NSDictionary *rpc,
 /// the handler; it only sets the connection's persona.
 extern NSString * const MCPUnixAuthorHandshakeMethod;
 
+/// Posted on the main queue (object = the server) when the last peer connection
+/// closes while the server is still listening. Lets a host that is only alive for
+/// its peers (a stdio host whose own session has ended — see MCPStdioServer) know
+/// it can go. Not posted by -stop. A new peer may connect right after it fires;
+/// re-check -connectionCount before acting on it.
+extern NSNotificationName const MCPUnixSocketServerDidBecomeIdleNotification;
+
 @interface MCPUnixSocketServer : NSObject
 
 + (instancetype)sharedInstance;
@@ -78,6 +85,10 @@ extern NSString * const MCPUnixAuthorHandshakeMethod;
 
 /// YES when this process bound the socket and is serving.
 @property (readonly, getter=isListening) BOOL listening;
+
+/// Number of peer connections currently open. Counts accepted connections whose
+/// read source is live; a peer that closed is removed the moment its EOF is read.
+@property (readonly) NSUInteger connectionCount;
 
 @end
 

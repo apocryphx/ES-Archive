@@ -31,6 +31,8 @@
 #import <poll.h>
 
 NSString * const MCPUnixAuthorHandshakeMethod = @"$/esarchive/author";
+NSNotificationName const MCPUnixSocketServerDidBecomeIdleNotification =
+    @"MCPUnixSocketServerDidBecomeIdleNotification";
 
 @implementation MCPUnixSocketServer {
     NSString             *_socketPath;
@@ -63,6 +65,9 @@ NSString * const MCPUnixAuthorHandshakeMethod = @"$/esarchive/author";
 
 - (NSString *)socketPath { return _socketPath; }
 - (BOOL)isListening { return _listening; }
+- (NSUInteger)connectionCount {
+    @synchronized (_connSources) { return _connSources.count; }
+}
 
 #pragma mark - Addressing helpers (chdir fallback for over-long App Group paths)
 
@@ -304,7 +309,19 @@ static BOOL ESPeerIsConnected(int fd) {
     });
     dispatch_source_set_cancel_handler(src, ^{
         close(cfd);
-        @synchronized (self->_connSources) { [self->_connSources removeObject:src]; }
+        NSUInteger remaining;
+        @synchronized (self->_connSources) {
+            [self->_connSources removeObject:src];
+            remaining = self->_connSources.count;
+        }
+        // Last peer gone while still serving: tell a lingering host it may exit.
+        // (-stop cancels every source too, but has already cleared _listening.)
+        if (remaining == 0 && self->_listening) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSNotificationCenter.defaultCenter
+                    postNotificationName:MCPUnixSocketServerDidBecomeIdleNotification object:self];
+            });
+        }
     });
     @synchronized (_connSources) { [_connSources addObject:src]; }
     dispatch_resume(src);

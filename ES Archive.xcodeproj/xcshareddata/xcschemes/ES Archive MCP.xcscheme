@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "15786DB32F55F87F00E136DA"
                BuildableName = "ES Archive MCP.app"
+               BlueprintName = "ES Archive MCP"
                ReferencedContainer = "container:ES Archive.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,6 +47,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "15786DB32F55F87F00E136DA"
             BuildableName = "ES Archive MCP.app"
+            BlueprintName = "ES Archive MCP"
             ReferencedContainer = "container:ES Archive.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,6 +64,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "15786DB32F55F87F00E136DA"
             BuildableName = "ES Archive MCP.app"
+            BlueprintName = "ES Archive MCP"
             ReferencedContainer = "container:ES Archive.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

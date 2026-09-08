@@ -10,6 +10,7 @@
 #import "ESBridgeCLI.h"
 #import "ESEngine.h"
 #import "MCPFraming.h"
+#import "MCPUnixSocketServer.h"
 #import <AppKit/AppKit.h>
 #import <stdatomic.h>
 
@@ -25,6 +26,9 @@ static int gRPCFileDescriptor = -1;
 @property (strong) NSFileHandle    *rpcOutHandle;
 @property (strong) NSMutableData   *inputBuffer;
 @property (strong) dispatch_source_t sigtermSource;
+/// YES after our stdio session ended while peer sessions still relay through
+/// this engine: we stay up for them (see -finishShutdown). Main thread only.
+@property (nonatomic) BOOL lingering;
 @end
 
 @implementation MCPStdioServer
@@ -103,26 +107,78 @@ static int gRPCFileDescriptor = -1;
 }
 
 - (void)drainAndTerminate {
-    // EOF and SIGTERM can both arrive in one shutdown; drain exactly once.
-    if (atomic_flag_test_and_set(&_drainStarted)) return;
+    // EOF and SIGTERM can both arrive in one shutdown; drain exactly once. A
+    // later signal while we linger for peers is honored only once no peer
+    // session depends on this engine any more.
+    if (atomic_flag_test_and_set(&_drainStarted)) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self terminateIfIdle]; });
+        return;
+    }
 
-    // Drain the queues in order before terminating:
+    // Drain the queues in order before deciding how to end:
     //   1. readQueue   (serial)     — process any pending input chunks
     //   2. workQueue   (concurrent) — barrier: finish handleLine for every
     //                                 line drained in step 1
     //   3. writeQueue  (serial)     — flush every response those lines wrote
-    //   4. flushAndSave             — Core Data is saved before the process dies
-    // Then hop to the main thread for NSApp.terminate. Without step 1, the
-    // barrier on workQueue can fire before late chunks have even been pushed
-    // onto workQueue, and a tool response gets lost in the shutdown race.
+    //   4. finishShutdown (main)    — save, then terminate or linger
+    // Without step 1, the barrier on workQueue can fire before late chunks have
+    // even been pushed onto workQueue, and a tool response gets lost in the
+    // shutdown race.
     dispatch_async(self.readQueue, ^{
         dispatch_barrier_async(self.workQueue, ^{
             dispatch_async(self.writeQueue, ^{
-                [[ESEngine shared] flushAndSave];
-                dispatch_async(dispatch_get_main_queue(), ^{ [NSApp terminate:nil]; });
+                dispatch_async(dispatch_get_main_queue(), ^{ [self finishShutdown]; });
             });
         });
     });
+}
+
+/// Main thread. Our stdio session is over and every reply is flushed. If this
+/// process hosts the shared engine and other sessions are relaying through it,
+/// stopping now would take all of them down with us — they would each re-elect,
+/// and one would reload the engine (Core Data + embedder) from cold. Claude Desktop
+/// makes this the common case: it spawns the server twice at startup and closes
+/// the first instance within a second, and that first instance usually won the
+/// bind. So a host lingers for its peers and exits once the last one leaves.
+/// See design-decisions/mid-session-reelection.md.
+- (void)finishShutdown {
+    MCPUnixSocketServer *srv = [MCPUnixSocketServer sharedInstance];
+    NSUInteger peers = ([ESEngine shared].servesLocally && srv.isListening) ? srv.connectionCount : 0;
+    if (peers > 0) {
+        fprintf(stderr, "[es-archive-mcp] stdio session ended, but %lu peer session(s) still use this engine — lingering as host\n",
+                (unsigned long)peers);
+        self.lingering = YES;
+        [[ESEngine shared] saveContext];
+        [NSNotificationCenter.defaultCenter addObserver:self
+                                               selector:@selector(peersBecameIdle:)
+                                                   name:MCPUnixSocketServerDidBecomeIdleNotification
+                                                 object:nil];
+        return;
+    }
+    [self terminateNow];
+}
+
+// The last peer left. Give a re-electing peer its reconnect window — it can drop
+// and come straight back — before concluding nobody needs us.
+- (void)peersBecameIdle:(NSNotification *)note {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [self terminateIfIdle];
+    });
+}
+
+- (void)terminateIfIdle {
+    if (!self.lingering) return;
+    if ([MCPUnixSocketServer sharedInstance].connectionCount > 0) return;
+    fprintf(stderr, "[es-archive-mcp] last peer session left — lingering host terminating\n");
+    [self terminateNow];
+}
+
+// Main thread. Core Data is saved (and the socket stopped, so any straggler
+// re-elects against a clean path) before the process dies.
+- (void)terminateNow {
+    self.lingering = NO;
+    [[ESEngine shared] flushAndSave];
+    [NSApp terminate:nil];
 }
 
 #pragma mark - Line framing

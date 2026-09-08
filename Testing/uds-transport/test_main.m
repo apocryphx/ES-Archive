@@ -17,7 +17,10 @@
 //  misbehaving-client catalog (byte-dribble, pipelined, garbage/non-object JSON,
 //  oversized value, slam-shut mid-reply, connection flood), and the two changes
 //  this branch adds — client timeout returning a clean error (not a hang) and
-//  cooperative shedding of a departed client's request.
+//  cooperative shedding of a departed client's request — plus the host-loss
+//  surface mid-session re-election is built on (design-decisions/
+//  mid-session-reelection.md): disconnect notification, typed error codes, idle
+//  notification, re-bind of the freed path.
 //
 
 #import <Foundation/Foundation.h>
@@ -281,6 +284,106 @@ static void test_election_defer(void) {
     unsetenv("UDS_SOCKET_PATH");   // caller resets to the functional-test path below
 }
 
+// Drain the main dispatch queue / run loop — the client and server post their
+// notifications there.
+static void Pump(NSTimeInterval seconds) {
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:seconds]];
+}
+
+static void test_host_loss(void) {
+    // A relay whose host goes away must (a) notice — idle watcher AND mid-request
+    // — (b) report it in a form ESEngine can act on (notification, -isConnected,
+    // typed error codes), and (c) leave the path free for the next host. This is
+    // the transport half of mid-session re-election; the election half is the
+    // same -electAndConnect the launch path uses. See
+    // design-decisions/mid-session-reelection.md.
+    NSString *hlPath = [NSString stringWithFormat:@"/tmp/es-uds-hostloss-%d.sock", getpid()];
+    setenv("UDS_SOCKET_PATH", hlPath.fileSystemRepresentation, 1);
+
+    MCPUnixSocketServer *host = [[MCPUnixSocketServer alloc] init];
+    NSError *e1 = nil;
+    [host startWithRequestHandler:StubHandler() error:&e1];
+
+    __block int disconnects = 0;
+    id obs = [NSNotificationCenter.defaultCenter
+        addObserverForName:MCPSocketClientHostDisconnectedNotification object:nil queue:nil
+                usingBlock:^(NSNotification *n) { disconnects++; }];
+    __block int idles = 0;
+    id idleObs = [NSNotificationCenter.defaultCenter
+        addObserverForName:MCPUnixSocketServerDidBecomeIdleNotification object:nil queue:nil
+                usingBlock:^(NSNotification *n) { idles++; }];
+
+    // (1) Idle client, host stops: the EOF watcher notices.
+    MCPSocketClient *c = [MCPSocketClient connectWithAuthor:nil];
+    NSDictionary *rep = [c sendRequest:@{@"id":@800, @"method":@"ping"}];
+    ok(rep != nil && c.isConnected && host.connectionCount == 1,
+       "host loss: connected client is counted by the host");
+    [host stop];
+    Pump(0.5);
+    ok(disconnects == 1 && !c.isConnected,
+       "host loss (idle): EOF watcher posts the disconnect once, client reports not connected");
+    rep = [c sendRequest:@{@"id":@801, @"method":@"x"}];
+    ok([rep[@"error"][@"code"] isEqual:@(MCPSocketClientErrorConnectionLost)],
+       "host loss (idle): later request returns -32001 ConnectionLost (safe to retry)");
+    [c close];
+    [c close];
+    rep = [c sendRequest:@{@"id":@802, @"method":@"x"}];
+    ok([rep[@"error"][@"code"] isEqual:@(MCPSocketClientErrorConnectionLost)],
+       "host loss: -close is idempotent and the client stays cleanly dead");
+
+    // (2) The path is free again: a new host binds it and serves a fresh client.
+    MCPUnixSocketServer *host2 = [[MCPUnixSocketServer alloc] init];
+    NSError *e2 = nil;
+    [host2 startWithRequestHandler:StubHandler() error:&e2];
+    MCPSocketClient *c2 = [MCPSocketClient connectWithAuthor:nil];
+    rep = [c2 sendRequest:@{@"id":@810, @"method":@"ping"}];
+    ok(host2.isListening && [rep[@"id"] isEqual:@810],
+       "host loss: next host re-binds the same path and a fresh client reaches it");
+
+    // (3) Last peer leaves a live host: the idle notification fires (what a
+    //     lingering host waits for), and the count is back to zero.
+    [c2 close];
+    Pump(0.5);
+    ok(idles == 1 && host2.connectionCount == 0,
+       "idle: host posts DidBecomeIdle once its last peer closes");
+
+    // (4) Host dies MID-REQUEST. A real MCPUnixSocketServer's -stop is graceful —
+    //     a handler already running finishes and its reply goes out before the fd
+    //     closes — so to model a host that vanishes (crash, SIGKILL) use a raw
+    //     listener that accepts, reads the request, and drops the connection
+    //     without answering. The in-flight request must fail with ReplyLost
+    //     (outcome unknown — must not be retried), and the disconnect is posted.
+    NSString *fakePath = [NSString stringWithFormat:@"/tmp/es-uds-fakehost-%d.sock", getpid()];
+    setenv("UDS_SOCKET_PATH", fakePath.fileSystemRepresentation, 1);
+    int lfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    struct sockaddr_un laddr; socklen_t llen = 0;
+    ESEngineFillSockaddr(&laddr, &llen, fakePath);
+    unlink(fakePath.fileSystemRepresentation);
+    bind(lfd, (struct sockaddr *)&laddr, llen);
+    listen(lfd, 4);
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+        int afd = accept(lfd, NULL, NULL);
+        char junk[512];
+        read(afd, junk, sizeof(junk));   // the request arrives…
+        usleep(100 * 1000);
+        close(afd);                      // …and the "host" dies without replying
+        close(lfd);
+    });
+    MCPSocketClient *c3 = [MCPSocketClient connectWithAuthor:nil];
+    NSDictionary *lostRep = [c3 sendRequest:@{@"id":@820, @"method":@"anything"}];
+    Pump(0.3);
+    ok([lostRep[@"error"][@"code"] isEqual:@(MCPSocketClientErrorReplyLost)] && !c3.isConnected,
+       "host loss (mid-request): -32002 ReplyLost, client dead");
+    ok(disconnects == 2, "host loss (mid-request): disconnect posted exactly once more");
+    ok(idles == 1, "stop: no idle notification from a host that is shutting down");
+    [c3 close];
+    unlink(fakePath.fileSystemRepresentation);
+
+    [NSNotificationCenter.defaultCenter removeObserver:obs];
+    [NSNotificationCenter.defaultCenter removeObserver:idleObs];
+    unsetenv("UDS_SOCKET_PATH");
+}
+
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
         NSString *path = [NSString stringWithFormat:@"/tmp/es-uds-test-%d.sock", getpid()];
@@ -289,6 +392,8 @@ int main(int argc, const char *argv[]) {
         // Election tests run first (they set/reset UDS_SOCKET_PATH themselves).
         fprintf(stderr, "[election]\n");
         test_election_defer();
+        fprintf(stderr, "[host loss]\n");
+        test_host_loss();
 
         // Bring up the functional host on our private path.
         setenv("UDS_SOCKET_PATH", path.fileSystemRepresentation, 1);

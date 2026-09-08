@@ -13,7 +13,6 @@
 #import "ESTagJanitor.h"
 #import "ESStdioStatusItemController.h"
 #import "MCPStdioServer.h"
-#import "MCPSocketClient.h"
 #import "ESStdioConnectController.h"
 #import "ESConnectHelper.h"
 #import "ESAppConfig.h"
@@ -25,6 +24,9 @@
 
 @interface ESStdioAppDelegate ()
 @property (strong) ESStdioStatusItemController *statusItemController;
+/// Set once this process has taken on the host's GUI and housekeeping — at launch
+/// or after a mid-session re-election. Never runs twice.
+@property (nonatomic) BOOL hostRoleActive;
 - (void)installUserMainMenu;
 - (void)showConnections:(id)sender;
 - (void)showSettings:(id)sender;
@@ -50,15 +52,13 @@
     // Engine first — it runs the socket election, which decides our role.
     [[ESEngine shared] start];
 
-    // If we relay and our host goes away, the shared engine is gone and this CLI
-    // relay has nothing left to serve (it does not reconnect — see MCPSocketClient,
-    // unlike the HTTP bridge). Terminate so the stdio pipes close and Claude reports
-    // a clean disconnect, instead of lingering as a headless LSUIElement zombie that
-    // keeps the bundle "running" and blocks the app from relaunching. A host has no
-    // client and never posts this, so observing it unconditionally is safe.
+    // A relay whose host goes away does not die with it: ESEngine re-elects
+    // (reconnects to the next host, or binds the socket and loads the engine
+    // itself). If it comes out of that as the host, it takes on the host's GUI and
+    // housekeeping here, mid-session. See design-decisions/mid-session-reelection.md.
     [NSNotificationCenter.defaultCenter addObserver:self
-                                           selector:@selector(hostDisconnected:)
-                                               name:MCPSocketClientHostDisconnectedNotification
+                                           selector:@selector(engineDidBecomeHost:)
+                                               name:ESEngineDidBecomeHostNotification
                                              object:nil];
 
     // host ⟺ GUI. The instance that runs the engine in-process (won the election,
@@ -66,61 +66,11 @@
     // ESToolExecutedNotification fire against live data — so it, and only it, raises
     // the GUI. Every relay stays a headless client of that host. This is the stdio
     // analogue of the HTTP server: first access starts the server (with GUI), the
-    // rest connect; closing it disconnects them. See design-decisions/
-    // uds-adaptation-from-template.md.
+    // rest connect. See design-decisions/uds-adaptation-from-template.md.
     BOOL servesLocally = [ESEngine shared].servesLocally;
 
     if (servesLocally) {
-        fprintf(stderr, "[es-archive-mcp] serving locally — raising the GUI (%s)\n",
-                [ESAppConfig activationMode] == ESActivationModeMenuBar ? "Minimal" : "Full");
-        // Mutually exclusive surfaces, keyed to the persisted UI mode: Full drives
-        // everything from the main menu (a Dock app), Minimal from the menu-bar status
-        // item. Both fire the same delegate commands (Back Up / Restore / Archive Scope)
-        // through the responder chain, so exactly one surface exists at a time. Safe
-        // here because we hold the engine in-process — an FRC-backed Archive Scope on a
-        // relay would bind to an empty context.
-        if ([ESAppConfig activationMode] == ESActivationModeMenuBar) {
-            self.statusItemController = [[ESStdioStatusItemController alloc] init];
-        } else {
-            [self installUserMainMenu];
-        }
-        // Full (Dock icon) vs Minimal (menu-bar only) is the user's persisted
-        // choice — no longer tied to how we were launched.
-        [self applyHostUIMode];
-        // In Full mode the host behaves like any app on launch: it comes to the
-        // foreground and greets with onboarding, whether the USER opened it or
-        // Claude spawned it — a user expects the app to show itself when it starts,
-        // and the host is the app's one live GUI (host ⟺ GUI). Minimal (menu-bar)
-        // mode is the deliberate "stay a quiet background service" opt-out — it's
-        // Accessory, so it neither shows a Dock icon nor takes focus. Foregrounding
-        // a Claude-spawned host does NOT fight Claude Desktop for focus: Claude
-        // spawns the MCP server as part of its own startup, before its window is
-        // activated, so the host comes up within the launch sequence rather than
-        // interrupting a Claude session already in front.
-        if ([ESAppConfig activationMode] != ESActivationModeMenuBar) {
-            [ESStdioConnectController showAtStartupIfEnabled];
-            [NSApp activate];
-        }
-
-        // Tag housekeeping — host only, like the vector backfill below: this
-        // writes, and writes funnel through the one instance holding the engine.
-        [ESTagJanitor runStartupSweepWithContext:[ESCoreDataStack shared].viewContext];
-
-        // Backfill vectors for embeddable memories that lack one — the same pass
-        // the HTTP Server app runs on launch (AppDelegate.m). Memories synced in
-        // from another device arrive without a vector, and only the engine host
-        // can encode them; whichever instance ends up hosting (user-launched or
-        // Claude-spawned) does it here, so it can't silently rot. Additive,
-        // idempotent, self-limiting: a clean archive is a no-op (completion 0),
-        // the first host clears the deficit, and it runs once per host — never per
-        // request. Writes funnel through this one host, so the single-writer
-        // invariant holds.
-        [[ESVectorEngine shared] backfillMissingVectorsWithCompletion:^(NSUInteger count) {
-            if (count > 0) {
-                fprintf(stderr, "[es-archive-mcp] backfilled %lu memories missing a vector\n",
-                        (unsigned long)count);
-            }
-        }];
+        [self activateHostRoleAtLaunch:YES];
     } else if (!self.launchedByAI) {
         // A user launched us, but a host is already running and there is no stdin
         // client to serve: nothing to host, nothing to relay, and the running host
@@ -137,6 +87,75 @@
     if (self.launchedByAI) {
         [[MCPStdioServer shared] start];
     }
+}
+
+// Posted on main by ESEngine after a re-election left this process hosting.
+- (void)engineDidBecomeHost:(NSNotification *)note {
+    [self activateHostRoleAtLaunch:NO];
+}
+
+/// Everything a host does beyond serving requests: the one GUI surface, and the
+/// write-side housekeeping that must run in exactly one process. `atLaunch` is YES
+/// from -applicationDidFinishLaunching and NO when a relay was promoted by a
+/// mid-session re-election — the latter must not take focus away from whatever
+/// the user is doing.
+- (void)activateHostRoleAtLaunch:(BOOL)atLaunch {
+    if (self.hostRoleActive) return;
+    self.hostRoleActive = YES;
+
+    fprintf(stderr, "[es-archive-mcp] serving locally — raising the GUI (%s)%s\n",
+            [ESAppConfig activationMode] == ESActivationModeMenuBar ? "Minimal" : "Full",
+            atLaunch ? "" : " after re-election");
+    // Mutually exclusive surfaces, keyed to the persisted UI mode: Full drives
+    // everything from the main menu (a Dock app), Minimal from the menu-bar status
+    // item. Both fire the same delegate commands (Back Up / Restore / Archive Scope)
+    // through the responder chain, so exactly one surface exists at a time. Safe
+    // here because we hold the engine in-process — an FRC-backed Archive Scope on a
+    // relay would bind to an empty context.
+    if ([ESAppConfig activationMode] == ESActivationModeMenuBar) {
+        self.statusItemController = [[ESStdioStatusItemController alloc] init];
+    } else {
+        [self installUserMainMenu];
+    }
+    // Full (Dock icon) vs Minimal (menu-bar only) is the user's persisted
+    // choice — no longer tied to how we were launched.
+    [self applyHostUIMode];
+    // In Full mode the host behaves like any app on launch: it comes to the
+    // foreground and greets with onboarding, whether the USER opened it or
+    // Claude spawned it — a user expects the app to show itself when it starts,
+    // and the host is the app's one live GUI (host ⟺ GUI). Minimal (menu-bar)
+    // mode is the deliberate "stay a quiet background service" opt-out — it's
+    // Accessory, so it neither shows a Dock icon nor takes focus. Foregrounding
+    // a Claude-spawned host does NOT fight Claude Desktop for focus: Claude
+    // spawns the MCP server as part of its own startup, before its window is
+    // activated, so the host comes up within the launch sequence rather than
+    // interrupting a Claude session already in front. A promotion mid-session is
+    // different — the user is in the middle of something — so it gets the Dock
+    // icon and menu but neither onboarding nor focus.
+    if (atLaunch && [ESAppConfig activationMode] != ESActivationModeMenuBar) {
+        [ESStdioConnectController showAtStartupIfEnabled];
+        [NSApp activate];
+    }
+
+    // Tag housekeeping — host only, like the vector backfill below: this
+    // writes, and writes funnel through the one instance holding the engine.
+    [ESTagJanitor runStartupSweepWithContext:[ESCoreDataStack shared].viewContext];
+
+    // Backfill vectors for embeddable memories that lack one — the same pass
+    // the HTTP Server app runs on launch (AppDelegate.m). Memories synced in
+    // from another device arrive without a vector, and only the engine host
+    // can encode them; whichever instance ends up hosting (user-launched,
+    // Claude-spawned, or promoted by re-election) does it here, so it can't
+    // silently rot. Additive, idempotent, self-limiting: a clean archive is a
+    // no-op (completion 0), the first host clears the deficit, and it runs once
+    // per host — never per request. Writes funnel through this one host, so the
+    // single-writer invariant holds.
+    [[ESVectorEngine shared] backfillMissingVectorsWithCompletion:^(NSUInteger count) {
+        if (count > 0) {
+            fprintf(stderr, "[es-archive-mcp] backfilled %lu memories missing a vector\n",
+                    (unsigned long)count);
+        }
+    }];
 }
 
 /// The MCP target bypasses NSApplicationMain, so no menu comes from a storyboard.
@@ -271,13 +290,6 @@
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
     return YES;
-}
-
-// Our host (the shared engine) closed the connection. Posted on the main queue by
-// MCPSocketClient, so we're already on main — terminate the relay now.
-- (void)hostDisconnected:(NSNotification *)note {
-    fprintf(stderr, "[es-archive-mcp] host disconnected — terminating relay\n");
-    [NSApp terminate:nil];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)note {

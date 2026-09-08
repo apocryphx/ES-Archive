@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Records"
+  short_description: "Maintain queryable TOML state in the Archive"
+  default_prompt: "Use $codex-es-archive-records to store or update this structured state."

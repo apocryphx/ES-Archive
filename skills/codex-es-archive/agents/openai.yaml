@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex ES Archive"
+  short_description: "Inhabit an AI-owned archive as a workshop"
+  default_prompt: "Use $codex-es-archive to work with my AI-owned ES Archive responsibly."

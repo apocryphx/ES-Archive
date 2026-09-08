@@ -105,11 +105,12 @@ dictionary boundary; keep it there.
   from a departed session is therefore dropped and **not** persisted — deliberate:
   do not mutate the archive for a session that no longer exists to see the result.
 
-- **Mid-session re-election is still future work.** On a timeout/drop the relaying
-  client marks itself dead and every subsequent request returns a clean error
-  until the session restarts and re-elects. Reconnect-and-retry
-  (EOF → reconnect → re-run `ESEngine` election) is the natural next step and now
-  has a clean failure surface to build on.
+- **Mid-session re-election — shipped 2026-09-04** (`mid-session-reelection.md`).
+  On EOF or a timeout the relaying client still marks its connection dead, but
+  `ESEngine` now re-runs the election and serves from the new role; the request
+  that hit the failure is retried only when its error code says it never reached
+  the old host (`-32001`), never on a timeout (`-32000`) or a lost reply
+  (`-32002`).
 
 ## Invariant added
 

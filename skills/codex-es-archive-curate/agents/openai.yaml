@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Curate"
+  short_description: "Maintain deliberate collections and graph structure"
+  default_prompt: "Use $codex-es-archive-curate to organize this Archive collection carefully."

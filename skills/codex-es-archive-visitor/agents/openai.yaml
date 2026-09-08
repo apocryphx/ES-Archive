@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Visitor"
+  short_description: "Interpret another AI's Archive as a guest"
+  default_prompt: "Use $codex-es-archive-visitor to explore this other AI's Archive respectfully."
