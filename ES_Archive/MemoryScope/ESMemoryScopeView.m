@@ -518,11 +518,11 @@ static const NSTimeInterval kCenteringDuration = 0.7;
     if (now - self.statWindowStart < 1.0) return;
     NSUInteger done = MAX(self.statCompleted, (NSUInteger)1);
     ESScopeRenderStats *r = self.statLast;
-    ESLog(@"[Scope] submitted %lu rendered %lu dropped %lu | assemble %.1f ms/frame | raster %.1f ms/frame (edges %.1f, nodes %.1f) | latency avg %.0f max %.0f ms | %lu nodes %lu edges drawn at %lux%lu",
+    ESLog(@"[Scope] submitted %lu rendered %lu dropped %lu | assemble %.1f ms/frame | raster %.1f ms/frame (edges %.1f, nodes %.1f) | latency avg %.0f max %.0f ms | %lu nodes %lu edges drawn (%lu off-screen skipped) at %lux%lu",
           (unsigned long)self.statSubmitted, (unsigned long)self.statCompleted, (unsigned long)self.statDropped,
           self.statAssembleMs / MAX(self.statSubmitted, (NSUInteger)1),
           self.statRasterMs / done, r.edgeMs, r.nodeMs, self.statLatencyMs / done, self.statMaxLatencyMs,
-          (unsigned long)r.nodesDrawn, (unsigned long)r.edgesDrawn, (unsigned long)r.pixelsW, (unsigned long)r.pixelsH);
+          (unsigned long)r.nodesDrawn, (unsigned long)r.edgesDrawn, (unsigned long)r.edgesSkipped, (unsigned long)r.pixelsW, (unsigned long)r.pixelsH);
     self.statWindowStart = now;
     self.statAssembleMs = self.statRasterMs = self.statLatencyMs = self.statMaxLatencyMs = 0;
     self.statSubmitted = self.statCompleted = self.statDropped = 0;

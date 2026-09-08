@@ -128,8 +128,12 @@ static inline double ESNowMs(void) { return CFAbsoluteTimeGetCurrent() * 1000.0;
                 { pos[a].x * s + ox, pos[a].y * s + oy },
                 { pos[b].x * s + ox, pos[b].y * s + oy },
             };
-            if (fmax(p[0].x, p[1].x) < minX || fmin(p[0].x, p[1].x) > maxX ||
-                fmax(p[0].y, p[1].y) < minY || fmin(p[0].y, p[1].y) > maxY) continue;
+            // Level of detail: draw an edge only if at least one endpoint is in
+            // the window. Edges that merely pass through (both nodes off-screen)
+            // are the mesh that swamps a zoomed-in view of a large persona.
+            BOOL aIn = (p[0].x >= minX && p[0].x <= maxX && p[0].y >= minY && p[0].y <= maxY);
+            BOOL bIn = (p[1].x >= minX && p[1].x <= maxX && p[1].y >= minY && p[1].y <= maxY);
+            if (!aIn && !bIn) { st.edgesSkipped++; continue; }
             if (isLink[e]) {
                 if (!linkMode) { CGContextSetLineWidth(ctx, kLineWidthLink); linkMode = YES; }
                 CGContextSetRGBStrokeColor(ctx, lc.r, lc.g, lc.b, lc.a);

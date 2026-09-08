@@ -48,6 +48,7 @@ typedef struct { float r, g, b, a; } ESScopeColor;
 @interface ESScopeRenderStats : NSObject
 @property (nonatomic) double totalMs, edgeMs, nodeMs;
 @property (nonatomic) NSUInteger edgesDrawn, nodesDrawn, pixelsW, pixelsH;
+@property (nonatomic) NSUInteger edgesSkipped;   // both endpoints off-screen
 @end
 
 @interface ESScopeRenderer : NSObject
