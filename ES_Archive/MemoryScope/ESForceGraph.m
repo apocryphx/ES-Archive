@@ -8,6 +8,7 @@
 
 #import "ESForceGraph.h"
 #import <math.h>
+#import <stdatomic.h>
 
 // Force simulation constants
 static const CGFloat kRepulsionStrength   = 500.0;
@@ -80,6 +81,12 @@ static const uint64_t kStepIntervalNsec   = NSEC_PER_SEC / 60;
     CGFloat _simAlpha;
     CGFloat _simMaxDelta;
     BOOL _running;                   // main-thread view of the timer state
+
+    // Set by main when a structure sync or stop is queued behind a step in
+    // flight; the step polls it and bails out so the queued block runs at once.
+    // At 68K nodes one all-pairs step takes seconds — without this, a persona
+    // switch waits for the old persona's tick to finish.
+    atomic_bool _abortStep;
 }
 
 - (instancetype)init {
@@ -219,7 +226,9 @@ static const uint64_t kStepIntervalNsec   = NSEC_PER_SEC / 60;
     if (!_structureDirty) return;
     _structureDirty = NO;
     ESSimState *state = [self buildSimState];
+    atomic_store(&_abortStep, true);        // interrupt a step in flight
     dispatch_async(_simQueue, ^{
+        atomic_store(&self->_abortStep, false);
         self->_sim = state;
         self->_simMaxDelta = CGFLOAT_MAX;
     });
@@ -239,7 +248,9 @@ static const uint64_t kStepIntervalNsec   = NSEC_PER_SEC / 60;
 
 - (void)stopSimulation {
     _running = NO;
+    atomic_store(&_abortStep, true);
     dispatch_async(_simQueue, ^{
+        atomic_store(&self->_abortStep, false);
         [self cancelStepTimerOnSimQueue];
     });
 }
@@ -286,8 +297,10 @@ static const uint64_t kStepIntervalNsec   = NSEC_PER_SEC / 60;
     CGFloat maxDelta = 0;
 
     if (count > 0) {
-        // 1. Repulsion (all visible pairs)
+        // 1. Repulsion (all visible pairs). Poll the abort flag once per row:
+        // a queued structure sync or stop must not wait for a full pass.
         for (NSUInteger i = 0; i < count; i++) {
+            if ((i & 63) == 0 && atomic_load(&_abortStep)) return;
             if (!visible[i] || pinned[i]) continue;
             for (NSUInteger j = i + 1; j < count; j++) {
                 if (!visible[j]) continue;
@@ -308,6 +321,7 @@ static const uint64_t kStepIntervalNsec   = NSEC_PER_SEC / 60;
 
         // 2. Attraction (edges)
         for (NSUInteger e = 0; e < s->edgeCount; e++) {
+            if ((e & 4095) == 0 && atomic_load(&_abortStep)) return;
             NSUInteger a = s->edgeA[e], b = s->edgeB[e];
             if (!visible[a] || !visible[b]) continue;
 
