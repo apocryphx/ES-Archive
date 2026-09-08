@@ -293,7 +293,7 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
         if (!nearest) {
             CGRect bounds = self.graph.boundingRect;
             node.position = CGRectIsEmpty(bounds)
-                ? CGPointMake(400, 300)
+                ? CGPointZero
                 : CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
         }
 
@@ -472,7 +472,15 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
         [linkCounts addObject:l.targetID];
     }
 
+    // Seed canvas centered on the graph origin, so a fresh graph appears in the
+    // middle of the view at any transform and auto-fit only rescales it. A
+    // corner-anchored canvas put the cloud in the lower right until the fit
+    // caught up.
     CGFloat canvasW = 800, canvasH = 600;
+    CGPoint (^randomSeed)(void) = ^CGPoint{
+        return CGPointMake(-canvasW * 0.25 + arc4random_uniform((uint32_t)(canvasW * 0.5)),
+                           -canvasH * 0.25 + arc4random_uniform((uint32_t)(canvasH * 0.5)));
+    };
     NSMutableArray<ESGraphNode *> *seeds = [NSMutableArray array];
     NSMutableArray<ESGraphNode *> *satellites = [NSMutableArray array];
 
@@ -490,10 +498,7 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
         [self.graph addNode:node];
 
         if (node.connectionCount > 0) {
-            node.position = CGPointMake(
-                canvasW * 0.25 + arc4random_uniform((uint32_t)(canvasW * 0.5)),
-                canvasH * 0.25 + arc4random_uniform((uint32_t)(canvasH * 0.5))
-            );
+            node.position = randomSeed();
             [seeds addObject:node];
         } else {
             [satellites addObject:node];
@@ -506,14 +511,9 @@ static const CGFloat    kAlphaNudgeLinkChange   = 0.2;
     // the neighbor directly, which is exactly the pass now running in the
     // background.)
     for (ESGraphNode *sat in satellites) {
-        if (seeds.count > 0) {
-            sat.position = seeds[arc4random_uniform((uint32_t)seeds.count)].position;
-        } else {
-            sat.position = CGPointMake(
-                canvasW * 0.25 + arc4random_uniform((uint32_t)(canvasW * 0.5)),
-                canvasH * 0.25 + arc4random_uniform((uint32_t)(canvasH * 0.5))
-            );
-        }
+        sat.position = seeds.count > 0
+            ? seeds[arc4random_uniform((uint32_t)seeds.count)].position
+            : randomSeed();
     }
 
     // Explicit link edges (user-authored connections — unlimited).
