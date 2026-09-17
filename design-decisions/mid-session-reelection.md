@@ -62,8 +62,24 @@ Retry policy for the request that hit the failure — decided by the error code
 If the relay comes out of re-election as the host, `ESEngine` posts
 `ESEngineDidBecomeHostNotification` and the delegate runs the host block it would
 have run at launch (menu or status item, activation policy, tag janitor, vector
-backfill) — but without onboarding or `activate`, because the user is in the
-middle of something.
+backfill). Whether it also greets (onboarding + `activate`) depends on *when*
+the promotion happens:
+
+- **Within 10 s of this process's own launch** it is still startup. This is
+  Claude Desktop's normal path: the probe wins the bind, greets, and is
+  SIGTERM+SIGKILLed about a second later (Desktop's transport follows SIGTERM
+  with SIGKILL after a fixed 1 s, so the linger below cannot save it); the real
+  instance is promoted tens of milliseconds after its own launch. Before this
+  distinction (2026-09-17) the onboarding window appeared with the probe and
+  vanished with it, and the promoted host never showed it again.
+- **Later** the user is in the middle of something: Dock icon and menu, but no
+  onboarding and no focus.
+
+An AI-spawned host greets only after a 2 s delay, on both paths. The probe dies
+before its timer fires, so nothing flashes; whichever host survives the delay is
+the real one (a host never demotes). A hand-launched app has no probe to wait
+out and greets at once. `ESStdioAppDelegate` `-activateHostRoleAtLaunch:`,
+`kESStartupWindow`, `kESGreetDelay`.
 
 ### 2. A host lingers for its peers (`MCPStdioServer`)
 

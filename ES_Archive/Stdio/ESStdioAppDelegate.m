@@ -27,10 +27,21 @@
 /// Set once this process has taken on the host's GUI and housekeeping — at launch
 /// or after a mid-session re-election. Never runs twice.
 @property (nonatomic) BOOL hostRoleActive;
+/// When -applicationDidFinishLaunching ran. A re-election that promotes this
+/// process within kESStartupWindow of it is still part of startup (Claude
+/// Desktop's probe handoff), not a mid-session event. See -activateHostRoleAtLaunch:.
+@property (strong) NSDate *launchDate;
 - (void)installUserMainMenu;
 - (void)showConnections:(id)sender;
 - (void)showSettings:(id)sender;
 @end
+
+/// A promotion by re-election this soon after launch counts as startup.
+static const NSTimeInterval kESStartupWindow = 10.0;
+/// How long an AI-spawned host waits before greeting. Claude Desktop's probe
+/// instance is SIGKILLed about a second after it starts; a host that dies inside
+/// this delay never flashes a window, and the one that survives it is the real host.
+static const NSTimeInterval kESGreetDelay = 2.0;
 
 @implementation ESStdioAppDelegate
 
@@ -48,6 +59,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)note {
     fprintf(stderr, "[es-archive-mcp] applicationDidFinishLaunching\n");
+    self.launchDate = [NSDate date];
 
     // Engine first — it runs the socket election, which decides our role.
     [[ESEngine shared] start];
@@ -132,9 +144,27 @@
     // interrupting a Claude session already in front. A promotion mid-session is
     // different — the user is in the middle of something — so it gets the Dock
     // icon and menu but neither onboarding nor focus.
-    if (atLaunch && [ESAppConfig activationMode] != ESActivationModeMenuBar) {
-        [ESStdioConnectController showAtStartupIfEnabled];
-        [NSApp activate];
+    //
+    // "Startup" is wider than -applicationDidFinishLaunching, though. Claude
+    // Desktop spawns us three times at launch; its probe instance usually wins
+    // the bind, greets, and is SIGTERM+SIGKILLed about a second later — the
+    // linger in MCPStdioServer cannot outlive a SIGKILL. The real instance then
+    // hosts by re-election, tens of milliseconds after its own launch. So a
+    // promotion inside kESStartupWindow of this process's launch is startup too.
+    // And an AI-spawned host greets only after kESGreetDelay: the probe dies
+    // before the timer fires (no window flashes), the survivor is the real host.
+    // A hand-launched app has no probe to wait out and greets at once.
+    BOOL startup = atLaunch || -[self.launchDate timeIntervalSinceNow] < kESStartupWindow;
+    if (startup && [ESAppConfig activationMode] != ESActivationModeMenuBar) {
+        NSTimeInterval delay = self.launchedByAI ? kESGreetDelay : 0;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            // Still alive ⇒ still the host: a host never demotes.
+            fprintf(stderr, "[es-archive-mcp] greeting — onboarding and focus%s\n",
+                    atLaunch ? "" : " (host by re-election during startup)");
+            [ESStdioConnectController showAtStartupIfEnabled];
+            [NSApp activate];
+        });
     }
 
     // Tag housekeeping — host only, like the vector backfill below: this
