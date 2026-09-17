@@ -153,3 +153,8 @@ serving again 0.9 s after the kill. The election lock (2026-09-17) was verified
 with this drill: before it, one run in five produced two hosts; after it, the
 host check passed in eleven consecutive runs, with the teardown transient
 (`socket-election.md`) visible in the trace but never a second host.
+
+`Testing/stdio-onboarding/run.sh` replays Desktop's probe handoff with the late
+SIGKILL: the probe lingers past its greet timer and stands down (session ended),
+the promoted host greets during startup, and a host promoted after the 30 s
+window stays quiet. 12 checks, ~45 s.
