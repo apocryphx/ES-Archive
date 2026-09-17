@@ -58,6 +58,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AppDelegate.m,
+				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				main.m,
 				MemoryScope/MEMORY_SCOPE.md,
 				Onboarding/ESHTTPConnectController.m,
@@ -68,7 +69,6 @@
 				Settings/ESServerConfig.m,
 				Settings/ESSettingsTabViewController.m,
 				SystemPulse/ESSystemPulseViewController.m,
-				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				"VectorEngine/docs/curve-visualizer.html",
 			);
 			target = 15786DB32F55F87F00E136DA /* ES Archive MCP */;
@@ -76,6 +76,7 @@
 		EE75F6B52FF74BDE00279212 /* Exceptions for "ES_Archive" folder in "ES Archive Server" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				MemoryScope/MEMORY_SCOPE.md,
 				Onboarding/ESStdioConnectController.m,
 				Stdio/ESBridgeCLI.m,
@@ -88,7 +89,6 @@
 				Stdio/MCPFraming.m,
 				Stdio/MCPSocketClient.m,
 				Stdio/MCPStdioServer.m,
-				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				"VectorEngine/docs/curve-visualizer.html",
 			);
 			target = EE75F6A32FF74BDD00279212 /* ES Archive Server */;
