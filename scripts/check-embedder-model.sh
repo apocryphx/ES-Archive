@@ -2,13 +2,14 @@
 #
 # check-embedder-model.sh — build-phase guard for the embedder model.
 #
-# The EmbeddingGemma model is large and kept OUT of git (see .gitignore:
-# EmbeddingGemmaEncoder.mlpackage/ and embeddinggemma.tokenizer.json). That means
-# a clean clone or a CI build produces an .app WITHOUT the model — and the engine
-# then fails SILENTLY at runtime: semantic search returns "No memories in your
-# scope yet" and the host process sits at ~64 MB instead of ~500 MB. This was
-# found the hard way in the UDS live test (see design-decisions/
-# uds-live-test-report-hardened.md). A red build is cheaper than that mystery.
+# The EmbeddingGemma model lives in a git submodule (ES_Archive/Embedders/
+# embeddinggemma-300m-qat-q4_0-coreml, hosted on Hugging Face via LFS). A clone
+# made without --recurse-submodules leaves that directory empty, so the build
+# produces an .app WITHOUT the model — and the engine then fails SILENTLY at
+# runtime: semantic search returns "No memories in your scope yet" and the host
+# process sits at ~64 MB instead of ~500 MB. This was found the hard way in the
+# UDS live test (see design-decisions/uds-live-test-report-hardened.md). A red
+# build is cheaper than that mystery.
 #
 # The check verifies the SHIPPABLE PRODUCT (ground truth), so it catches both a
 # missing source file and a file that was never added to the target's resources.
@@ -17,7 +18,7 @@
 set -u
 
 RES="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
-SRC="${SRCROOT}/ES_Archive/Embedders/EmbeddingGemmaEmbedder"
+SRC="${SRCROOT}/ES_Archive/Embedders/embeddinggemma-300m-qat-q4_0-coreml"
 
 status=0
 require() {
@@ -32,21 +33,22 @@ require "EmbeddingGemmaEncoder.mlmodelc"
 require "embeddinggemma.tokenizer.json"
 
 if [ "$status" -ne 0 ]; then
-    echo "error: The EmbeddingGemma model is gitignored, so this build produced a" >&2
-    echo "error: silently non-functional engine (empty semantic search)." >&2
-    echo "error: Restore the model into:" >&2
+    echo "error: The EmbeddingGemma model submodule is missing or empty, so this build" >&2
+    echo "error: produced a silently non-functional engine (empty semantic search)." >&2
+    echo "error: Restore it with:  git submodule update --init  (needs git-lfs), which fills:" >&2
     echo "error:   $SRC" >&2
     echo "error: (EmbeddingGemmaEncoder.mlpackage + embeddinggemma.tokenizer.json), confirm" >&2
     echo "error: they are members of this target's Copy Bundle Resources phase, then rebuild." >&2
     exit 1
 fi
 
-# Reject the com.apple.quarantine xattr on the built model. The model is
-# downloaded (gitignored), so macOS stamps it with quarantine, and the CoreML
-# compile copies that attribute into the bundle's .mlmodelc. An App Store /
-# TestFlight upload then fails validation with error 91109. Catch it here as a
-# red build (a read-only scan of these already-declared input resources, so it
-# stays sandbox-compatible) instead of after a long upload round-trip.
+# Reject the com.apple.quarantine xattr on the built model. A git checkout does
+# not set it, but a model dropped in from a browser download carries it, and
+# the CoreML compile copies that attribute into the bundle's .mlmodelc. An App
+# Store / TestFlight upload then fails validation with error 91109. Catch it
+# here as a red build (a read-only scan of these already-declared input
+# resources, so it stays sandbox-compatible) instead of after a long upload
+# round-trip.
 bad=$(find "$RES/EmbeddingGemmaEncoder.mlmodelc" "$RES/embeddinggemma.tokenizer.json" -type f 2>/dev/null | while IFS= read -r f; do
     if xattr "$f" 2>/dev/null | grep -qi "com.apple.quarantine"; then printf '%s\n' "${f#$RES/}"; fi
 done)

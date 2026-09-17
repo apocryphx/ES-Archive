@@ -68,6 +68,7 @@
 				Settings/ESServerConfig.m,
 				Settings/ESSettingsTabViewController.m,
 				SystemPulse/ESSystemPulseViewController.m,
+				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				"VectorEngine/docs/curve-visualizer.html",
 			);
 			target = 15786DB32F55F87F00E136DA /* ES Archive MCP */;
@@ -87,6 +88,7 @@
 				Stdio/MCPFraming.m,
 				Stdio/MCPSocketClient.m,
 				Stdio/MCPStdioServer.m,
+				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				"VectorEngine/docs/curve-visualizer.html",
 			);
 			target = EE75F6A32FF74BDD00279212 /* ES Archive Server */;

@@ -10,10 +10,9 @@ project.xcworkspace/xcuserdata/
 build/
 DerivedData/
 
-# Embedder assets — large binary model + tokenizer, restored from disk or the
-# conversion scripts (embedding-trajectories), not committed.
-*.mlpackage/
-embeddinggemma.tokenizer.json
+# Embedder assets — the EmbeddingGemma model + tokenizer live in the git
+# submodule ES_Archive/Embedders/embeddinggemma-300m-qat-q4_0-coreml (hosted
+# on Hugging Face, LFS). Restore with: git submodule update --init
 
 # mcpb packaging — the staged app and the built artifact live on GitHub
 # releases, not in the tree.
