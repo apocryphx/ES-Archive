@@ -6,7 +6,7 @@
 # re-elect (one hosts, one relays) → the new host's stdin closes and it lingers
 # for its peer → the peer leaves and the host exits. Needs a built Debug app:
 #
-#   xcodebuild -workspace ../ES-Projects.xcworkspace -scheme "ES Archive MCP" \
+#   xcodebuild -workspace ES-Archive.xcworkspace -scheme "ES Archive MCP" \
 #       -configuration Debug build CODE_SIGNING_ALLOWED=NO
 #   Testing/stdio-reelection/run.sh [path/to/ES Archive MCP.app]
 #
@@ -17,7 +17,7 @@
 # See design-decisions/mid-session-reelection.md.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP="${1:-$(ls -dt "$HOME"/Library/Developer/Xcode/DerivedData/ES-Projects-*/Build/Products/Debug/"ES Archive MCP.app" | head -1)}"
+APP="${1:-$(ls -dt "$HOME"/Library/Developer/Xcode/DerivedData/ES-Archive-*/Build/Products/Debug/"ES Archive MCP.app" | head -1)}"
 BIN="$APP/Contents/MacOS/ES Archive MCP"
 [ -x "$BIN" ] || { echo "no built app at: $BIN" >&2; exit 2; }
 FAKE_HOME="${TMPDIR:-/tmp}/es-reelection-drill.$$"
