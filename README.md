@@ -32,6 +32,37 @@ That's all. Claude Desktop launches the server on demand and the archive tools a
 
 ES Archive MCP is distributed through the **Mac App Store**, sandboxed like every App Store app. All data stays on your Mac; if you're signed into iCloud it syncs through your own private CloudKit database, and nothing else leaves the machine.
 
+## Build from source
+
+The repository uses **git submodules** for the on-device embedder and the two dependency projects, so clone with them:
+
+```sh
+git clone --recurse-submodules https://github.com/apocryphx/ES-Archive.git
+```
+
+If you already have a clone without them:
+
+```sh
+git submodule update --init
+```
+
+The embedder submodule pulls ~220 MB of model weights and tokenizer through **Git LFS**, so install it once beforehand (`brew install git-lfs && git lfs install`).
+
+| Submodule | Path | What it is |
+|---|---|---|
+| [embeddinggemma-300m-qat-q4_0-coreml](https://huggingface.co/apocryphx/embeddinggemma-300m-qat-q4_0-coreml) | `ES_Archive/Embedders/embeddinggemma-300m-qat-q4_0-coreml` | EmbeddingGemma Core ML package + tokenizer (Hugging Face, LFS) |
+| [ObjCTokenizer](https://github.com/apocryphx/ObjCTokenizer) | `External/ObjCTokenizer` | HuggingFace-compatible tokenizer in Objective-C |
+| [GCDWebServer](https://github.com/apocryphx/GCDWebServer) | `External/GCDWebServer` | Hardened localhost HTTP server for ES Archive Server |
+
+Open **`ES-Archive.xcworkspace`** (not the bare `.xcodeproj` — it cannot resolve the dependency projects on its own) and build the `ES Archive MCP` or `ES Archive Server` scheme. A build phase verifies the embedder model landed in the bundle and fails red if a submodule is missing.
+
+To keep the submodules moving with the main repo on every pull, set once per clone:
+
+```sh
+git config submodule.recurse true
+```
+
+---
 ## What it does
 
 ES Archive exposes **22 MCP tools**. Most retrieval and curation runs through **`archive_cli`**, a Unix-pipeline surface — compose operations with `|` the way you would in a shell (`lfind --tag "X" | w2vgrep "concept" | head 5`); run `archive_cli("man")` for the full vocabulary. The rest are direct tools:
@@ -67,7 +98,7 @@ The stdio **ES Archive MCP** scopes a persona **per connection** — each sessio
 The engine — the Core Data stack, the on-device embedder, vector search, and every MCP tool implementation — is shared by both targets. What differs is the transport:
 
 - **ES Archive MCP** speaks MCP as newline-delimited JSON-RPC over **stdio**, and N concurrent sessions share **one** engine rather than N. The first session to start binds a UNIX-domain socket in the shared App Group container and hosts the engine in-process; every other session connects to that host and **relays** its requests over the socket, never loading its own Core Data stack or embedder (≈30 MB per relay vs. ≈550 MB for the one host). The election is the `bind()` itself — kernel-arbitrated, no daemon, App-Store-safe (see [`design-decisions/socket-election.md`](design-decisions/socket-election.md)). The host also owns the single GUI; relays stay headless and exit when their host does, so nothing lingers. There is no HTTP listener anywhere in the target. Shutdown is stdin EOF or SIGTERM, draining cleanly before the store is saved.
-- **ES Archive Server** hosts the same engine behind a localhost HTTP server — vendored [GCDWebServer](GCDWebServer/), hardened with six security fixes documented in [GCDWebServer/CHANGES.md](GCDWebServer/CHANGES.md) — binding to `127.0.0.1` only, one listener per persona. It accepts no external connections; remote access, when wanted, is delegated to a cloudflared tunnel with per-port Cloudflare Access authentication.
+- **ES Archive Server** hosts the same engine behind a localhost HTTP server — [GCDWebServer](External/GCDWebServer/) (a submodule), hardened with security fixes documented in [CHANGES-2026-05-09.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-05-09.md) and [CHANGES-2026-04-25.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-04-25.md) — binding to `127.0.0.1` only, one listener per persona. It accepts no external connections; remote access, when wanted, is delegated to a cloudflared tunnel with per-port Cloudflare Access authentication.
 
 Packaging of the stdio `.mcpb` lives in [`packaging/`](packaging/).
 
@@ -83,7 +114,7 @@ ES Archive has been in active development for over a year (as ES Memory until Au
 
 ## License
 
-MIT. See [LICENSE](LICENSE) for full text. The vendored [GCDWebServer](GCDWebServer/) component retains its original BSD-style license; see [GCDWebServer/LICENSE.txt](GCDWebServer/LICENSE.txt).
+MIT. See [LICENSE](LICENSE) for full text. The [GCDWebServer](External/GCDWebServer/) submodule retains its original BSD 3-Clause license; see [its README](External/GCDWebServer/README.md#license).
 
 ## Author
 
