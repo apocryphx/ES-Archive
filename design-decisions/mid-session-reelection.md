@@ -65,21 +65,31 @@ have run at launch (menu or status item, activation policy, tag janitor, vector
 backfill). Whether it also greets (onboarding + `activate`) depends on *when*
 the promotion happens:
 
-- **Within 10 s of this process's own launch** it is still startup. This is
-  Claude Desktop's normal path: the probe wins the bind, greets, and is
-  SIGTERM+SIGKILLed about a second later (Desktop's transport follows SIGTERM
-  with SIGKILL after a fixed 1 s, so the linger below cannot save it); the real
-  instance is promoted tens of milliseconds after its own launch. Before this
-  distinction (2026-09-17) the onboarding window appeared with the probe and
-  vanished with it, and the promoted host never showed it again.
+- **Within 30 s of this process's own launch** it is still startup. This is
+  Claude Desktop's normal path: the probe wins the bind, is told to shut down
+  about a second in, and is SIGKILLed a few seconds later when Desktop spawns
+  the next instance; the real instance is promoted the moment the probe dies.
+  Before this distinction (2026-09-17) the onboarding window appeared with the
+  probe and vanished with it, and the promoted host never showed it again.
 - **Later** the user is in the middle of something: Dock icon and menu, but no
   onboarding and no focus.
 
-An AI-spawned host greets only after a 2 s delay, on both paths. The probe dies
-before its timer fires, so nothing flashes; whichever host survives the delay is
-the real one (a host never demotes). A hand-launched app has no probe to wait
-out and greets at once. `ESStdioAppDelegate` `-activateHostRoleAtLaunch:`,
+An AI-spawned host greets only after a 2 s delay, on both paths, and only if
+its **own stdio session is still open** when the timer fires
+(`MCPStdioServer.sessionEnded`). That second condition is what actually keeps
+the probe quiet: Desktop closes the probe's stdin at ~1 s but the SIGKILL comes
+at Desktop's pace — 4 s in the traced launch, not the fixed 1 s its transport
+code suggests — so a host that has been told its session is over must never
+greet, however long it lingers for its peers. A hand-launched app has no probe
+to wait out and greets at once. `ESStdioAppDelegate` `-activateHostRoleAtLaunch:`,
 `kESStartupWindow`, `kESGreetDelay`.
+
+The promoted host greets several seconds into Desktop's launch, by which time
+Desktop's window is in front — and since macOS 14 an app cannot take focus from
+the active app, so `-activate` is declined and the window would open one layer
+behind Desktop (confirmed with the window list: Claude, then ES Archive MCP).
+The onboarding window therefore floats above everything until it first becomes
+key, then drops to a normal window (`ESOnboardingWindowController` `+show`).
 
 ### 2. A host lingers for its peers (`MCPStdioServer`)
 

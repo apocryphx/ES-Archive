@@ -18,6 +18,7 @@ static int gRPCFileDescriptor = -1;
 
 @interface MCPStdioServer () {
     atomic_flag _drainStarted;
+    atomic_bool _sessionEnded;
 }
 @property (strong) dispatch_queue_t readQueue;
 @property (strong) dispatch_queue_t writeQueue;
@@ -106,7 +107,10 @@ static int gRPCFileDescriptor = -1;
     dispatch_resume(self.sigtermSource);
 }
 
+- (BOOL)sessionEnded { return atomic_load(&_sessionEnded); }
+
 - (void)drainAndTerminate {
+    atomic_store(&_sessionEnded, true);
     // EOF and SIGTERM can both arrive in one shutdown; drain exactly once. A
     // later signal while we linger for peers is honored only once no peer
     // session depends on this engine any more.

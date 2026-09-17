@@ -37,7 +37,7 @@
 @end
 
 /// A promotion by re-election this soon after launch counts as startup.
-static const NSTimeInterval kESStartupWindow = 10.0;
+static const NSTimeInterval kESStartupWindow = 30.0;
 /// How long an AI-spawned host waits before greeting. Claude Desktop's probe
 /// instance is SIGKILLed about a second after it starts; a host that dies inside
 /// this delay never flashes a window, and the one that survives it is the real host.
@@ -151,14 +151,21 @@ static const NSTimeInterval kESGreetDelay = 2.0;
     // linger in MCPStdioServer cannot outlive a SIGKILL. The real instance then
     // hosts by re-election, tens of milliseconds after its own launch. So a
     // promotion inside kESStartupWindow of this process's launch is startup too.
-    // And an AI-spawned host greets only after kESGreetDelay: the probe dies
-    // before the timer fires (no window flashes), the survivor is the real host.
-    // A hand-launched app has no probe to wait out and greets at once.
+    // And an AI-spawned host greets only after kESGreetDelay, and only if its
+    // own stdio session is still open by then. Desktop closes the probe's stdin
+    // about a second in (the SIGKILL follows seconds later, at Desktop's pace —
+    // not something to time against), so the probe's timer finds sessionEnded
+    // and stands down; the survivor with a live session is the real host. A
+    // hand-launched app has no probe to wait out and greets at once.
     BOOL startup = atLaunch || -[self.launchDate timeIntervalSinceNow] < kESStartupWindow;
     if (startup && [ESAppConfig activationMode] != ESActivationModeMenuBar) {
         NSTimeInterval delay = self.launchedByAI ? kESGreetDelay : 0;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
+            if (self.launchedByAI && [MCPStdioServer shared].sessionEnded) {
+                fprintf(stderr, "[es-archive-mcp] not greeting — own stdio session already ended\n");
+                return;
+            }
             // Still alive ⇒ still the host: a host never demotes.
             fprintf(stderr, "[es-archive-mcp] greeting — onboarding and focus%s\n",
                     atLaunch ? "" : " (host by re-election during startup)");

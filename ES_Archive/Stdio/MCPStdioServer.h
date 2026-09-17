@@ -35,6 +35,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)shared;
 - (void)start;
 
+/// YES once this process's own stdio session is over (stdin EOF or SIGTERM
+/// received), whether it then terminates or lingers as host for its peers. A
+/// host whose session has ended is a session that is finishing — Claude
+/// Desktop's launch probe, typically — and must not greet the user.
+@property (readonly) BOOL sessionEnded;
+
 @end
 
 NS_ASSUME_NONNULL_END

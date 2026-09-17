@@ -47,7 +47,25 @@ static const CGFloat kCardBodyWidth = 552.0;
 
 + (void)show {
     ESOnboardingWindowController *c = [self sharedController];
-    [c.window center];
+    NSWindow *w = c.window;
+    [w center];
+    // Since macOS 14 an app cannot take focus from the active app on its own:
+    // -activate below is a request, and when Claude Desktop is already in front
+    // (the host promoted by re-election a few seconds into Desktop's launch) it
+    // is declined and this window would open one layer behind Desktop, unseen.
+    // Onboarding exists to be seen once, so it floats above everything until the
+    // user engages with it — the first time it becomes key it drops to a normal
+    // window. If activation does succeed (hand launch, nothing in front) the
+    // window is key at once and the float is over before it is visible.
+    w.level = NSFloatingWindowLevel;
+    __block id token = nil;
+    token = [NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidBecomeKeyNotification
+                                                            object:w
+                                                             queue:NSOperationQueue.mainQueue
+                                                        usingBlock:^(NSNotification *note) {
+        w.level = NSNormalWindowLevel;
+        if (token) { [NSNotificationCenter.defaultCenter removeObserver:token]; token = nil; }
+    }];
     [c showWindow:nil];
     [NSApp activate];   // macOS 14+; use activateIgnoringOtherApps: on older SDKs
 }
