@@ -152,26 +152,37 @@ them and goes when the last one leaves.
 start probes it, gets `ECONNREFUSED`, unlinks, and re-elects. Recovery is
 automatic and requires no janitor process.
 
-**The split-brain window (the one real race).** Two processes, A and B, both
-observe the same *stale* socket, both get `ECONNREFUSED`, and both decide to
-unlink. If the interleaving is: A unlinks → A binds (fresh socket on the path)
-→ **B unlinks (removing A's fresh socket!)** → B binds — then A and B are
-*both* listening: A on an unlinked inode (its existing clients keep working;
-no new client can reach it), B on the path (all new clients go to B). That is
-a temporary two-host split. Why we accept it rather than adding a lock file
-(which would reintroduce the crashed-holder problem the election exists to
-avoid):
+**The split-brain window (the one real race) — closed 2026-09-17.** Two
+processes, A and B, both observe the same *stale* socket, both get
+`ECONNREFUSED`, and both decide to unlink. If the interleaving is: A unlinks →
+A binds (fresh socket on the path) → **B unlinks (removing A's fresh socket!)**
+→ B binds — then A and B are *both* listening: A on an unlinked inode, B on
+the path. Two hosts, two Core Data writers.
 
-1. The window requires two processes to race through probe→unlink within
-   microseconds of each other *against an already-crashed host* — a crash
-   followed by a near-simultaneous double start.
-2. The consequence is bounded: A serves only its pre-split clients until they
-   disconnect, then idles; B serves everyone new. No requests are lost.
-3. The store itself tolerates it: both hosts open the same Core Data store
-   with persistent history tracking + remote-change notifications — the same
-   multi-instance configuration ES Memory shipped with before any of this
-   work, when every session hosted its own engine. Split-brain briefly
-   degrades to the previous status quo, not to corruption.
+This brief originally accepted the window because it seemed to need a crash
+followed by a near-simultaneous double start. Mid-session re-election
+(`mid-session-reelection.md`) made it the *common* case: every relay of a
+killed host sees EOF in the same instant and re-elects in the same instant.
+`Testing/stdio-reelection` reproduced the double host outright once its
+election was traced.
+
+The fix keeps the bind as the election and serializes only the stale-file
+cleanup: `flock(LOCK_EX)` on `<socket path>.lock` for the span of one attempt
+(bind → probe → unlink → re-bind → listen), see `ESAcquireElectionLock` in
+`MCPUnixSocketServer.m`. Under the lock a probe sees either a listening host
+or a genuinely dead path, and nobody can unlink a socket that a peer has bound
+but not yet listened on. This is *not* the lock/PID-file design rejected
+below: the lock carries no claim about who hosts, it is held for microseconds,
+and the kernel drops it when the holder dies — a crash mid-election leaves
+nothing on disk that the next election has to distrust.
+
+**The teardown transient (benign, expected).** When a host is SIGKILLed, its
+accepted connections report EOF to the relays *before* its listening socket
+is gone. A relay that re-elects within that window can `connect()` to the
+corpse successfully, get EOF a moment later, and re-elect a second time; the
+trace shows both relays doing exactly this ~3 ms after the kill. Nothing is
+lost — the second round elects one host and one relay — and the drill checks
+the settled role, not the transient one.
 
 **Unlink of a live socket by an outside actor.** Anything with group-container
 file access could unlink the socket while the host lives — producing the same
@@ -186,7 +197,7 @@ accepted.
 | launchd LaunchAgent (`SMAppService`) | true singleton, durable host — but killed by MAS launch constraints (`REDESIGN.md` §8b); Developer-ID only |
 | bundled `.xpc`, `ServiceType=User` | refused by launchd for app-embedded services ("Path not allowed in target domain", §8c) |
 | bundled `.xpc`, `ServiceType=Application` | launches, but one instance **per client** — the N×RAM problem restated |
-| lock/PID file | check-then-act races; crashed holder leaves a lie on disk that needs timeout heuristics to clear |
+| lock/PID file | check-then-act races; crashed holder leaves a lie on disk that needs timeout heuristics to clear (the `flock` around stale-file cleanup is not this: it claims nothing and dies with its holder) |
 | localhost TCP port | works (it's the HTTP server's mechanism) — but consumes a port, needs port config, and the port number must be communicated; the UDS path is a fixed rendezvous with filesystem permissions |
 | **UDS bind-election** | kernel-arbitrated, MAS-safe, no daemons, self-healing after crashes; costs: host lifetime = process lifetime, and the bounded split-brain window above |
 
@@ -203,4 +214,5 @@ accepted.
    stdio host with different handlers).
 4. **A host that loses its socket must not fight for it back.** If re-binding
    logic is ever added, it must go through the same election (probe first) —
-   never a blind unlink of a path someone else may own.
+   never a blind unlink of a path someone else may own — and always under
+   the election lock, so the unlink cannot race a peer's fresh bind.

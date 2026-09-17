@@ -30,6 +30,10 @@
 
 #import <Foundation/Foundation.h>
 #import <os/log.h>
+#import <pthread.h>
+#import <unistd.h>
+#import <stdlib.h>
+#import <string.h>
 
 #ifdef DEBUG
   #define ESLog(fmt, ...) NSLog(fmt, ##__VA_ARGS__)
@@ -52,6 +56,27 @@ static inline os_log_t ESLogAlwaysHandle(void) {
 /// Release-safe diagnostic log. Formats via NSString first so all the usual
 /// `%@`, `%lu`, etc. specifiers work the same as `NSLog`, then emits via
 /// os_log at default level so it survives notarized builds.
+/// Election / socket trace, for reconstructing exactly what N processes did to
+/// each other. Off unless the environment has ES_ARCHIVE_TRACE=1 (checked once),
+/// so it costs a load and a branch in Release. Writes one line to stderr —
+/// which Claude Desktop captures into mcp-server-ES Archive.log, and which the
+/// drills in Testing/ record per process — stamped with seconds since this
+/// process first traced, pid, and thread, so lines from several processes can be
+/// merged. See Testing/stdio-reelection/run.sh (TRACE=…).
+/// Process-wide state lives in ESLog.m — one flag, one clock, shared by every
+/// translation unit that traces.
+BOOL   ESTraceEnabled(void);
+double ESTraceClock(void);
+
+#define ESTrace(fmt, ...) do { \
+    if (ESTraceEnabled()) { \
+        NSString *_es_t_ = [NSString stringWithFormat:(fmt), ##__VA_ARGS__]; \
+        uint64_t _es_tid_ = 0; pthread_threadid_np(NULL, &_es_tid_); \
+        fprintf(stderr, "[es-trace] +%.4f pid=%d tid=%llu %s\n", \
+                ESTraceClock(), getpid(), (unsigned long long)_es_tid_, _es_t_.UTF8String); \
+    } \
+} while (0)
+
 #define ESLogAlways(fmt, ...) do { \
     NSString *_es_msg_ = [NSString stringWithFormat:(fmt), ##__VA_ARGS__]; \
     os_log(ESLogAlwaysHandle(), "%{public}@", _es_msg_); \

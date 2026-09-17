@@ -114,6 +114,17 @@ SIGKILL, only re-election saves the peers.
   `uds-adaptation-from-template.md`; the connection is still severed on timeout,
   but the *process* now recovers by re-electing instead of staying dead.
 
+## Tracing
+
+`ES_ARCHIVE_TRACE=1` in the environment turns on `ESTrace` (ESLog.h): one
+stderr line per election step and socket event — lock, bind, probe, unlink,
+listen, accept, connect, request, reply, EOF, close — stamped with seconds since
+the process first traced, pid, and thread. Claude Desktop captures the server's
+stderr into `~/Library/Logs/Claude/mcp-server-ES Archive.log`, so putting the
+variable in the server's `env` in Desktop's MCP config traces the live
+probe/real/shared-pool handoff. `TRACE=file Testing/stdio-reelection/run.sh`
+records every process's lines into one file for the drill.
+
 ## Verified
 
 `Testing/uds-transport/run.sh` (the Foundation-only harness) adds
@@ -128,4 +139,7 @@ the whole scenario over stdio pipes on a private socket: A hosts, B and C relay,
 A is SIGKILLed, B and C re-elect (one hosts and raises the host role, the other
 relays to it), the new host's stdin closes and it lingers for its peer, the peer
 leaves and the host exits with the socket unlinked. 21 checks; both relays were
-serving again 0.9 s after the kill.
+serving again 0.9 s after the kill. The election lock (2026-09-17) was verified
+with this drill: before it, one run in five produced two hosts; after it, the
+host check passed in eleven consecutive runs, with the teardown transient
+(`socket-election.md`) visible in the trace but never a second host.

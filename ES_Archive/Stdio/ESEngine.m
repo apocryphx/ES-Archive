@@ -80,6 +80,7 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
 /// run more than once: the engine loads at most once (-loadEngineIfNeeded), and
 /// MCPUnixSocketServer re-binds cleanly after a -stop.
 - (void)electAndConnect {
+    ESTrace(@"engine election begins");
     // 0. If an ES Archive Server is already running, it owns the one shared
     //    engine. Connect and relay to it — and skip the whole local bring-up
     //    below, so this stdio process never loads Core Data or the embedder.
@@ -87,6 +88,7 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
     self.remote = [MCPSocketClient connectWithAuthor:self.authorOverride];
     if (self.remote) {
         ESLog(@"[ESEngine] using shared engine over socket — local engine NOT loaded");
+        ESTrace(@"engine election result: relay (connected before bind)");
         return;
     }
     ESLog(@"[ESEngine] no shared engine found — racing to host");
@@ -108,9 +110,11 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
         self.remote = [MCPSocketClient connectWithAuthor:self.authorOverride];
         if (self.remote) {
             ESLog(@"[ESEngine] a peer won the host race — relaying to it (engine NOT loaded)");
+            ESTrace(@"engine election result: relay (peer won the bind)");
             return;
         }
         ESLog(@"[ESEngine] peer won the race but connect failed — loading a standalone engine");
+        ESTrace(@"engine election result: standalone (peer won the bind, connect failed)");
     } else if (!elected) {
         // No App Group container to rendezvous on: can neither host nor relay.
         // Degrade to a private per-session engine (the App Group precondition —
@@ -119,6 +123,7 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
               electErr.localizedDescription ?: @"no App Group");
     }
     // Otherwise we bound the socket and are the host: fall through to load, serve.
+    if (srv.isListening) ESTrace(@"engine election result: host (bound) — loading engine");
 
     // 2. Bring up the engine. Only a process that reaches here loads it (the host,
     //    or a standalone fallback), so a lost-race relay never pays for Core Data
@@ -143,6 +148,7 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
             return [ESEngine.shared handleRequest:rpc scope:[ESRequestScope scopeWithAuthor:author]];
         }];
         ESLog(@"[ESEngine] hosting the shared engine for peer sessions at %@", srv.socketPath);
+        ESTrace(@"engine host ready — serving peers");
     } else {
         ESLog(@"[ESEngine] running standalone in-process (no peers)");
     }
@@ -238,6 +244,7 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
     [_roleCondition unlock];
 
     fprintf(stderr, "[es-archive-mcp] shared engine host went away — re-electing\n");
+    ESTrace(@"engine re-election begins (closing dead client)");
 
     // Close the dead client here, off-main: -close waits for any request still on
     // its wire to let go, which (for a host that is wedged rather than gone) can
@@ -304,6 +311,8 @@ NSNotificationName const ESEngineDidBecomeHostNotification = @"ESEngineDidBecome
         [self reelectReplacing:remote];
         BOOL neverDelivered = (reply == nil)
             || [reply[@"error"][@"code"] isEqual:@(MCPSocketClientErrorConnectionLost)];
+        ESTrace(@"engine request %@ id=%@ after host loss: %@", rpc[@"method"], rpc[@"id"],
+                neverDelivered ? @"retrying on new role" : @"returning transport error");
         if (!neverDelivered) return reply;
     }
     return reply;

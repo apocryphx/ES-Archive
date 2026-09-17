@@ -7,6 +7,7 @@
 //
 
 #import "MCPSocketClient.h"
+#import "ESLog.h"
 #import "ESEngineSocket.h"
 
 #import <sys/socket.h>
@@ -63,9 +64,11 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0) return nil;
     if (![self connectFD:fd toPath:path]) {   // no server listening
+        ESTrace(@"client connect %@ → refused (%s)", path.lastPathComponent, strerror(errno));
         close(fd);
         return nil;
     }
+    ESTrace(@"client connect %@ → fd %d (author %@)", path.lastPathComponent, fd, author ?: @"(default)");
     int on = 1; setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
     // Non-blocking so reads can be bounded by poll() without ever parking here
     // forever. (connect() above was blocking, which is what we want for it.)
@@ -125,6 +128,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
             if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) return;
             // n == 0 (peer closed) or a hard error: the host is gone. Mark dead so a
             // request that races us short-circuits, cancel so we don't re-fire, notify.
+            ESTrace(@"client fd %d idle watcher: %s", watchedFD, n == 0 ? "EOF" : strerror(errno));
             atomic_store(&sc->_dead, true);
             dispatch_source_cancel(src);
             [sc hostDisconnected];
@@ -177,16 +181,23 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
                             @"shared engine connection is closed");
     }
     if (![self writeAll:line]) {
+        ESTrace(@"client fd %d write failed for %@ id=%@ (%s)", _fd, rpc[@"method"], rpcId, strerror(errno));
         [self closeConnection];
         [self hostDisconnected];   // the host is gone — ESEngine re-elects
         [_lock unlock];
         return ESRelayError(rpcId, MCPSocketClientErrorConnectionLost,
                             @"shared engine connection lost while sending");
     }
+    ESTrace(@"client fd %d sent %@ id=%@", _fd, rpc[@"method"], rpcId ?: @"(notification)");
     if (isNotification) { [_lock unlock]; return nil; }
 
     BOOL timedOut = NO;
     NSDictionary *reply = [self readReplyTimedOut:&timedOut];
+    if (reply) {
+        ESTrace(@"client fd %d reply id=%@%@", _fd, reply[@"id"], reply[@"error"] ? @" (error)" : @"");
+    } else {
+        ESTrace(@"client fd %d no reply for id=%@: %s", _fd, rpcId, timedOut ? "timeout" : "EOF/error");
+    }
     if (!reply) {
         // Timed out or the host vanished mid-reply. Either way the connection is
         // now unusable — a late reply arriving later would desync the stream — so
@@ -267,6 +278,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
 /// cancel the watcher and wait for its cancel handler — libdispatch requires the
 /// fd to outlive the source — then close. Idempotent.
 - (void)closeConnection {
+    if (_fd >= 0) ESTrace(@"client fd %d closing", _fd);
     atomic_store(&_dead, true);
     if (_eofSource) {
         dispatch_source_cancel(_eofSource);
@@ -292,6 +304,7 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
         _disconnectPosted = YES;
     }
     fprintf(stderr, "[es-archive-mcp] shared engine host disconnected\n");
+    ESTrace(@"client posting host-disconnected");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSNotificationCenter.defaultCenter
             postNotificationName:MCPSocketClientHostDisconnectedNotification object:self];

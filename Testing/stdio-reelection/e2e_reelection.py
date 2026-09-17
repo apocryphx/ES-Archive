@@ -12,6 +12,10 @@ import json, os, signal, subprocess, sys, threading, queue, time, shutil
 APP = sys.argv[1]
 MODE_MENUBAR = sys.argv[2]
 FAKE_HOME = sys.argv[3]
+# Optional 4th arg: a trace file. Every stderr line of every process is appended
+# there with wall-clock time and process name, and the binaries run with
+# ES_ARCHIVE_TRACE=1 so the election / socket trace points (ESTrace) fire.
+TRACE = open(sys.argv[4], "w") if len(sys.argv) > 4 and sys.argv[4] else None
 shutil.rmtree(FAKE_HOME, ignore_errors=True)
 os.makedirs(FAKE_HOME)
 SOCK = os.path.join(FAKE_HOME, "engine.sock")
@@ -19,6 +23,7 @@ DEV_STORE_DIR = os.path.expanduser("~/Library/Application Support/ES Archive MCP
 # Created by (and only by) unsigned test hosts like this one; start from empty.
 shutil.rmtree(DEV_STORE_DIR, ignore_errors=True)
 env = dict(os.environ, HOME=FAKE_HOME, UDS_SOCKET_PATH=SOCK)
+if TRACE: env["ES_ARCHIVE_TRACE"] = "1"
 for k in ("CFFIXED_USER_HOME",):
     env.pop(k, None)
 
@@ -41,6 +46,8 @@ class Proc:
         for line in iter(self.p.stderr.readline, b""):
             s = line.decode("utf-8", "replace").rstrip()
             self.err.append(s)
+            if TRACE:
+                TRACE.write(f"{time.strftime('%H:%M:%S')}.{int((time.time()%1)*1000):03d} [{self.name}] {s}\n"); TRACE.flush()
             if "es-archive-mcp" in s: print(f"    [{self.name} stderr] {s}", flush=True)
     def send(self, obj):
         self.p.stdin.write((json.dumps(obj) + "\n").encode()); self.p.stdin.flush()
@@ -63,6 +70,14 @@ class Proc:
     def close_stdin(self): self.p.stdin.close()
     def alive(self): return self.p.poll() is None
     def has(self, needle): return any(needle in s for s in self.err)
+    def final_role(self):
+        # The role this process ended up in: its LAST "re-elected —" line. A relay
+        # can transiently connect to the dead host's listen socket during kernel
+        # teardown (connect succeeds, then EOF) and re-elect a second time; only
+        # the settled role matters.
+        roles = [s for s in self.err if "re-elected —" in s]
+        if not roles: return None
+        return "host" if "now hosts the engine" in roles[-1] else "relay"
     def wait_for(self, needle, timeout):
         deadline = time.time() + timeout
         while time.time() < deadline:
@@ -108,14 +123,17 @@ try:
     tools_ok(B, "B via A"); cli_ok(C, "C via A")
 
     print("[phase 2] host A is SIGKILLed — relays must re-elect")
+    if TRACE: TRACE.write(f"{time.strftime('%H:%M:%S')}.{int((time.time()%1)*1000):03d} [harness] SIGKILL A (pid {A.p.pid})\n")
     A.p.send_signal(signal.SIGKILL); A.p.wait()
     t0 = time.time()
     rB = tools_ok(B, "B after A died")
     rC = tools_ok(C, "C after A died")
     print(f"    (both served {time.time()-t0:.1f}s after the kill)")
     time.sleep(0.5)
+    # Strict on hosting: a process that EVER hosted counts (two hosts, even
+    # briefly, would mean two Core Data writers). Settled role for the relay.
     hosts  = [p for p in (B, C) if p.has("now hosts the engine")]
-    relays = [p for p in (B, C) if p.has("relaying to the new host")]
+    relays = [p for p in (B, C) if p.final_role() == "relay"]
     ok(len(hosts) == 1 and len(relays) == 1,
        f"exactly one re-elected host ({[h.name for h in hosts]}) and one relay ({[r.name for r in relays]})")
     ok(all(p.alive() for p in (B, C)), "B and C both still alive")

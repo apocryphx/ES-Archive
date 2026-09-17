@@ -28,6 +28,7 @@
 #import <unistd.h>
 #import <errno.h>
 #import <fcntl.h>
+#import <sys/file.h>
 #import <poll.h>
 
 NSString * const MCPUnixAuthorHandshakeMethod = @"$/esarchive/author";
@@ -93,6 +94,40 @@ static int ESBindSocket(int fd, NSString *path) {
     return result;
 }
 
+/// Exclusive advisory lock on `<socket path>.lock`, held for the span of one
+/// election attempt (bind → probe → unlink stale → re-bind → listen). The bind is
+/// still the election; the lock only serializes the STALE-FILE CLEANUP, which is
+/// otherwise a check-then-act: two relays losing the same host re-elect in the
+/// same instant, one unlinks the corpse and re-binds, and the other's probe lands
+/// in the microseconds before that peer calls listen() — so it too sees "stale",
+/// unlinks the peer's fresh socket, binds its own, and both load the engine (seen
+/// in Testing/stdio-reelection, 2026-09-17). Under the lock a probe sees either a
+/// listening host or a genuinely dead path. flock() is released by the kernel if
+/// the holder dies, so a crash mid-election cannot wedge the next one. Returns
+/// -1 (and logs) if the lock file cannot be opened; the caller then proceeds
+/// unlocked rather than refusing to host.
+static int ESAcquireElectionLock(NSString *socketPath) {
+    NSString *lockPath = [socketPath stringByAppendingString:@".lock"];
+    int fd = open(lockPath.fileSystemRepresentation, O_RDWR | O_CREAT | O_CLOEXEC, 0600);
+    if (fd < 0) {
+        ESLog(@"[MCP-UDS] election lock unavailable (%s) — electing unlocked", strerror(errno));
+        return -1;
+    }
+    double t0 = ESTraceClock();
+    while (flock(fd, LOCK_EX) != 0) {
+        if (errno == EINTR) continue;
+        ESLog(@"[MCP-UDS] election lock failed (%s) — electing unlocked", strerror(errno));
+        close(fd);
+        return -1;
+    }
+    ESTrace(@"election lock acquired after %.1f ms", (ESTraceClock() - t0) * 1000.0);
+    return fd;
+}
+
+static void ESReleaseElectionLock(int fd) {
+    if (fd >= 0) { flock(fd, LOCK_UN); close(fd); ESTrace(@"election lock released"); }
+}
+
 /// Is a LIVE host accepting on `path`? A successful connect() proves someone is
 /// blocked in accept() — it cannot succeed against a crashed owner's corpse.
 static BOOL ESProbeSocket(NSString *path) {
@@ -102,6 +137,7 @@ static BOOL ESProbeSocket(NSString *path) {
     BOOL alive = NO;
     if (ESEngineFillSockaddr(&addr, &len, path)) {
         alive = connect(fd, (struct sockaddr *)&addr, len) == 0;
+        ESTrace(@"election probe connect → %s", alive ? "alive" : strerror(errno));
     } else {
         NSString *dir  = path.stringByDeletingLastPathComponent;
         NSString *leaf = path.lastPathComponent;
@@ -167,15 +203,20 @@ static BOOL ESPeerIsConnected(int fd) {
     }
 
     // On EADDRINUSE, connect-probe: a live peer owns it (defer, don't serve); a
-    // refused connect => stale socket, unlink + retry.
+    // refused connect => stale socket, unlink + retry. The whole attempt runs
+    // under the election lock so the unlink can never hit a peer's fresh bind
+    // (see ESAcquireElectionLock).
     const char *cpath = _socketPath.fileSystemRepresentation;
+    int lockFD = ESAcquireElectionLock(_socketPath);
+    BOOL result = NO;
     for (int attempt = 0; attempt < 4; attempt++) {
         int fd = socket(AF_UNIX, SOCK_STREAM, 0);
         if (fd < 0) {
             if (error) *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
-            return NO;
+            break;
         }
         int be = ESBindSocket(fd, _socketPath);
+        ESTrace(@"election bind attempt %d → %s", attempt, be == 0 ? "bound" : strerror(be));
         if (be == 0) {
             // Non-blocking listen socket so the accept source can drain a whole
             // burst and re-arm; SOMAXCONN backlog absorbs connection storms
@@ -185,27 +226,32 @@ static BOOL ESPeerIsConnected(int fd) {
             int flags = fcntl(fd, F_GETFL, 0);
             fcntl(fd, F_SETFL, flags | O_NONBLOCK);
             listen(fd, SOMAXCONN);
+            ESTrace(@"election listening on fd %d", fd);
             _listenFD = fd;
             _listening = YES;
             if (beginAccepting) [self startAccepting];
             ESLog(@"[MCP-UDS] hosting (pid %d) at %@%@", getpid(), _socketPath,
                   beginAccepting ? @"" : @" — accept deferred until the engine is ready");
-            return YES;
+            result = YES;
+            break;
         }
         close(fd);
         if (be == EADDRINUSE) {
             if (ESProbeSocket(_socketPath)) {
                 ESLog(@"[MCP-UDS] a live peer already hosts the socket; deferring");
-                return YES;               // not listening; caller connects as a client
+                result = YES;             // not listening; caller connects as a client
+                break;
             }
             ESLog(@"[MCP-UDS] removing stale socket, re-binding");
+            ESTrace(@"election unlinking stale socket file");
             unlink(cpath);
             continue;
         }
         if (error) *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:be userInfo:nil];
-        return NO;
+        break;
     }
-    return NO;
+    ESReleaseElectionLock(lockFD);
+    return result;
 }
 
 - (void)stop {
@@ -219,6 +265,8 @@ static BOOL ESPeerIsConnected(int fd) {
     NSArray<dispatch_source_t> *sources;
     @synchronized (_connSources) { sources = _connSources.allObjects; }
     for (dispatch_source_t s in sources) dispatch_source_cancel(s);
+    ESTrace(@"server stop: closing listen fd %d, cancelling %lu connection(s), unlinking",
+            _listenFD, (unsigned long)sources.count);
     if (_listenFD >= 0) { close(_listenFD); _listenFD = -1; }
     unlink(_socketPath.fileSystemRepresentation);
     ESLog(@"[MCP-UDS] stopped");
@@ -227,6 +275,7 @@ static BOOL ESPeerIsConnected(int fd) {
 #pragma mark - Accept
 
 - (void)startAccepting {
+    ESTrace(@"server accepting on fd %d", _listenFD);
     _acceptSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, _listenFD, 0, _acceptQ);
     __weak typeof(self) ws = self;
     dispatch_source_set_event_handler(_acceptSource, ^{ [ws acceptPending]; });
@@ -243,6 +292,7 @@ static BOOL ESPeerIsConnected(int fd) {
         int on = 1; setsockopt(cfd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
         int flags = fcntl(cfd, F_GETFL, 0);
         fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
+        ESTrace(@"server accepted cfd %d", cfd);
         [self serveConnection:cfd];
     }
 }
@@ -286,23 +336,27 @@ static BOOL ESPeerIsConnected(int fd) {
                         id a = json[@"params"][@"author"];
                         connAuthor = [a isKindOfClass:NSString.class] ? a : nil;
                         ESLog(@"[MCP-UDS] connection persona: %@", connAuthor ? : @"(default)");
+                        ESTrace(@"server cfd %d persona %@", cfd, connAuthor ?: @"(default)");
                         continue;
                     }
 
                     // Hand the request to the engine with a shedding predicate that
                     // peeks THIS connection's read side at dispatch time.
+                    ESTrace(@"server cfd %d request %@ id=%@", cfd, json[@"method"], json[@"id"] ?: @"(notification)");
                     NSDictionary *envelope = handler
                         ? handler(json, connAuthor, ^BOOL{ return ESPeerIsConnected(cfd); })
                         : nil;
                     if (envelope) {
                         NSData *reply = [ss encode:envelope];
                         if (reply) [ss writeAll:reply toFD:cfd];
+                        ESTrace(@"server cfd %d replied id=%@ (%lu bytes)", cfd, envelope[@"id"], (unsigned long)reply.length);
                     }
                 }
                 continue;
             }
             if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) return;  // drained; wait for more
             if (n < 0 && errno == EINTR) continue;
+            ESTrace(@"server cfd %d read: %s — cancelling", cfd, n == 0 ? "EOF" : strerror(errno));
             dispatch_source_cancel(src);   // 0 = peer closed, or a real error
             return;
         }
@@ -314,6 +368,7 @@ static BOOL ESPeerIsConnected(int fd) {
             [self->_connSources removeObject:src];
             remaining = self->_connSources.count;
         }
+        ESTrace(@"server cfd %d closed, %lu connection(s) remain", cfd, (unsigned long)remaining);
         // Last peer gone while still serving: tell a lingering host it may exit.
         // (-stop cancels every source too, but has already cleared _listening.)
         if (remaining == 0 && self->_listening) {
