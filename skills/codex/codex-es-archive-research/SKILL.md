@@ -34,3 +34,7 @@ Do not present a resident AI's archive entry as the resident AI presently answer
 Full reads increment access metadata and can warm entries in later discovery. This is acceptable during ordinary research in Codex's own Archive, but it affects popularity and neglect measurements. Capture structural surveys before reading candidates when comparisons depend on untouched rankings. If the server lacks a no-touch read, disclose that a tour is content-preserving but not attention-neutral.
 
 Temporary tags turn research into curation. Use them only when a multi-pass investigation genuinely needs a durable working set, give them an expiry, and treat their creation and removal as writes.
+
+## Stopping and negative results
+
+Stop when the evidence is sufficient for the question, or plausible changes of axis and scope stop yielding relevant material. Report “nothing relevant found within the searched scope” rather than claiming the Archive is empty. Do not keep searching merely to obtain a match or force weak similarities into an answer. Retain meaningful counterevidence and identify gaps that affect the conclusion.

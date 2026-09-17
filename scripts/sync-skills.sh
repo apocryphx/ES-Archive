@@ -1,6 +1,7 @@
 #!/bin/zsh
-# Deploy the canonical skill files (skills/*/SKILL.md) to the local Claude
-# skill folders and rebuild the .skill zip packages.
+# Deploy the canonical skill files to the local skill folders:
+#   skills/claude/es-archive-*/SKILL.md → Claude (Code, Desktop, claude.ai packages)
+#   skills/codex/*/                     → Codex (~/.codex/skills)
 #
 # The repo is the source of truth — see skills/README.md. Run this after any
 # edit to a SKILL.md here. Re-uploading .skill packages to claude.ai (if the
@@ -8,7 +9,8 @@
 
 set -euo pipefail
 
-REPO_SKILLS="$(cd "$(dirname "$0")/../skills" && pwd)"
+REPO_SKILLS="$(cd "$(dirname "$0")/../skills/claude" && pwd)"
+CODEX_SKILLS_SRC="$(cd "$(dirname "$0")/../skills/codex" && pwd)"
 TARGETS=("$HOME/Claude/Skills" "$HOME/Documents/Claude/Skills")
 
 for target in "${TARGETS[@]}"; do
@@ -34,4 +36,18 @@ if [[ -d "$CC_SKILLS" ]]; then
     done
 else
     echo "skip (missing): $CC_SKILLS"
+fi
+
+# Codex reads skills from ~/.codex/skills — one folder per skill (SKILL.md plus
+# any agents/ metadata), copied whole.
+CX_SKILLS="$HOME/.codex/skills"
+if [[ -d "$CX_SKILLS" ]]; then
+    for src in "$CODEX_SKILLS_SRC"/*/; do
+        name="$(basename "$src")"
+        mkdir -p "$CX_SKILLS/$name"
+        rsync -a --delete "$src" "$CX_SKILLS/$name/"
+        echo "deployed $name -> $CX_SKILLS"
+    done
+else
+    echo "skip (missing): $CX_SKILLS"
 fi

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Codex Archive Store"
-  short_description: "Crystallize durable, evidence-bearing knowledge"
-  default_prompt: "Use $codex-es-archive-store to preserve this result in my Archive."

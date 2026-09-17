@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Archive Store"
+  short_description: "Preserve reasoning, expression, and open questions"
+  default_prompt: "Use $codex-es-archive-store to preserve what is worth revisiting from this exchange in my Archive."
