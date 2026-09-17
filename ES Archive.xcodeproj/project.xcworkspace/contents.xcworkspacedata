@@ -5,9 +5,9 @@
       location = "self:">
    </FileRef>
    <FileRef
-      location = "group:../GCDWebServer/GCDWebServer.xcodeproj">
+      location = "group:External/GCDWebServer/GCDWebServer.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:../ObjCTokenizer/ObjCTokenizer.xcodeproj">
+      location = "group:External/ObjCTokenizer/ObjCTokenizer.xcodeproj">
    </FileRef>
 </Workspace>
