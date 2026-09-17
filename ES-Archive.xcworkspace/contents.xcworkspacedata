@@ -5,9 +5,9 @@
       location = "group:ES Archive.xcodeproj">
    </FileRef>
    <FileRef
-      location = "container:../GCDWebServer/GCDWebServer.xcodeproj">
+      location = "container:External/GCDWebServer/GCDWebServer.xcodeproj">
    </FileRef>
    <FileRef
-      location = "container:../ObjCTokenizer/ObjCTokenizer.xcodeproj">
+      location = "container:External/ObjCTokenizer/ObjCTokenizer.xcodeproj">
    </FileRef>
 </Workspace>

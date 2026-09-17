@@ -1,3 +1,9 @@
 [submodule "ES_Archive/Embedders/embeddinggemma-300m-qat-q4_0-coreml"]
 	path = ES_Archive/Embedders/embeddinggemma-300m-qat-q4_0-coreml
 	url = https://huggingface.co/apocryphx/embeddinggemma-300m-qat-q4_0-coreml
+[submodule "External/ObjCTokenizer"]
+	path = External/ObjCTokenizer
+	url = https://github.com/apocryphx/ObjCTokenizer.git
+[submodule "External/GCDWebServer"]
+	path = External/GCDWebServer
+	url = https://github.com/apocryphx/GCDWebServer.git
