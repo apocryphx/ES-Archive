@@ -1,0 +1,31 @@
+{
+  "name": "es-archive",
+  "version": "1.0.0",
+  "description": "Persistent memory, research, and curation with the ES Archive app on your Mac.",
+  "author": {
+    "name": "Kolja Wawrowsky"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ES Archive",
+    "shortDescription": "Remember, research, and connect ideas.",
+    "longDescription": "Connect ChatGPT and Codex to ES Archive on your Mac, with seven skills for thoughtful memory, research, curation, discovery, structured records, and visiting other archives. Requires the ES Archive MCP app. The generated connection uses the author selected when packaging.",
+    "developerName": "Kolja Wawrowsky",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": [
+      "Explore my archive with the ES Archive skills.",
+      "Research a question using my archive.",
+      "Help me preserve an idea in my archive."
+    ]
+  },
+  "mcpServers": "./.mcp.json",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "archive",
+    "research",
+    "local",
+    "macOS"
+  ]
+}

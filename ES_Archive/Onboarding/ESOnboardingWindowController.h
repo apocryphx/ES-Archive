@@ -55,6 +55,11 @@ NS_ASSUME_NONNULL_BEGIN
                 accentColor:(NSColor *)accentColor
                contentViews:(NSArray<NSView *> *)contentViews;
 
+/// The "Install Claude Skills" card, shared by both apps: a short pitch and a
+/// button that opens ESSkillInstallController. Subclasses add it where it
+/// reads best in their section order.
+- (NSView *)skillsCard;
+
 /// A read-only monospaced box for a configuration snippet. The text view is
 /// held in -jsonTextView so a subclass can re-render it (the HTTP pane rewrites
 /// its JSON when the persona changes).

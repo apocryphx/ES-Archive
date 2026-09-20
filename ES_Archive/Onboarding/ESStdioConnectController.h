@@ -11,9 +11,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// The Connect window as the MCP app presents it: a one-click Claude Desktop
-/// connector, and an mcp.json for LM Studio and other stdio hosts.
+/// connector, a copyable Terminal setup command and manual ChatGPT setup, and an
+/// mcp.json for LM Studio and other stdio hosts.
 ///
-/// Both are generated against this app's own executable path, which is sound
+/// All three are generated against this app's own executable path, which is sound
 /// here and only here — the MCP binary is the stdio server (same Mach-O, serves
 /// stdio when spawned with pipes). MCP-target only; the Server app opens
 /// ESHTTPConnectController instead.

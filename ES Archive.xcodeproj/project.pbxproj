@@ -228,6 +228,7 @@
 				15786DB12F55F87F00E136DA /* Frameworks */,
 				15AE1F0730450007000000B5 /* Index Help Book */,
 				15786DB22F55F87F00E136DA /* Resources */,
+				15AE1F0930450009000000C1 /* Bundle Claude skills */,
 				151E6E402F9C15DE00369DC2 /* Embed Frameworks */,
 				FACADE000000000000000C01 /* Verify embedder model */,
 			);
@@ -249,6 +250,7 @@
 				EE75F6A92FF74BDD00279212 /* Frameworks */,
 				15AE1F0330450003000000B2 /* Index Help Book */,
 				EE75F6AC2FF74BDD00279212 /* Resources */,
+				15AE1F0A30450009000000C2 /* Bundle Claude skills */,
 				EE75F6AD2FF74BDD00279212 /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -383,6 +385,64 @@
 				"# reindexes (directory mtime changes); new pages should be added to the",
 				"# input list above for content-edit tracking.",
 				"hiutil -Caf \"${SRCROOT}/help/ES Archive MCP.help/Contents/Resources/en.lproj/ES Archive MCP.helpindex\" \"${SRCROOT}/help/ES Archive MCP.help/Contents/Resources/en.lproj\"",
+				"",
+			);
+		};
+		15AE1F0930450009000000C1 /* Bundle Claude skills */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+				"$(SRCROOT)/skills/claude",
+			);
+			name = "Bundle Claude skills";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Skills",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"# Stage the canonical Claude skills (skills/claude/<name>/SKILL.md) into",
+				"# Resources/Skills/<name>/SKILL.md so ESSkillInstallController can pack and",
+				"# hand them to Claude Desktop. The repo tree is the source of truth; every",
+				"# build carries the skill text that matches its tool surface. The skills",
+				"# folder is deliberately not a synchronized group: six files named SKILL.md",
+				"# would collide when flattened into Resources.",
+				"set -e",
+				"DEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Skills\"",
+				"rm -rf \"${DEST}\"",
+				"for src in \"${SRCROOT}\"/skills/claude/es-archive-*/SKILL.md; do",
+				"    name=\"$(basename \"$(dirname \"${src}\")\")\"",
+				"    mkdir -p \"${DEST}/${name}\"",
+				"    cp \"${src}\" \"${DEST}/${name}/SKILL.md\"",
+				"done",
+				"",
+			);
+		};
+		15AE1F0A30450009000000C2 /* Bundle Claude skills */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+				"$(SRCROOT)/skills/claude",
+			);
+			name = "Bundle Claude skills";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Skills",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"# Stage the canonical Claude skills (skills/claude/<name>/SKILL.md) into",
+				"# Resources/Skills/<name>/SKILL.md so ESSkillInstallController can pack and",
+				"# hand them to Claude Desktop. The repo tree is the source of truth; every",
+				"# build carries the skill text that matches its tool surface. The skills",
+				"# folder is deliberately not a synchronized group: six files named SKILL.md",
+				"# would collide when flattened into Resources.",
+				"set -e",
+				"DEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Skills\"",
+				"rm -rf \"${DEST}\"",
+				"for src in \"${SRCROOT}\"/skills/claude/es-archive-*/SKILL.md; do",
+				"    name=\"$(basename \"$(dirname \"${src}\")\")\"",
+				"    mkdir -p \"${DEST}/${name}\"",
+				"    cp \"${src}\" \"${DEST}/${name}/SKILL.md\"",
+				"done",
 				"",
 			);
 		};
@@ -606,7 +666,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 60;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2PYWYF3C55;
 				ENABLE_APP_SANDBOX = YES;
@@ -658,7 +718,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 60;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2PYWYF3C55;
 				ENABLE_APP_SANDBOX = YES;

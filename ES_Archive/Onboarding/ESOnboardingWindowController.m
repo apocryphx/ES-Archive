@@ -6,6 +6,7 @@
 #import "ESOnboardingWindowController.h"
 #import "ESBackupCommands.h"
 #import "ESMemoryScopeWindowController.h"
+#import "ESSkillInstallController.h"
 
 // Whether the Connect window auto-appears at launch. Default YES; the
 // "Show at next startup" checkbox writes it.
@@ -13,6 +14,13 @@ static NSString * const kShowAtStartupKey = @"ESOnboardingShowAtStartup";
 static const CGFloat kWindowWidth = 720.0;
 static const CGFloat kCardWidth = 656.0;
 static const CGFloat kCardBodyWidth = 552.0;
+
+// Keep the document anchored at the top when the viewport is shorter than its content.
+@interface ESOnboardingDocumentView : NSView
+@end
+@implementation ESOnboardingDocumentView
+- (BOOL)isFlipped { return YES; }
+@end
 
 @interface ESOnboardingWindowController ()
 @property (weak) NSButton *showAtStartupCheckbox;
@@ -77,7 +85,7 @@ static const CGFloat kCardBodyWidth = 552.0;
 - (instancetype)init {
     NSWindow *w = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, kWindowWidth, 700)
-                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
                     backing:NSBackingStoreBuffered
                       defer:NO];
     w.title = @"Connect ES Archive";
@@ -131,7 +139,7 @@ static const CGFloat kCardBodyWidth = 552.0;
         NSTextField *demoCopy = [self bodyLabel:
             @"Add example memories, tags, and links, then explore search, connections, and Memory Scope. "
             @"They merge into your archive as regular entries."];
-        NSButton *samples = [NSButton buttonWithTitle:@"Import Demo Archive…"
+        NSButton *samples = [NSButton buttonWithTitle:@"Create Demo Archive"
                                                target:self action:@selector(addSampleMemories:)];
         samples.bezelStyle = NSBezelStyleRounded;
         NSView *demoCard = [self cardWithEyebrow:@"OPTIONAL"
@@ -170,17 +178,38 @@ static const CGFloat kCardBodyWidth = 552.0;
     [stack addArrangedSubview:windowBottomSpacer];
 
     NSView *content = self.window.contentView;
-    [content addSubview:stack];
+    NSScrollView *scroll = [[NSScrollView alloc] init];
+    scroll.translatesAutoresizingMaskIntoConstraints = NO;
+    scroll.hasVerticalScroller = YES;
+    scroll.hasHorizontalScroller = NO;
+    scroll.scrollerStyle = NSScrollerStyleOverlay;
+    scroll.drawsBackground = NO;
+    NSView *document = [[ESOnboardingDocumentView alloc] init];
+    document.translatesAutoresizingMaskIntoConstraints = NO;
+    scroll.documentView = document;
+    [document addSubview:stack];
+    [content addSubview:scroll];
     [NSLayoutConstraint activateConstraints:@[
-        [stack.leadingAnchor  constraintEqualToAnchor:content.leadingAnchor],
-        [stack.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-        [stack.topAnchor      constraintEqualToAnchor:content.topAnchor],
+        [scroll.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+        [scroll.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+        [scroll.topAnchor constraintEqualToAnchor:content.topAnchor],
+        [scroll.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
+        [document.widthAnchor constraintEqualToAnchor:scroll.contentView.widthAnchor],
+        [stack.leadingAnchor constraintEqualToAnchor:document.leadingAnchor],
+        [stack.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
+        [stack.topAnchor constraintEqualToAnchor:document.topAnchor],
+        [stack.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
     ]];
-    // Size the window to the stack's actual fitting height — no trailing blank
-    // space, no clipping, regardless of how the copy wraps or how many sections
-    // the subclass added.
+    // Preserve the cards' readable width, but allow vertical resizing. Leave
+    // room for the title bar and screen edges even on a small display.
+    NSScreen *screen = self.window.screen ?: NSScreen.mainScreen;
+    CGFloat availableHeight = screen ? NSHeight(screen.visibleFrame) - 80 : 700;
+    CGFloat height = MIN(700, availableHeight);
+    self.window.contentMinSize = NSMakeSize(kWindowWidth, MIN(400, height));
+    self.window.contentMaxSize = NSMakeSize(kWindowWidth, CGFLOAT_MAX);
+    [self.window setContentSize:NSMakeSize(kWindowWidth, height)];
     [content layoutSubtreeIfNeeded];
-    [self.window setContentSize:NSMakeSize(kWindowWidth, stack.fittingSize.height)];
+    [document scrollPoint:NSZeroPoint];
 }
 
 #pragma mark - Subclass hook (base: nothing)
@@ -198,6 +227,10 @@ static const CGFloat kCardBodyWidth = 552.0;
     // wondering what changed. Vectors are still encoding in the background, so
     // similarity edges keep arriving for a moment after it appears.
     [[ESMemoryScopeWindowController shared] showWindow:self];
+}
+
+- (void)showSkillInstaller:(id)sender {
+    [ESSkillInstallController show];
 }
 
 - (void)toggleShowAtStartup:(NSButton *)sender {
@@ -282,7 +315,12 @@ static const CGFloat kCardBodyWidth = 552.0;
     copy.spacing = 8;
     [copy addArrangedSubview:eyebrowLabel];
     [copy addArrangedSubview:[self sectionHeader:title]];
-    for (NSView *view in contentViews) [copy addArrangedSubview:view];
+    for (NSView *view in contentViews) {
+        if ([view isKindOfClass:NSButton.class] && ![view isKindOfClass:NSPopUpButton.class]) {
+            ((NSButton *)view).bezelColor = accentColor;
+        }
+        [copy addArrangedSubview:view];
+    }
 
     // NSStackView's fitting height does not reliably include its trailing edge
     // inset when the final arranged view is a button. An explicit spacer keeps
@@ -305,6 +343,21 @@ static const CGFloat kCardBodyWidth = 552.0;
     [card addArrangedSubview:copy];
     [card.widthAnchor constraintEqualToConstant:kCardWidth].active = YES;
     return card;
+}
+
+- (NSView *)skillsCard {
+    NSTextField *copy = [self bodyLabel:
+        @"Skills teach Claude how to use the archive well — when to store, how to research, "
+        @"how to curate. Read each one first if you like; installing hands it to Claude Desktop "
+        @"for confirmation."];
+    NSButton *install = [NSButton buttonWithTitle:@"Install Claude Skills…"
+                                           target:self action:@selector(showSkillInstaller:)];
+    install.bezelStyle = NSBezelStyleRounded;
+    return [self cardWithEyebrow:@"CLAUDE SKILLS"
+                           title:@"Teach Claude the archive"
+                      symbolName:@"book.closed.fill"
+                     accentColor:NSColor.systemIndigoColor
+                    contentViews:@[copy, install]];
 }
 
 - (NSScrollView *)jsonBoxWithString:(NSString *)json {

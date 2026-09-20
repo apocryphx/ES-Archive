@@ -38,7 +38,7 @@ Run `man discover` inside `archive_cli` for the authoritative documentation.
 |---|---|
 | `hot` | recently active entries: where the conversation is now |
 | `forgotten` | accessed long ago and rarely: the Archive's buried signal |
-| `lost` | never accessed — orphans waiting for integration or a deliberate decision |
+| `lost` | orphans: no links, no tags, no access history — waiting for integration or a deliberate decision |
 | `hubs` | most connected: the load-bearing nodes of the graph |
 | `popular` | most accessed overall: what the Archive is known for. Watch for orthodoxy |
 | `revised` | most edited: living documents, where thinking has changed |

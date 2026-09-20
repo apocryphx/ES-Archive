@@ -4,7 +4,8 @@ description: >
   Core orientation for ES Archive (formerly ES Memory), Claude's persistent
   archive accessed via MCP. Load this skill whenever ES Archive tools
   (archive_store, archive_cli, archive_read, and the other archive_* tools)
-  are visible in the tool list. Also load it when the user says
+  are visible in the tool list, even if nothing
+  memory-related has been mentioned. Also load it when the user says
   "remember this", "do you remember", "save this", or refers to prior
   context Claude cannot see. Mandatory, not optional: archive tools without
   this skill produce lower-quality interactions. Provides compressed

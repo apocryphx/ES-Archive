@@ -61,8 +61,9 @@ Pipelines compose. Different orderings expose different cross-sections.
 When a research session involves multiple pipelines (different axes, different entry points, iterating toward a complete picture), use a temporary tag as an accumulation bucket. Tag each significant find as you go, continue searching with fresh pipelines, tag again. When the session is done, read the full collected set, then delete the tag.
 
 ```
-# Open the bucket (provision it here so it gets kind and expiry;
-# connect-or-create via the pipeline would mint it as kind 'thing')
+# Open the bucket. Provision it first: the pipeline `tag` stage only
+# attaches tags that already exist (unknown names are an error), and
+# provisioning here sets kind and expiry up front.
 archive_tags(mode=create, name="research-session", kind=session, expiresAt="+2h")
 
 # First pass: semantic

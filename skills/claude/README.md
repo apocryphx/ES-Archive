@@ -21,20 +21,22 @@ which copies each `SKILL.md` out and rebuilds the `.skill` zip packages. If the
 skills are also registered by upload (claude.ai → Settings → Capabilities), the
 repacked `.skill` files must be re-uploaded there — that step is manual.
 
-These files are documentation only; they sit outside `ES_Archive/` deliberately,
-since that folder is a synchronized Xcode group and would bundle them wholesale.
+These files sit outside `ES_Archive/` deliberately: that folder is a synchronized
+Xcode group, and six files all named `SKILL.md` would collide when flattened into
+Resources. Instead the **"Bundle Claude skills"** build phase in both app targets
+stages `skills/claude/<name>/SKILL.md` into the app's `Resources/Skills/<name>/`,
+so every build carries the skill text that matches its tool surface.
 
-**Distribution: download, not the app bundle.** The skills are published for
-download and installed by hand; the apps neither carry nor install them.
+**Distribution: the app installs them.** The Claude Skills card of the Connect
+window (Help ▸ Connect ES Archive…) opens `ESSkillInstallController`: one
+row per skill with Read (the SKILL.md in a sheet) and Install, which turns gray
+with a green checkmark once the skill has been handed over.
+Install packs the skill as a `.skill` zip with ESZip, writes it to
+`~/Library/Application Support/ES Archive/Skills/`, and opens it in Claude Desktop
+**by bundle identifier** — never through the Launch Services `.skill` handler,
+which ChatGPT also claims. Claude Desktop shows its own confirmation per skill and
+replaces an earlier copy of the same name. An app update is therefore a skill
+update again: the drift this directory exists to prevent is caught at build time.
 
-This replaced an in-app route that proved too unreliable to keep: a "Bundle
-Claude skills" build phase staged this directory into each app's
-`Resources/skills/`, and an **Install Claude Skills…** command handed the
-`.skill` packages to Claude Desktop for its own per-skill confirmation. Both the
-build phase and the command are gone. Consequences worth knowing:
-
-- An app update is no longer a skill update. Skills and the tool surface they
-  document now version independently, so **a skill change has to be published
-  separately** — the drift this directory exists to prevent is now a release
-  step rather than something the build guarantees.
-- Nothing reads `Resources/skills/` any more, and nothing writes it.
+`sync-skills.sh` remains for the developer's own machine (Claude Code reads
+`~/.claude/skills` directly) and for the manual claude.ai upload.

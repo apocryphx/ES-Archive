@@ -27,6 +27,11 @@ click <span class="ui">Connect</span>, and approve the install when Claude Deskt
 extension so only one archive is connected.</li>
 </ol>
 
+<p>For <strong>ChatGPT</strong>, open the server from <span class="ui">Settings ▸ Plugins ▸ MCPs</span>
+and check that the command is the app's full executable path and that
+<span class="path">--author</span> and the persona name are two separate argument rows — a single
+row holding both is passed as one argument, and the persona is silently ignored.</p>
+
 <p>For <strong>LM Studio</strong>, confirm the configuration was pasted into
 <span class="ui">Program ▸ Edit mcp.json</span> unchanged, and that the loaded model supports
 tool use — one that does not will never call the tools, however well it is connected. If you have

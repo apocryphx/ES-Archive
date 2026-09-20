@@ -265,9 +265,10 @@ static const NSTimeInterval kESGreetDelay = 2.0;
 
     // ── Help menu ──
     // Onboarding lives here by macOS convention (welcome/setup content under
-    // Help): the Connect window with the Claude Desktop connector, the skill
-    // install list, and the LM Studio config. Registered as NSApp.helpMenu so
-    // macOS appends its standard help-search field.
+    // Help): the Connect window with the Claude Desktop connector and the
+    // client configs; the skill installer opens from a card in that window.
+    // Registered as NSApp.helpMenu so macOS appends its standard help-search
+    // field.
     //
     // The app-help item goes first, per macOS convention and matching the Server
     // target. -showHelp: does nothing in either app until a help book is
@@ -285,11 +286,9 @@ static const NSTimeInterval kESGreetDelay = 2.0;
     NSApp.mainMenu = mainMenu;
 }
 
-/// The Connect window — Claude Desktop connector, the per-skill install list, and
-/// the LM Studio config. Reached from Help ▸ Connect ES Archive… and from the
-/// Minimal-mode status item. A File ▸ Install Claude Skills… item used to open
-/// this same window too; it dates from when installing skills was its own
-/// open-panel command, and was removed once the Connect window absorbed the job.
+/// The Connect window — Claude Desktop connector, ChatGPT setup and the LM
+/// Studio config. Reached from Help ▸ Connect ES Archive… and from the
+/// Minimal-mode status item.
 - (void)showConnections:(id)sender {
     [NSApp activateIgnoringOtherApps:YES];
     [ESStdioConnectController show];

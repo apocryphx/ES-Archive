@@ -352,8 +352,6 @@
 ///     Server binary. The Server target excludes the Stdio sources, so Claude
 ///     would spawn it with pipes and get a process that never speaks JSON-RPC.
 ///   * The LM Studio config JSON embeds the same path, with the same result.
-///   * "Install Claude Skills" is correct as-is — the skill suite is bundled
-///     with both targets.
 ///
 /// The Server's own connection story is the HTTP bridge on localhost plus the
 /// ports / personas / JWT settings, so that is what its version of this window

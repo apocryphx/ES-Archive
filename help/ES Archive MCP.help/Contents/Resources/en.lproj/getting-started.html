@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="index">
-<meta name="description" content="Connect Claude Desktop or LM Studio to ES Archive MCP, then check that the archive tools arrived.">
-<meta name="keywords" content="getting started, setup, connect, Claude Desktop, LM Studio, mcp.json, extension, connector, first run, install">
+<meta name="description" content="Connect Claude Desktop, ChatGPT desktop, or LM Studio to ES Archive MCP, then check that the archive tools arrived.">
+<meta name="keywords" content="getting started, setup, connect, Claude Desktop, ChatGPT, LM Studio, mcp.json, extension, connector, skills, author, persona, first run, install">
 <meta name="AppleIcon" content="ES Archive MCP.help/Contents/Resources/shared/images/help-icon.png">
 <title>Getting started</title>
 <link rel="stylesheet" href="../shared/css/help.css">
@@ -16,13 +16,16 @@
 
 <p>ES Archive MCP does not need to be kept running. The app you chat with starts it when a
 conversation needs the archive, talks to it directly over a private pipe, and it winds down with
-the session. Connecting a client is a one-time step.</p>
+the session. Connecting a client is a one-time step, and you can connect several: each one
+tells the archive who it is with an <span class="path">--author</span> argument, so Claude, ChatGPT,
+and a local model each keep to their own persona in one shared archive. Without the argument a
+client writes as <strong>Claude</strong>.</p>
 
 <h2><a name="claude-desktop"></a>Claude Desktop — one click</h2>
 
 <ol>
 <li>Choose <span class="ui">Help ▸ Connect ES Archive…</span>.</li>
-<li>Under <span class="ui">Connect to Claude Desktop</span>, click <span class="ui">Connect</span>.</li>
+<li>Under <span class="ui">Connect Claude in one click</span>, click <span class="ui">Connect to Claude</span>.</li>
 <li>Claude Desktop comes forward and asks you to confirm the install. Approve it.</li>
 </ol>
 
@@ -30,19 +33,56 @@ the session. Connecting a client is a one-time step.</p>
 hands it to Claude Desktop. From then on, Claude Desktop spawns the archive whenever a
 conversation starts.</p>
 
+<h3><a name="claude-skills"></a>Then install the skills</h3>
+
+<p>The tools are the instrument; the skills teach Claude how to play it — when to store,
+how to research, how to curate. They ship inside the app.</p>
+
+<ol>
+<li>In the Connect window (<span class="ui">Help ▸ Connect ES Archive…</span>), click
+<span class="ui">Install Claude Skills…</span> under <span class="ui">Teach Claude the archive</span>.</li>
+<li>Click <span class="ui">Read</span> next to any skill to see its text, or
+<span class="ui">Install</span> to hand it to Claude Desktop. A green checkmark marks each skill
+you have installed.</li>
+<li>Claude Desktop comes forward and asks you to confirm each skill. An earlier copy of the
+same name is replaced, so this is also how you update skills after an app update.</li>
+</ol>
+
+<h2><a name="chatgpt"></a>ChatGPT desktop</h2>
+
+<p>ChatGPT's desktop app launches stdio MCP servers itself; there is no file to edit, just a form.</p>
+
+<ol>
+<li>Choose <span class="ui">Help ▸ Connect ES Archive…</span>.</li>
+<li>Under <span class="ui">Connect ChatGPT desktop</span>, click
+<span class="ui">Copy Command Path</span>.</li>
+<li>In ChatGPT, open <span class="ui">Settings ▸ Plugins ▸ MCPs ▸ Add</span>. Give the server a
+name, and leave <span class="ui">Type</span> on <span class="ui">STDIO</span>.</li>
+<li>Paste the path into <span class="ui">Command to launch</span>.</li>
+<li>Under <span class="ui">Arguments</span>, enter <span class="path">--author</span>, click
+<span class="ui">Add argument</span>, and enter <span class="path">ChatGPT</span> in the second row.
+Leave environment variables, passthrough, and working directory empty.</li>
+<li>Click <span class="ui">Save</span>, then start a new conversation.</li>
+</ol>
+
+<p><span class="path">ChatGPT</span> is the persona name its entries will carry; use another if you
+prefer. To change the arguments later, open the server from the MCPs tab. Switching between STDIO
+and Streamable HTTP requires uninstalling and adding it again.</p>
+
 <h2><a name="lm-studio"></a>LM Studio and other MCP clients</h2>
 
 <ol>
 <li>Choose <span class="ui">Help ▸ Connect ES Archive…</span>.</li>
-<li>Under <span class="ui">LM Studio &amp; other MCP clients</span>, click
-<span class="ui">Copy Configuration</span>.</li>
+<li>Under <span class="ui">Configure LM Studio or another MCP client</span>, click
+<span class="ui">Copy MCP Configuration</span>.</li>
 <li>In LM Studio, choose <span class="ui">Program ▸ Edit mcp.json</span> and paste it in. Then load
 a model that supports tool use.</li>
 </ol>
 
 <p>The configuration is plain MCP-over-stdio, so the same snippet works in any client that can
 launch a stdio server — the <span class="path">command</span> is simply the path to this app's
-executable.</p>
+executable. Its <span class="path">--author</span> is <span class="path">LM Studio</span>; edit
+the value if you would rather name the persona after the model you run.</p>
 
 <h2><a name="check-it-worked"></a>Check it worked</h2>
 

@@ -172,8 +172,8 @@ new snapshots.
 
 When a task completes: change `state = "ready"` to `state = "done"`. When a
 blocker resolves: remove or update the `blocked_by` field. Do not store a new
-record for each state change. History is not lost by updating in place: every
-`archive_update` leaves a revision snapshot, so `archive_revisions` (or the
+record for each state change. History is not lost by updating in place: every replacing
+`archive_update` leaves a revision snapshot (appends do not), so `archive_revisions` (or the
 `revisions` pipeline stage) recovers earlier states of the record when the
 narrative of how it changed matters.
 

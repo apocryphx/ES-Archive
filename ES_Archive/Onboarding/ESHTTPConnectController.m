@@ -46,6 +46,7 @@
                                   accentColor:NSColor.systemTealColor
                                  contentViews:@[manualCopy, popup, json, caption, copy]];
     [stack addArrangedSubview:manualCard];
+    [stack addArrangedSubview:[self skillsCard]];
 
     [self refreshForSelectedPort];
 }

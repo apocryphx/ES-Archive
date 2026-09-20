@@ -1,8 +1,8 @@
 # ES Archive
 
-**An AI-first archive server for Claude and other MCP-compatible clients.**
+**An AI-first archive server for Claude, ChatGPT, LM Studio, and any other MCP-compatible client.**
 
-Persistent archive that the AI owns: store, retrieve, organize, curate, and forget across sessions. The Archive is the collection; an entry is what a session writes into it. Built natively in Objective-C with Core Data, on-device multilingual Core ML embeddings, and optional CloudKit sync. Designed and optimized for Claude; also runs with local models in LM Studio.
+Persistent archive that the AI owns: store, retrieve, organize, curate, and forget across sessions. The Archive is the collection; an entry is what a session writes into it. Built natively in Objective-C with Core Data, on-device multilingual Core ML embeddings, and optional CloudKit sync. Designed and optimized for Claude; Claude Desktop, ChatGPT desktop, and LM Studio all connect to the same server over stdio, each as its own persona, in one shared archive.
 
 ES Archive was known as **ES Memory** through version 3.3.3. The rename was a clean cut, no aliases: the MCP tools (`memory_*` → `archive_*`), bundle identifiers, and app group all changed. The CloudKit container and sync schema did not, so a synced archive re-downloads on first launch, and legacy `.esmemory` backups still open.
 
@@ -12,23 +12,74 @@ Read more about the technology and philosophy behind ES Archive on [alpharecursi
 
 ES Archive is one engine that ships in two forms, built as two targets in this repository:
 
-- **ES Archive MCP** — a **stdio** server. Claude Desktop (or Claude Code) spawns it from a `.mcpb` extension; no localhost port, no network listener. Concurrent sessions **share one in-process engine** over a local UNIX-domain socket — the first to start hosts it, the rest relay — so N Claude sessions cost one engine, not N (see [Architecture](#architecture)). Each session's persona is set per connection. This is the recommended install for Claude.
-- **ES Archive Server** — the **HTTP** app. Hosts the same engine behind a hardened localhost web server for clients that speak MCP-over-HTTP or SSE (LM Studio, `curl`, a cloudflared tunnel), and adds multi-persona support. Use this when you want more than one persona, `/sse` clients, or remote access.
+- **ES Archive MCP** — a **stdio** server, and the recommended install. Any client that can launch a stdio MCP server spawns it directly: Claude Desktop, Claude Code, ChatGPT desktop, LM Studio, Codex. No localhost port, no network listener. Concurrent sessions — across all of those clients at once — **share one in-process engine** over a local UNIX-domain socket: the first to start hosts it, the rest relay, so N sessions cost one engine, not N (see [Architecture](#architecture)). Each session declares its persona at launch with `--author`, so Claude, ChatGPT, and a local model each write as themselves into the same archive.
+- **ES Archive Server** — the **HTTP** app. Hosts the same engine behind a hardened localhost web server for clients that speak MCP-over-HTTP or SSE (`curl`, a cloudflared tunnel, HTTP-only clients), with port-bound personas and per-port authentication. Use this when you need `/sse` or HTTP clients, or remote access.
 
 Both read and write the same kind of archive; each keeps its own local store.
 
 ## Requirements
 
 - macOS 26 (Tahoe) or later
-- **ES Archive MCP:** Claude Desktop, or Claude Code
-- **ES Archive Server:** any MCP-over-HTTP or SSE client (tested with local models via [LM Studio](https://lmstudio.ai) on the `/sse` transport)
+- **ES Archive MCP:** any client that launches stdio MCP servers — tested with Claude Desktop, Claude Code, ChatGPT desktop, LM Studio, and Codex
+- **ES Archive Server:** any MCP-over-HTTP or SSE client
 
 ## Install (ES Archive MCP, recommended)
 
 1. Install **ES Archive MCP** from the Mac App Store.
-2. Add it to Claude Desktop as an extension (Settings → Extensions).
+2. Connect the client(s) you use — see below. Each is a one-time step.
 
-That's all. Claude Desktop launches the server on demand and the archive tools appear automatically — no separate app to run, nothing listening on a port. While it's running the host presents the app's UI — a Dock app by default (Archive Scope, persona management, backup/restore), or a menu-bar item if you switch to Minimal mode in Settings.
+That's all. The client launches the server on demand and the archive tools appear automatically — no separate app to keep running, nothing listening on a port. While it's running the host presents the app's UI — a Dock app by default (Archive Scope, persona management, backup/restore), or a menu-bar item if you switch to Minimal mode in Settings.
+
+Every client points at the same executable:
+
+```
+/Applications/ES Archive MCP.app/Contents/MacOS/ES Archive MCP
+```
+
+and passes `--author <name>` to say who is writing. The name is the persona: it is stamped on every entry the session stores and scopes what the session reads, so each assistant keeps to its own slice of the shared archive. Without the flag the session writes as **Claude**.
+
+### Claude Desktop
+
+In ES Archive MCP, choose **Help ▸ Connect ES Archive…** and click **Connect to Claude**. That builds a connector pointing at this copy of the app and hands it to Claude Desktop, which asks you to approve the install. (Equivalently: Claude Desktop → Settings → Extensions → install the `.mcpb` from a [release](https://github.com/apocryphx/ES-Archive/releases).)
+
+### ChatGPT desktop
+
+ChatGPT's desktop app can launch stdio MCP servers directly. In ChatGPT, open **Settings → Plugins → MCPs → Add**. The **Connect to a custom MCP** dialog opens with the **Type** toggle already on **STDIO** (the other option, Streamable HTTP, is for the Server app). Fill in:
+
+| Field | Value |
+|---|---|
+| Name | `ES Archive` (any name you like) |
+| Type | **STDIO** (the default) |
+| Command to launch | `/Applications/ES Archive MCP.app/Contents/MacOS/ES Archive MCP` |
+| Arguments | `--author` and `ChatGPT` — one argument per row, using **Add argument** for the second |
+| Environment variables, passthrough, working directory | leave empty |
+
+Save, then start a new conversation; the `archive_*` tools appear as a plugin. Use whatever persona name you like in place of `ChatGPT` — that is the name entries will carry. To change the arguments later, open the server from the MCPs tab; switching between STDIO and Streamable HTTP requires an uninstall and re-add. Note that this is a recent ChatGPT feature and much of the older advice online (HTTP-only connectors, developer mode) no longer applies.
+
+### LM Studio
+
+In ES Archive MCP, choose **Help ▸ Connect ES Archive…** and click **Copy MCP Configuration**, then in LM Studio choose **Program ▸ Edit mcp.json** and paste. Add an author for the model you run, and load a model that supports tool use:
+
+```json
+{
+  "mcpServers": {
+    "es-archive": {
+      "command": "/Applications/ES Archive MCP.app/Contents/MacOS/ES Archive MCP",
+      "args": ["--author", "Gemma"]
+    }
+  }
+}
+```
+
+### Claude Code
+
+```sh
+claude mcp add es-archive -- "/Applications/ES Archive MCP.app/Contents/MacOS/ES Archive MCP" --author Claude
+```
+
+### Any other stdio client
+
+The LM Studio snippet is plain MCP-over-stdio. Any client that can launch a command with arguments (Codex, editors, agent frameworks) uses the same executable path and `--author`.
 
 ES Archive MCP is distributed through the **Mac App Store**, sandboxed like every App Store app. All data stays on your Mac; if you're signed into iCloud it syncs through your own private CloudKit database, and nothing else leaves the machine.
 
@@ -77,6 +128,19 @@ ES Archive exposes **22 MCP tools**. Most retrieval and curation runs through **
 
 Tags are deliberately curated — every tag's existence is an authorial judgment, not an automatic extraction. On `archive_store`, the server returns similarity scores against existing entries as a behavioral cue against duplication.
 
+## Skills
+
+The tools are the instrument; the **skills** are how an assistant learns to play it. The repository carries two complete suites in [`skills/`](skills/), each documenting the same tool surface in its own voice, and each owned and edited only by the assistant it is written for:
+
+| Suite | Written for | Skills |
+|---|---|---|
+| [`skills/claude/`](skills/claude/) | Claude Desktop, Claude Code, claude.ai | `es-archive-overview` (orientation, loads the rest), `-store`, `-research`, `-curate`, `-discover`, `-toml` |
+| [`skills/codex/`](skills/codex/) | ChatGPT desktop and Codex | `codex-es-archive` (orientation), `-store`, `-research`, `-curate`, `-discover`, `-records`, `-visitor` (reading another AI's archive) |
+
+They cover the same ground — when and what to store, how to research with `archive_cli` pipelines, how to curate tags and links, how to listen to the archive's shape — but they are not translations of each other. The Claude suite was written with Claude over a year of daily use; the Codex suite was written by Codex for itself, including a *visitor* skill for reading an archive that belongs to a different persona without curating it.
+
+The skills are versioned next to the code they describe so that a tool change and its skill change land in the same commit. Both apps bundle the Claude suite at build time and install it from the **Install Claude Skills…** card of the Connect window (Help ▸ Connect ES Archive…): each skill has a Read button to see its text and an Install button that hands it to Claude Desktop for confirmation and shows a checkmark once done. For a developer machine, `scripts/sync-skills.sh` copies the Claude suite to `~/.claude/skills` and packs `.skill` files for claude.ai, and copies the Codex suite to `~/.codex/skills`, where both Codex and ChatGPT desktop (Settings → Plugins → Skills) pick it up. See [`skills/README.md`](skills/README.md).
+
 ## Storage and embeddings
 
 Entries are stored locally in Core Data. Vector embeddings are computed on-device with **EmbeddingGemma** — Google's `embeddinggemma-300m`, quantized to int4 (768-dimensional) — via Core ML. It is **multilingual across 100+ languages**, so a query in one language reaches entries written in another; each entry is embedded with its title alongside its summary for sharper retrieval. CloudKit sync across your devices is optional — without iCloud, ES Archive works fully offline, and with it, data stays within your iCloud account. No third-party services, no telemetry.
@@ -85,22 +149,22 @@ Entries are stored locally in Core Data. Vector embeddings are computed on-devic
 
 Both apps include a visual layer that renders the Archive as a force-directed graph. Nodes are entries, edges are explicit links and similarity connections, color encodes access frequency. Each entry draws one similarity edge to its single nearest neighbor, and small clusters that would otherwise float free are bridged into the main body, so the graph reads as one connected whole rather than scattered fragments. A second tab shows tags as an Archimedean spiral, sized by frequency. The views update live as the Archive changes and as tools are called — you can watch new entries find their place, and see when sustained engagement with a topic produces a hub.
 
-## Personas (ES Archive Server)
+## Personas
 
-The HTTP **ES Archive Server** can host multiple AI personas — Claude, and any others you add — each with its own scoped slice of a single shared archive. Every persona binds a listening port, and the port a request arrives on *is* its identity: authorship is stamped from the channel rather than asserted by the client, so misattribution and name-drift are structurally impossible. Each persona sees and writes only its own entries.
+An ES Archive persona is an author: a name that is stamped on everything a session writes and that scopes everything it reads. Several assistants can share one archive without seeing or overwriting each other's entries, and the tags, links, and Archive Scope graph stay one shared structure.
 
-Personas are managed in **Settings → Personas**. Every author already in the Archive is listed with its record count; from there you can assign a port to serve a persona, create a new one, rename or merge an author across all of its records, or delete a persona along with its records. Adding a persona is a table row and a port — no rebuild, no new container. Each port can independently require a Cloudflare Access JWT, so a persona exposed over a [cloudflared](https://www.cloudflare.com/products/tunnel/) tunnel sits behind edge authentication while a local-only persona stays open. A read-only `GET /personas` directory lets a client discover which port serves which persona before connecting.
+The stdio **ES Archive MCP** scopes a persona **per connection**: each session declares its author with `--author` at launch. That is how Claude Desktop, ChatGPT, and LM Studio coexist on one machine — three clients, three personas, one engine, one archive. Its Settings pane lists the Archive's personas to **delete** or **merge** them (merge renames an author across all of its records, which is how you fold a misnamed persona into the right one).
 
-The stdio **ES Archive MCP** scopes a persona **per connection** — each session declares its author with `--author` at launch, so different sessions write as different personas against the one shared engine. Its Settings pane lists the Archive's personas to **delete** or **merge** them. Port-bound personas, persona creation, and per-port JWT stay exclusive to the Server app.
+The HTTP **ES Archive Server** binds personas to **ports** instead: the port a request arrives on *is* its identity, so authorship is stamped from the channel rather than asserted by the client, and misattribution is structurally impossible. Personas are managed in **Settings → Personas** — every author already in the Archive is listed with its record count; from there you can assign a port to serve a persona, create a new one, rename or merge an author, or delete a persona along with its records. Each port can independently require a Cloudflare Access JWT, so a persona exposed over a [cloudflared](https://www.cloudflare.com/products/tunnel/) tunnel sits behind edge authentication while a local-only persona stays open. A read-only `GET /personas` directory lets a client discover which port serves which persona before connecting. Port-bound personas, persona creation, and per-port JWT stay exclusive to the Server app.
 
 ## Architecture
 
 The engine — the Core Data stack, the on-device embedder, vector search, and every MCP tool implementation — is shared by both targets. What differs is the transport:
 
-- **ES Archive MCP** speaks MCP as newline-delimited JSON-RPC over **stdio**, and N concurrent sessions share **one** engine rather than N. The first session to start binds a UNIX-domain socket in the shared App Group container and hosts the engine in-process; every other session connects to that host and **relays** its requests over the socket, never loading its own Core Data stack or embedder (≈30 MB per relay vs. ≈550 MB for the one host). The election is the `bind()` itself — kernel-arbitrated, no daemon, App-Store-safe (see [`design-decisions/socket-election.md`](design-decisions/socket-election.md)). The host also owns the single GUI; relays stay headless and exit when their host does, so nothing lingers. There is no HTTP listener anywhere in the target. Shutdown is stdin EOF or SIGTERM, draining cleanly before the store is saved.
+- **ES Archive MCP** speaks MCP as newline-delimited JSON-RPC over **stdio**, and N concurrent sessions — whichever clients spawned them — share **one** engine rather than N. The first session to start binds a UNIX-domain socket in the shared App Group container and hosts the engine in-process; every other session connects to that host, declares its `--author`, and **relays** its requests over the socket, never loading its own Core Data stack or embedder (≈30 MB per relay vs. ≈550 MB for the one host). The election is the `bind()` itself — kernel-arbitrated, no daemon, App-Store-safe (see [`design-decisions/socket-election.md`](design-decisions/socket-election.md)). The host also owns the single GUI; relays stay headless and exit when their host does, so nothing lingers. There is no HTTP listener anywhere in the target. Shutdown is stdin EOF or SIGTERM, draining cleanly before the store is saved.
 - **ES Archive Server** hosts the same engine behind a localhost HTTP server — [GCDWebServer](External/GCDWebServer/) (a submodule), hardened with security fixes documented in [CHANGES-2026-05-09.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-05-09.md) and [CHANGES-2026-04-25.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-04-25.md) — binding to `127.0.0.1` only, one listener per persona. It accepts no external connections; remote access, when wanted, is delegated to a cloudflared tunnel with per-port Cloudflare Access authentication.
 
-Packaging of the stdio `.mcpb` lives in [`packaging/`](packaging/).
+Packaging of the stdio `.mcpb` for Claude Desktop lives in [`packaging/`](packaging/).
 
 ## Why Objective-C
 
