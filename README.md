@@ -176,6 +176,10 @@ The practical consequence: the contributor surface is small by design. This is n
 
 ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.8** (ES Archive MCP, stdio) and **3.3.5** (ES Archive Server, HTTP). The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
 
+## Support
+
+Questions, bug reports and feature requests go to the [Issues page](https://github.com/apocryphx/ES-Archive/issues). Search first — the answer may already be there — then open a new issue with the app (MCP or Server), its version from the About panel, and what you expected to happen. The in-app help book (Help ▸ ES Archive Help) covers setup, connecting clients, personas and troubleshooting. Your archive stays on your Mac and in your iCloud account; see [PRIVACY.md](PRIVACY.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE) for full text. The [GCDWebServer](External/GCDWebServer/) submodule retains its original BSD 3-Clause license; see [its README](External/GCDWebServer/README.md#license).
