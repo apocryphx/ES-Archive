@@ -174,7 +174,7 @@ The practical consequence: the contributor surface is small by design. This is n
 
 ## Status
 
-ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.8** (ES Archive MCP, stdio) and **3.3.5** (ES Archive Server, HTTP). The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
+ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.12** for both ES Archive MCP (stdio) and ES Archive Server (HTTP); the MCP build is in public beta on TestFlight. The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
 
 ## Support
 
