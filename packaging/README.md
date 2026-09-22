@@ -33,3 +33,14 @@ tools. **Do not change it.** Users never see it: the `display_name` is
 
 `bundle/server/` (the staged app) and `ES-Archive-MCP.mcpb` are gitignored — the
 binary artifact lives on releases, not in the tree.
+
+## MCP registry
+
+The official registry (registry.modelcontextprotocol.io) lists ES Archive as
+`io.github.apocryphx/es-archive`, pointing at the `.mcpb` on the matching
+GitHub release. `registry/server.json` is the template; `publish-registry.sh`
+fills in the version (from `bundle/manifest.json`) and the bundle's SHA-256,
+creates or updates the `v<version>` release with the `.mcpb` attached, waits
+for GitHub to serve it, and publishes. One-time setup: `brew install
+mcp-publisher` and `mcp-publisher login github`. Run the packaging step above
+first; `--dry-run` validates without releasing or publishing.

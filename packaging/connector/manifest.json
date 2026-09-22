@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "es-archive-bridge",
   "display_name": "ES Archive",
-  "version": "3.1.0",
+  "version": "3.3.12",
   "description": "Connector for the App Store edition of ES Archive. Configures Claude to talk to the ES Archive MCP server installed in /Applications over stdio: the engine, Core Data archive, EmbeddingGemma vector search, and all 22 tools live in the installed app, not in this bundle. Requires ES Archive (formerly ES Memory) installed from the App Store or TestFlight. All data stays on your machine or syncs via your private iCloud.",
   "author": { "name": "Kolja Wawrowsky" },
   "icon": "icon.png",
