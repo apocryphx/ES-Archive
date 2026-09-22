@@ -2,6 +2,8 @@
 
 **An AI-first archive server for Claude, ChatGPT, LM Studio, and any other MCP-compatible client.**
 
+[![Download ES Archive MCP on the Mac App Store](.github/assets/mac-app-store-badge-black.svg)](https://apps.apple.com/app/id6806891612)
+
 Persistent archive that the AI owns: store, retrieve, organize, curate, and forget across sessions. The Archive is the collection; an entry is what a session writes into it. Built natively in Objective-C with Core Data, on-device multilingual Core ML embeddings, and optional CloudKit sync. Designed and optimized for Claude; Claude Desktop, ChatGPT desktop, and LM Studio all connect to the same server over stdio, each as its own persona, in one shared archive.
 
 ES Archive was known as **ES Memory** through version 3.3.3. The rename was a clean cut, no aliases: the MCP tools (`memory_*` → `archive_*`), bundle identifiers, and app group all changed. The CloudKit container and sync schema did not, so a synced archive re-downloads on first launch, and legacy `.esmemory` backups still open.
