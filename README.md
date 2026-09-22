@@ -25,7 +25,7 @@ Both read and write the same kind of archive; each keeps its own local store.
 
 ## Install (ES Archive MCP, recommended)
 
-1. Install **ES Archive MCP** from the Mac App Store.
+1. Install **ES Archive MCP** from the [Mac App Store](https://apps.apple.com/app/id6806891612).
 2. Connect the client(s) you use — see below. Each is a one-time step.
 
 That's all. The client launches the server on demand and the archive tools appear automatically — no separate app to keep running, nothing listening on a port. While it's running the host presents the app's UI — a Dock app by default (Archive Scope, persona management, backup/restore), or a menu-bar item if you switch to Minimal mode in Settings.
@@ -174,7 +174,7 @@ The practical consequence: the contributor surface is small by design. This is n
 
 ## Status
 
-ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.12** for both ES Archive MCP (stdio) and ES Archive Server (HTTP); the MCP build is in public beta on TestFlight. The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
+ES Archive has been in active development for over a year (as ES Memory until August 2026), used by its author daily and built in collaboration with Claude across many sessions. It is released publicly as part of the [alpharecursion](https://alpharecursion.com) research program. The current release is **3.3.12** for both ES Archive MCP (stdio) and ES Archive Server (HTTP); ES Archive MCP is [on the Mac App Store](https://apps.apple.com/app/id6806891612), approved September 22, 2026. The tool API listed above is stable; new tools may be added but existing ones will not be removed without notice.
 
 ## Support
 
