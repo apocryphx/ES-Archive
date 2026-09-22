@@ -42,7 +42,12 @@ reweights the graph, so read the forgotten and the lost before the popular.
    three that still look alive. For each, say what it holds and which
    current thread it belongs to. This is the buried signal the report exists
    to surface.
-3. **lost** — never accessed. Read the summaries. For each of the top ten,
+3. **lost** — never accessed. Lost means unread, not unlinked: an entry a
+   previous pass linked or tagged stays lost until someone opens it. So for
+   each of the top ten, first run `archive_links` on it. If it already has
+   links or tags, it has been placed; read it in full with `archive_read`,
+   which is what lifts it out of this mode, and report it under "placed,
+   now read" in one line. Only for entries with no links and no tags
    propose one of three: a link (to which entry, with which edge verb), a
    collection (which existing tag, or a new one the keeper might mint), or
    superseded-by (which later entry). Never propose erasure; that is the
@@ -73,8 +78,9 @@ Return it as your final message, Markdown, headed
 - **Where the conversation is** (hot, one or two lines).
 - **Worth reading again** (forgotten entries still alive, each with the
   thread it belongs to).
-- **Waiting for a decision** (lost entries, each with one proposal and the
-  exact title it would connect to).
+- **Waiting for a decision** (lost entries with no links and no tags, each
+  with one proposal and the exact title it would connect to; then one line
+  listing the placed entries you read so they leave this mode).
 - **Load-bearing** (hubs, with any never-opened ones flagged).
 - **Has the garden narrowed?** (popular, with a plain yes or no and the
   evidence).
