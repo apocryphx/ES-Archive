@@ -696,7 +696,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
-				MARKETING_VERSION = 3.3.12;
+				MARKETING_VERSION = 3.3.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-mcp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -748,7 +748,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
-				MARKETING_VERSION = 3.3.12;
+				MARKETING_VERSION = 3.3.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-mcp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -799,7 +799,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 3.3.12;
+				MARKETING_VERSION = 3.3.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-server";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -850,7 +850,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 3.3.12;
+				MARKETING_VERSION = 3.3.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elarity.es-archive-server";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
