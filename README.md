@@ -42,7 +42,7 @@ and passes `--author <name>` to say who is writing. The name is the persona: it 
 
 ### Claude Desktop
 
-In ES Archive MCP, choose **Help ▸ Connect ES Archive…** and click **Connect to Claude**. That builds a connector pointing at this copy of the app and hands it to Claude Desktop, which asks you to approve the install. (Equivalently: Claude Desktop → Settings → Extensions → install the `.mcpb` from a [release](https://github.com/apocryphx/ES-Archive/releases).)
+In ES Archive MCP, choose **Help ▸ Connect ES Archive…** and click **Connect to Claude**. That builds a connector pointing at this copy of the app and hands it to Claude Desktop, which asks you to approve the install.
 
 ### ChatGPT desktop
 
@@ -166,7 +166,7 @@ The engine — the Core Data stack, the on-device embedder, vector search, and e
 - **ES Archive MCP** speaks MCP as newline-delimited JSON-RPC over **stdio**, and N concurrent sessions — whichever clients spawned them — share **one** engine rather than N. The first session to start binds a UNIX-domain socket in the shared App Group container and hosts the engine in-process; every other session connects to that host, declares its `--author`, and **relays** its requests over the socket, never loading its own Core Data stack or embedder (≈30 MB per relay vs. ≈550 MB for the one host). The election is the `bind()` itself — kernel-arbitrated, no daemon, App-Store-safe (see [`design-decisions/socket-election.md`](design-decisions/socket-election.md)). The host also owns the single GUI; relays stay headless and exit when their host does, so nothing lingers. There is no HTTP listener anywhere in the target. Shutdown is stdin EOF or SIGTERM, draining cleanly before the store is saved.
 - **ES Archive Server** hosts the same engine behind a localhost HTTP server — [GCDWebServer](External/GCDWebServer/) (a submodule), hardened with security fixes documented in [CHANGES-2026-05-09.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-05-09.md) and [CHANGES-2026-04-25.md](External/GCDWebServer/GCDWebServer/CHANGES-2026-04-25.md) — binding to `127.0.0.1` only, one listener per persona. It accepts no external connections; remote access, when wanted, is delegated to a cloudflared tunnel with per-port Cloudflare Access authentication.
 
-Packaging of the stdio `.mcpb` for Claude Desktop lives in [`packaging/`](packaging/).
+ES Archive ships through the Mac App Store only; [`packaging/`](packaging/) holds the App Review notes and the ChatGPT/Codex plugin.
 
 ## Why Objective-C
 
