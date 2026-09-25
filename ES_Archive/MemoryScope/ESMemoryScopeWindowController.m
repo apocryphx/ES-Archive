@@ -181,6 +181,7 @@ static NSString * const kAllPersonasTitle = @"All (witness)";
     self.scopeView.graph = self.dataSource.graph;
     self.scopeView.dataSource = self.dataSource;
     self.scopeView.colorByPersona = (self.dataSource.selectedPersona == nil);
+    self.tagCloudView.persona = self.dataSource.selectedPersona;
     [self populatePersonaPopup];
 
     // Observe graph updates to restart simulation
@@ -345,6 +346,7 @@ static NSString * const kAllPersonasTitle = @"All (witness)";
     BOOL all = [title isEqualToString:kAllPersonasTitle];
     self.scopeView.colorByPersona = all;
     [self.dataSource selectPersona:all ? nil : title];  // rebuilds; posts graphDidUpdate
+    self.tagCloudView.persona = self.dataSource.selectedPersona;
     [self.scopeView resetToFit];
 }
 

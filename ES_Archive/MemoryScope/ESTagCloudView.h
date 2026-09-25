@@ -11,11 +11,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Tag cloud visualization driven by CDTag entities.
-/// Owns its own FRC; layout computed via Archimedean spiral placement.
+/// Reloads on view-context changes that touch tags; layout computed via
+/// Archimedean spiral placement.
 @interface ESTagCloudView : NSView
 
-/// Rebuild layout from current Core Data state.
-- (void)rebuildLayout;
+/// The persona (author) whose memories are counted. nil = All (witness):
+/// every persona's memories together. Setting it reloads the cloud.
+@property (nonatomic, copy, nullable) NSString *persona;
+
+/// Re-read tag counts from Core Data and lay them out again.
+- (void)reloadTags;
 
 @end
 

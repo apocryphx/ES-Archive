@@ -9,6 +9,7 @@
 #import "ESTagCloudView.h"
 #import "ESCoreDataStack.h"
 #import "CDTag.h"
+#import "CDMemory.h"
 
 #pragma mark - Constants
 
@@ -18,6 +19,7 @@ static const CGFloat kSpiralStep    = 3.0;
 static const CGFloat kSpiralGrowth  = 0.4;
 static const CGFloat kItemPadding   = 6.0;
 static const NSUInteger kMaxSpiralIterations = 2000;
+static const NSTimeInterval kReloadCoalesceDelay = 0.3;
 
 static const NSUInteger kTagKindPaletteCount = 10;
 
@@ -101,14 +103,28 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
 @end
 
 @implementation ESTagCloudItem
+
+// A fresh item for one layout pass: the pass writes placedRect off-main, so
+// passes never share items with each other or with drawing.
+- (ESTagCloudItem *)layoutCopy {
+    ESTagCloudItem *c = [[ESTagCloudItem alloc] init];
+    c.name  = self.name;
+    c.kind  = self.kind;
+    c.count = self.count;
+    c.font  = self.font;
+    c.color = self.color;
+    return c;
+}
+
 @end
 
 #pragma mark - ESTagCloudView
 
-@interface ESTagCloudView () <NSFetchedResultsControllerDelegate>
-@property (nonatomic, strong) NSFetchedResultsController *tagFRC;
+@interface ESTagCloudView ()
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSColor *> *kindColorMap;
-@property (nonatomic, strong) NSArray<ESTagCloudItem *> *layoutItems;
+@property (nonatomic, strong) NSArray<ESTagCloudItem *> *items;        // counted, sorted, styled; unplaced
+@property (nonatomic, strong) NSArray<ESTagCloudItem *> *layoutItems;  // placed, drawn
+@property (nonatomic) BOOL needsReload;  // data changed while off-window
 @property (nonatomic, strong) NSPopover *tagPopover;
 @property (nonatomic) NSUInteger layoutGeneration;
 @end
@@ -130,9 +146,23 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
 - (void)commonInit {
     ESInitTagKindPalette();
     _kindColorMap = [NSMutableDictionary dictionary];
+    _items = @[];
     _layoutItems = @[];
     _layoutGeneration = 0;
-    [self setupFRC];
+    _needsReload = YES;
+
+    // Any change that reaches the view context — the host's own writes, merges,
+    // CloudKit imports — posts here. A CDTag FRC missed memory-side changes
+    // (e.g. an author edit) and knows nothing of personas; this sees both.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(contextObjectsDidChange:)
+                                                 name:NSManagedObjectContextObjectsDidChangeNotification
+                                               object:[ESCoreDataStack shared].viewContext];
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
 }
 
 - (BOOL)isFlipped {
@@ -155,22 +185,39 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
     [self addTrackingArea:ta];
 }
 
-#pragma mark - FRC
+#pragma mark - Change Tracking
 
-- (void)setupFRC {
-    NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
-    NSFetchRequest *fetch = [NSFetchRequest fetchRequestWithEntityName:@"CDTag"];
-    fetch.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES]];
-    self.tagFRC = [[NSFetchedResultsController alloc] initWithFetchRequest:fetch
-                                                      managedObjectContext:ctx
-                                                        sectionNameKeyPath:nil
-                                                                 cacheName:nil];
-    self.tagFRC.delegate = self;
-    [self.tagFRC performFetch:nil];
+- (void)setPersona:(nullable NSString *)persona {
+    if (persona == _persona || [persona isEqualToString:_persona]) return;
+    _persona = [persona copy];
+    [self reloadTags];
 }
 
-- (void)controllerDidChangeContent:(NSFetchedResultsController *)controller {
-    [self rebuildLayout];
+// Tag membership lives on CDTag.memories, so every tag/untag, store, erase and
+// merge touches a CDTag. A CDMemory author edit moves counts between personas
+// without touching any tag. Local memory updates that leave author alone
+// (reads bumping accessCount, body edits) are ignored; merged (refreshed)
+// memories carry no changedValues, so they reload conservatively.
+- (BOOL)changeAffectsCloud:(NSNotification *)note {
+    NSDictionary *info = note.userInfo;
+    if (info[NSInvalidatedAllObjectsKey]) return YES;
+    for (NSString *key in @[NSInsertedObjectsKey, NSDeletedObjectsKey,
+                            NSUpdatedObjectsKey, NSRefreshedObjectsKey, NSInvalidatedObjectsKey]) {
+        for (NSManagedObject *obj in info[key]) {
+            if ([obj isKindOfClass:CDTag.class]) return YES;
+            if (![obj isKindOfClass:CDMemory.class]) continue;
+            if (![key isEqualToString:NSUpdatedObjectsKey]) return YES;
+            if (obj.changedValues[@"author"]) return YES;
+        }
+    }
+    return NO;
+}
+
+- (void)contextObjectsDidChange:(NSNotification *)note {
+    if (![self changeAffectsCloud:note]) return;
+    // Coalesce: a pipeline tagging fifty entries is one reload, not fifty.
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(reloadTags) object:nil];
+    [self performSelector:@selector(reloadTags) withObject:nil afterDelay:kReloadCoalesceDelay];
 }
 
 #pragma mark - Color
@@ -196,15 +243,35 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
 
 #pragma mark - Layout
 
-- (void)rebuildLayout {
-    NSArray<CDTag *> *allTags = self.tagFRC.fetchedObjects;
+- (void)reloadTags {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(reloadTags) object:nil];
+    // Off-window (other tab, closed window): defer to -viewDidMoveToWindow.
+    if (!self.window) {
+        self.needsReload = YES;
+        return;
+    }
+    self.needsReload = NO;
 
-    // Build items on main (Core Data access), filter count > 0, find max
+    NSManagedObjectContext *ctx = [ESCoreDataStack shared].viewContext;
+    NSFetchRequest *fetch = [NSFetchRequest fetchRequestWithEntityName:@"CDTag"];
+    fetch.relationshipKeyPathsForPrefetching = @[@"memories"];
+    NSArray<CDTag *> *allTags = [ctx executeFetchRequest:fetch error:nil] ?: @[];
+    NSString *persona = self.persona;
+
+    // Count per tag — only the selected persona's memories, or all of them in
+    // All (witness) mode. Filter count > 0, find max.
     NSMutableArray<ESTagCloudItem *> *items = [NSMutableArray array];
     NSUInteger maxCount = 1;
 
     for (CDTag *tag in allTags) {
-        NSUInteger count = tag.memories.count;
+        NSUInteger count = 0;
+        if (persona) {
+            for (CDMemory *m in tag.memories) {
+                if ([m.author isEqualToString:persona]) count++;
+            }
+        } else {
+            count = tag.memories.count;
+        }
         if (count == 0) continue;
 
         ESTagCloudItem *item = [[ESTagCloudItem alloc] init];
@@ -217,11 +284,11 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
         if (count > maxCount) maxCount = count;
     }
 
-    // Sort descending by count
+    // Sort descending by count, then by name so equal counts place stably
     [items sortUsingComparator:^NSComparisonResult(ESTagCloudItem *a, ESTagCloudItem *b) {
         if (a.count > b.count) return NSOrderedAscending;
         if (a.count < b.count) return NSOrderedDescending;
-        return NSOrderedSame;
+        return [a.name localizedCaseInsensitiveCompare:b.name];
     }];
 
     // Compute fonts
@@ -232,6 +299,14 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
         NSFontWeight weight = (i < medianIdx) ? NSFontWeightBold : NSFontWeightRegular;
         item.font = [NSFont systemFontOfSize:fontSize weight:weight];
     }
+
+    self.items = items;
+    [self rebuildLayout];
+}
+
+- (void)rebuildLayout {
+    NSMutableArray<ESTagCloudItem *> *items = [NSMutableArray arrayWithCapacity:self.items.count];
+    for (ESTagCloudItem *item in self.items) [items addObject:[item layoutCopy]];
 
     // Capture view bounds and generation for background layout
     NSSize viewSize = self.bounds.size;
@@ -436,8 +511,8 @@ static CGFloat ESTagFontSize(NSUInteger count, NSUInteger maxCount) {
 
 - (void)viewDidMoveToWindow {
     [super viewDidMoveToWindow];
-    if (self.window) {
-        [self rebuildLayout];
+    if (self.window && self.needsReload) {
+        [self reloadTags];
     }
 }
 
