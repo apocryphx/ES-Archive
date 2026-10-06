@@ -5,9 +5,14 @@
 `expression` or `stages`; `archive_cli` is an engine tool
 (`Server/Tools/ESMemoryCLITool.{h,m}`) and both apps list it; the stdio host
 only reorders it to index 0. Grammar parity table:
-`ES Archive Tests/ESPipelineParserTests.m`. Phase 2 (the date normalizer,
-still in `Stdio/ESBridgeCLI.{h,m}`) is open. The rest of this brief is kept
-as written: §2 describes the state *before* phase 1.
+`ES Archive Tests/ESPipelineParserTests.m`.
+**Phase 2 implemented October 6, 2026.** The relative-date resolver lives in
+`Server/ESDateArgument.{h,m}` and runs inside `archive_store`,
+`archive_update`, `archive_tags` and `archive_timeline` (whose `from`/`to`
+had promised offsets that no surface actually resolved). `Stdio/ESBridgeCLI`
+is deleted; the stdio host rewrites nothing on the way in. Table test:
+`ES Archive Tests/ESDateArgumentTests.m`. The rest of this brief is kept as
+written: §2 describes the state *before* phase 1.
 **Audience:** A fresh coding session. Read this whole document first; the code
 locations below are exact as of `main` at `bce65b7` (September 8, 2026).
 **Archive record:** *Unify the pipeline interface: archive_cli strings on the

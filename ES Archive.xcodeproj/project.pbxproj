@@ -79,7 +79,6 @@
 				"Embedders/embeddinggemma-300m-qat-q4_0-coreml/README.md",
 				MemoryScope/MEMORY_SCOPE.md,
 				Onboarding/ESStdioConnectController.m,
-				Stdio/ESBridgeCLI.m,
 				Stdio/ESEngine.m,
 				Stdio/ESStdioAppDelegate.m,
 				Stdio/ESStdioMain.m,

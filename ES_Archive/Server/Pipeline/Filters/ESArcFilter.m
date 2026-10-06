@@ -14,7 +14,7 @@
 
 /// Parse "12h", "1d", "30m", "90s", "2w" — unsigned duration → seconds.
 /// Returns 0 (and sets parsed=NO) on bad input. Used only for --window;
-/// the bridge has its own signed-offset parser for relative-date semantics.
+/// signed relative dates on the tool surface go through ESDateArgument.
 static NSTimeInterval ESArcParseDuration(NSString *input, BOOL *parsed) {
     if (parsed) *parsed = NO;
     if (![input isKindOfClass:NSString.class] || input.length == 0) return 0;

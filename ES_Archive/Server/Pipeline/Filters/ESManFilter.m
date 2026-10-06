@@ -519,7 +519,7 @@
 + (NSString *)manPage {
     return
         @"NAME\n"
-        @"    man — documentation for archive_pipeline commands and topics\n"
+        @"    man — documentation for archive_cli commands and topics\n"
         @"\n"
         @"SYNOPSIS\n"
         @"    man\n"

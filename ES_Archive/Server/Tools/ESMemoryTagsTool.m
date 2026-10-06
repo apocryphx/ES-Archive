@@ -10,6 +10,7 @@
 //
 
 #import "ESMemoryTagsTool.h"
+#import "ESDateArgument.h"
 #import "CDTag.h"
 #import "CDTag+CoreDataProperties.h"
 #import "CDMemory.h"
@@ -33,12 +34,12 @@
                 @"mode": @{@"type": @"string", @"description": @"list, create, delete, rename, update, merge", @"enum": @[@"list", @"create", @"delete", @"rename", @"update", @"merge"]},
                 @"name": @{@"type": @"string", @"description": @"In list mode: case-insensitive substring filter (e.g. \"Hu\" matches Humboldt, Hundertwasser). In create/delete/rename/update: exact tag name to operate on, matched case- and diacritic-insensitively. In create mode a name already in use returns \"already_exists\" — tag names are unique and there is no overwrite."},
                 @"kind": @{@"type": @"string", @"description": @"In list mode: filter by kind. In create mode: descriptive kind (person, place, project, principle, subset, session, research). 'thing' is the uncategorized default that connect-or-create (archive_store/archive_tag) assigns to tags it mints."},
-                @"expiresAt": @{@"type": @"string", @"description": @"Create mode: ISO-8601 absolute datetime, or omit for permanent. Bridge resolves relative offsets like \"+30 days\"."},
+                @"expiresAt": @{@"type": @"string", @"description": @"Create mode: ISO-8601 absolute datetime or a relative offset like \"+30 days\" / \"+2h\" (resolved against the current time), or omit for permanent."},
                 @"limit": @{@"type": @"integer", @"description": @"Maximum tags to return (list mode). Default 50."},
                 @"offset": @{@"type": @"integer", @"description": @"Skip this many tags before applying limit (list mode). Default 0."},
                 @"newName": @{@"type": @"string", @"description": @"New name (rename)."},
                 @"newKind": @{@"type": @"string", @"description": @"New kind (update)."},
-                @"newExpiresAt": @{@"description": @"Update mode: new ISO-8601 expiration, or null/empty to clear.", @"oneOf": @[@{@"type": @"string"}, @{@"type": @"null"}]},
+                @"newExpiresAt": @{@"description": @"Update mode: new expiration (ISO-8601 or a relative offset like \"+30 days\"), or null/empty to clear.", @"oneOf": @[@{@"type": @"string"}, @{@"type": @"null"}]},
                 @"source": @{@"type": @"string", @"description": @"Merge from tag name."},
                 @"target": @{@"type": @"string", @"description": @"Merge into tag name."},
                 @"includeExpired": @{@"description": @"List mode: include tags whose dateExpired has passed. Default false.", @"oneOf": @[@{@"type": @"boolean"}, @{@"type": @"string"}]}
@@ -167,12 +168,11 @@
 
     NSDate *expiresAt = nil;
     if ([expiresAtRaw isKindOfClass:NSString.class] && [(NSString *)expiresAtRaw length] > 0) {
-        NSISO8601DateFormatter *df = [[NSISO8601DateFormatter alloc] init];
-        expiresAt = [df dateFromString:(NSString *)expiresAtRaw];
+        expiresAt = ESDateFromArgument((NSString *)expiresAtRaw);
         if (!expiresAt) {
             return @{
                 @"status": @"invalid_expiresAt",
-                @"hint": @"Provide ISO-8601 (e.g. 2026-06-01T12:00:00Z). Relative offsets are resolved by the bridge."
+                @"hint": ESDateArgumentHint()
             };
         }
     }
@@ -267,12 +267,11 @@
             if (str.length == 0) {
                 clearingExpiry = YES;
             } else {
-                NSISO8601DateFormatter *df = [[NSISO8601DateFormatter alloc] init];
-                parsedExpiresAt = [df dateFromString:str];
+                parsedExpiresAt = ESDateFromArgument(str);
                 if (!parsedExpiresAt) {
                     return @{
                         @"status": @"invalid_newExpiresAt",
-                        @"hint": @"Provide ISO-8601 (e.g. 2026-06-01T12:00:00Z) or null."
+                        @"hint": [ESDateArgumentHint() stringByAppendingString:@" Pass null to clear."]
                     };
                 }
             }

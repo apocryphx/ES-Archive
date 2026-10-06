@@ -5,7 +5,7 @@
 //  Copyright © 2026 Kolja Wawrowsky. All rights reserved.
 //  Licensed under the MIT License. See LICENSE file in the project root.
 //
-//  man — documentation for archive_pipeline commands. Terminal stage.
+//  man — documentation for archive_cli commands. Terminal stage.
 //  With no positional argument, returns the index of all registered
 //  filters. With a command name, returns that filter's man page.
 //

@@ -14,6 +14,7 @@
 //
 
 #import "ESMemoryUpdateTool.h"
+#import "ESDateArgument.h"
 #import "CDMemory.h"
 #import "CDMemoryRevision.h"
 #import "CDMemoryRevision+CoreDataProperties.h"
@@ -60,7 +61,7 @@
                 @"private": @{@"description": @"Change private.", @"oneOf": @[@{@"type": @"boolean"}, @{@"type": @"string"}]},
                 @"summary": @{@"type": @"string", @"description": @"Retrieval-optimized summary (2-4 sentences, plain prose). Embedded as the vector instead of body. Describe what the entry is about, what it concludes, and why it matters."},
                 @"language": @{@"type": @"string", @"description": @"ISO 639-1 language code of the updated entry ('en', 'de', etc.). Optional. If omitted, the entry's existing language tag is preserved. Set explicitly only when you're actually changing the language of the entry's primary content."},
-                @"dateCreated": @{@"type": @"string", @"description": @"Optional retrofit of the historical creation timestamp. ISO-8601 ('2025-08-10T14:00:00Z') or a relative offset (the bridge normalizes '-30 days' → ISO-8601). Use this to correct an entry whose creation date is wrong — typically because the entry was imported or bulk re-saved and lost its original authoring date. dateModified always updates to now (this IS a modification); the previous values of both dateCreated and dateModified are preserved on the revision snapshot."},
+                @"dateCreated": @{@"type": @"string", @"description": @"Optional retrofit of the historical creation timestamp. ISO-8601 ('2025-08-10T14:00:00Z') or a relative offset ('-30 days', '-2h'), resolved against the current time. Use this to correct an entry whose creation date is wrong — typically because the entry was imported or bulk re-saved and lost its original authoring date. dateModified always updates to now (this IS a modification); the previous values of both dateCreated and dateModified are preserved on the revision snapshot."},
                 @"tags": @{
                     @"type": @"array",
                     @"description": @"Replace tags.",
@@ -143,18 +144,17 @@
 
     // Pre-validate optional dateCreated before any context mutation. Same
     // discipline as the tags pre-validation below: parse failures must
-    // bail out before we touch the context. Bridge has already normalized
-    // any relative offset to ISO-8601.
+    // bail out before we touch the context. Absolute ISO-8601 or a relative
+    // offset, resolved here (see ESDateArgument).
     NSString *dateCreatedStr = [ESMemoryToolBase stringFromArgs:arguments key:@"dateCreated"];
     NSDate *parsedDateCreated = nil;
     if (dateCreatedStr.length > 0) {
-        NSISO8601DateFormatter *df = [[NSISO8601DateFormatter alloc] init];
-        parsedDateCreated = [df dateFromString:dateCreatedStr];
+        parsedDateCreated = ESDateFromArgument(dateCreatedStr);
         if (!parsedDateCreated) {
             return @{
                 @"status": @"invalid_dateCreated",
                 @"title": memory.title ?: @"",
-                @"hint": @"Provide ISO-8601 (e.g. '2025-08-10T14:00:00Z') or a relative offset like '-30 days' / '-2h'. Relative offsets are resolved by the bridge."
+                @"hint": ESDateArgumentHint()
             };
         }
     }

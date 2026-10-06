@@ -11,6 +11,7 @@
 //
 
 #import "ESMemoryStoreTool.h"
+#import "ESDateArgument.h"
 #import "CDMemory.h"
 #import "CDVector.h"
 #import "CDMemoryLookup.h"
@@ -57,7 +58,7 @@
                 },
                 @"dateCreated": @{
                     @"type": @"string",
-                    @"description": @"Optional override for the entry's creation timestamp. If omitted, the server uses the current time — the right default for entries authored in the moment. Provide an ISO-8601 timestamp (e.g. '2025-08-10T14:00:00Z') only when the entry you're storing was originally written or experienced at an earlier point — e.g. importing an older work, backfilling a session you forgot to record, or filing a letter dated long before today. The bridge accepts relative offsets ('-30 days', '-2h') and normalizes them to ISO-8601 before forwarding. dateModified is always set to now regardless — that's the moment the row entered the Archive."
+                    @"description": @"Optional override for the entry's creation timestamp. If omitted, the server uses the current time — the right default for entries authored in the moment. Provide an ISO-8601 timestamp (e.g. '2025-08-10T14:00:00Z') only when the entry you're storing was originally written or experienced at an earlier point — e.g. importing an older work, backfilling a session you forgot to record, or filing a letter dated long before today. Relative offsets ('-30 days', '-2h') are accepted and resolved against the current time. dateModified is always set to now regardless — that's the moment the row entered the Archive."
                 },
                 @"tags": @{
                     @"description": @"Tags to attach. Any tag that doesn't exist yet is created automatically (connect-or-create). Pass an array of {name} or {name, kind} objects, an array of name strings, or a comma-separated string of names. New tags default to kind 'thing' unless a kind is given; newly-created tag names come back under 'createdTags'.",
@@ -101,18 +102,17 @@
 
     NSManagedObjectContext *ctx = store.viewContext;
 
-    // Pre-validate optional dateCreated before any context mutation. The
-    // bridge has already normalized relative offsets (e.g. "-30 days") to
-    // ISO-8601, so the server only deals with strict ISO-8601 here.
+    // Pre-validate optional dateCreated before any context mutation.
+    // Absolute ISO-8601 or a relative offset ("-30 days"), resolved here on
+    // every surface (see ESDateArgument).
     NSString *dateCreatedStr = [ESMemoryToolBase stringFromArgs:arguments key:@"dateCreated"];
     NSDate *parsedDateCreated = nil;
     if (dateCreatedStr.length > 0) {
-        NSISO8601DateFormatter *df = [[NSISO8601DateFormatter alloc] init];
-        parsedDateCreated = [df dateFromString:dateCreatedStr];
+        parsedDateCreated = ESDateFromArgument(dateCreatedStr);
         if (!parsedDateCreated) {
             return @{
                 @"status": @"invalid_dateCreated",
-                @"hint": @"Provide ISO-8601 (e.g. '2025-08-10T14:00:00Z') or a relative offset like '-30 days' / '-2h'. Relative offsets are resolved by the bridge."
+                @"hint": ESDateArgumentHint()
             };
         }
     }

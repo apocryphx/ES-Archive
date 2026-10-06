@@ -7,7 +7,6 @@
 //
 
 #import "MCPStdioServer.h"
-#import "ESBridgeCLI.h"
 #import "ESEngine.h"
 #import "MCPFraming.h"
 #import "MCPUnixSocketServer.h"
@@ -238,56 +237,14 @@ static int gRPCFileDescriptor = -1;
         // moved to index 0 ahead of the other schemas, preserving the
         // bridge's presentation exactly.
         output = [self toolsListResponseForMessage:msg rpcId:rpcId];
-    } else if ([method isEqualToString:@"tools/call"]) {
-        NSDictionary *params = [msg[@"params"] isKindOfClass:NSDictionary.class] ? msg[@"params"] : nil;
-        NSString *toolName = [params[@"name"] isKindOfClass:NSString.class] ? params[@"name"] : nil;
-
-        // Pre-normalize relative-date args ("+30 days") into ISO-8601 before
-        // dispatch. If normalization fails, error locally instead of handing
-        // the engine garbage.
-        NSArray<NSString *> *dateKeys = nil;
-        if ([toolName isEqualToString:@"archive_tags"])            dateKeys = @[ @"expiresAt", @"newExpiresAt" ];
-        else if ([toolName isEqualToString:@"archive_store"])      dateKeys = @[ @"dateCreated" ];
-        else if ([toolName isEqualToString:@"archive_update"])     dateKeys = @[ @"dateCreated" ];
-
-        BOOL dateNormFailed = NO;
-        NSMutableDictionary *normalizedArgs = nil;
-        for (NSString *dateKey in dateKeys) {
-            id raw = params[@"arguments"][dateKey];
-            if (![raw isKindOfClass:NSString.class] || [(NSString *)raw length] == 0) continue;
-            NSString *normalized = ESBridgeNormalizeRelativeDate(raw);
-            if (!normalized) {
-                output = ESMBJSONRPCError(rpcId, -32602,
-                    [NSString stringWithFormat:
-                        @"%@: '%@' is not a valid date. "
-                         "Pass ISO-8601 (e.g. 2026-06-01T12:00:00Z) or a relative "
-                         "offset like \"+30 days\", \"-1 hour\", \"+2h\".",
-                        dateKey, raw]);
-                dateNormFailed = YES;
-                break;
-            }
-            if (![raw isEqualToString:normalized]) {
-                if (!normalizedArgs) {
-                    normalizedArgs = [params[@"arguments"] mutableCopy]
-                        ?: [NSMutableDictionary dictionary];
-                }
-                normalizedArgs[dateKey] = normalized;
-            }
-        }
-        if (!dateNormFailed && normalizedArgs) {
-            NSMutableDictionary *newParams = [params mutableCopy];
-            newParams[@"arguments"] = normalizedArgs;
-            NSMutableDictionary *newMsg = [msg mutableCopy];
-            newMsg[@"params"] = newParams;
-            msg = newMsg;
-        }
     }
 
     if (!output) {
         // Everything else — initialize, notifications/*, resources/*, and
-        // every tools/call, archive_cli included (it is an engine tool now;
-        // the parser lives in Server/Pipeline/ESPipelineParser) — goes
-        // straight to the in-process engine.
+        // every tools/call — goes straight to the in-process engine. This
+        // host no longer rewrites anything on the way in: archive_cli is an
+        // engine tool (Server/Pipeline/ESPipelineParser) and relative dates
+        // are resolved by the engine (Server/ESDateArgument).
         //
         // The call is synchronous on this concurrent work queue for the same
         // reason the bridge forwarded synchronously: stdin EOF triggers the

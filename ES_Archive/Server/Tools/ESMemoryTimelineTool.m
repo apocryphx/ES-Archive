@@ -14,6 +14,7 @@
 //
 
 #import "ESMemoryTimelineTool.h"
+#import "ESDateArgument.h"
 #import "CDMemory.h"
 #import "CDMemoryLookup.h"
 #import "CDTag.h"
@@ -30,8 +31,8 @@
                          "'oldest' / 'what did I store first' → order:oldest. "
                          "by: created (default — when it entered the Archive), modified (last edited — "
                          "the former memory_recent was order:newest+by:modified), or accessed (last read). "
-                         "from/to bound a window (ISO-8601; the bridge normalizes relative offsets like "
-                         "'-30 days'); days is sugar for the last N days. Optional tags scope the "
+                         "from/to bound a window (ISO-8601 or a relative offset like '-30 days', resolved "
+                         "against the current time); days is sugar for the last N days. Optional tags scope the "
                          "timeline to a project or entity.",
         @"annotations": @{
             @"readOnlyHint": @YES,
@@ -42,7 +43,7 @@
             @"properties": @{
                 @"order": @{@"type": @"string", @"description": @"newest (default) or oldest.", @"enum": @[@"newest", @"oldest"]},
                 @"by": @{@"type": @"string", @"description": @"Time axis: created (default), modified, or accessed.", @"enum": @[@"created", @"modified", @"accessed"]},
-                @"from": @{@"type": @"string", @"description": @"Window start. ISO-8601 (e.g. 2025-11-01T00:00:00Z); relative offsets like '-30 days' are normalized by the bridge."},
+                @"from": @{@"type": @"string", @"description": @"Window start. ISO-8601 (e.g. 2025-11-01T00:00:00Z) or a relative offset like '-30 days' / '-2h'."},
                 @"to": @{@"type": @"string", @"description": @"Window end. Same formats as from."},
                 @"days": @{@"description": @"Sugar: limit to the last N days on the chosen axis (ignored if from is given).", @"oneOf": @[@{@"type": @"integer"}, @{@"type": @"string"}]},
                 @"limit": @{@"description": @"Maximum number of results. Default: 20.", @"oneOf": @[@{@"type": @"integer"}, @{@"type": @"string"}]},
@@ -82,21 +83,20 @@
     else if ([byArg caseInsensitiveCompare:@"accessed"] == NSOrderedSame) dateKey = @"dateAccessed";
     else return @{@"status": @"invalid_by", @"hint": @"by must be created, modified, or accessed."};
 
-    // Window bounds. from/to arrive as ISO-8601 (the bridge has already
-    // normalized any relative offset). days is server-side sugar for from.
-    NSISO8601DateFormatter *iso = [[NSISO8601DateFormatter alloc] init];
+    // Window bounds. from/to are ISO-8601 or relative offsets, resolved
+    // here (see ESDateArgument). days is sugar for from.
     NSDate *fromDate = nil, *toDate = nil;
     NSString *fromStr = [ESMemoryToolBase stringFromArgs:arguments key:@"from"];
     NSString *toStr = [ESMemoryToolBase stringFromArgs:arguments key:@"to"];
     if (fromStr.length > 0) {
-        fromDate = [iso dateFromString:fromStr];
+        fromDate = ESDateFromArgument(fromStr);
         if (!fromDate) return @{@"status": @"invalid_from",
-                                @"hint": @"from must be ISO-8601 (e.g. 2025-11-01T00:00:00Z). Relative offsets are normalized by the bridge."};
+                                @"hint": [@"from: " stringByAppendingString:ESDateArgumentHint()]};
     }
     if (toStr.length > 0) {
-        toDate = [iso dateFromString:toStr];
+        toDate = ESDateFromArgument(toStr);
         if (!toDate) return @{@"status": @"invalid_to",
-                              @"hint": @"to must be ISO-8601 (e.g. 2025-11-30T23:59:59Z). Relative offsets are normalized by the bridge."};
+                              @"hint": [@"to: " stringByAppendingString:ESDateArgumentHint()]};
     }
     if (!fromDate && arguments[@"days"]) {
         NSInteger days = [ESMemoryToolBase integerFromArgs:arguments key:@"days" default:0];

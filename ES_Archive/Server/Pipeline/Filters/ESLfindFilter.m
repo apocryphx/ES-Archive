@@ -108,8 +108,8 @@
             if (d > 0) _days = @(d);
         }
 
-        // --include-expired : escape hatch. Boolean-only flag; the bridge
-        // CLI's booleanOnlyFlags set normalizes this into @YES.
+        // --include-expired : escape hatch. Boolean-only flag; the
+        // parser's booleanOnlyFlags set (ESPipelineParser) yields @YES.
         id expiredVal = stage.flags[@"include-expired"];
         if ([expiredVal isKindOfClass:NSNumber.class]) {
             _includeExpired = [(NSNumber *)expiredVal boolValue];

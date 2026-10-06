@@ -1,19 +1,17 @@
 //
-//  ESBridgeCLI.m
-//  ES Archive MCP
+//  ESDateArgument.m
+//  ES Archive
 //
 //  Copyright © 2026 Kolja Wawrowsky. All rights reserved.
 //  Licensed under the MIT License. See LICENSE file in the project root.
 //
 
-#import "ESBridgeCLI.h"
-#import "ESBridgeCLI.h"
+#import "ESDateArgument.h"
 
-
-#pragma mark - Date helpers
+NS_ASSUME_NONNULL_BEGIN
 
 // Parse one of "+N <unit>", "-N <unit>", or compact "+1d"/"-2h" into a
-// (sign, value, unit-key) triple. Returns NO if the input doesn't match.
+// signed number of seconds. Returns NO if the input doesn't match.
 static BOOL ParseRelativeOffset(NSString *input, NSInteger *outSeconds) {
     if (input.length < 2) return NO;
     unichar first = [input characterAtIndex:0];
@@ -38,10 +36,9 @@ static BOOL ParseRelativeOffset(NSString *input, NSInteger *outSeconds) {
     unit = unit.lowercaseString;
     if (unit.length == 0) return NO;
 
-    // Map unit spellings to seconds. Months and years are calendar-aware in
-    // principle, but for tag lifecycles "30 days" approximations are fine —
-    // we want NSDate arithmetic that's stable across locales, so seconds-
-    // based works.
+    // Months and years are calendar-aware in principle, but for tag
+    // lifecycles and backdated entries a 30-day / 365-day approximation is
+    // fine, and seconds-based arithmetic is stable across locales.
     NSInteger unitSeconds = 0;
     if ([@[@"s", @"sec", @"secs", @"second", @"seconds"] containsObject:unit]) {
         unitSeconds = 1;
@@ -65,26 +62,28 @@ static BOOL ParseRelativeOffset(NSString *input, NSInteger *outSeconds) {
     return YES;
 }
 
-NSString * _Nullable ESBridgeNormalizeRelativeDate(NSString *input) {
+NSDate * _Nullable ESDateFromArgument(NSString * _Nullable input) {
     if (![input isKindOfClass:NSString.class]) return nil;
     NSString *trimmed = [input stringByTrimmingCharactersInSet:
-                         NSCharacterSet.whitespaceCharacterSet];
+                         NSCharacterSet.whitespaceAndNewlineCharacterSet];
     if (trimmed.length == 0) return nil;
 
+    // Absolute ISO-8601 first: it is the canonical form, and a "+0500"
+    // timezone suffix must keep its meaning rather than read as an offset.
     NSISO8601DateFormatter *df = [[NSISO8601DateFormatter alloc] init];
-
-    // Try ISO-8601 absolute first — it's the canonical form, and we want
-    // "+0500" or similar valid timezone offsets to keep their meaning.
     NSDate *absolute = [df dateFromString:trimmed];
-    if (absolute) return [df stringFromDate:absolute];
+    if (absolute) return absolute;
 
-    // Fall through to relative-offset parsing.
     NSInteger seconds = 0;
     if (ParseRelativeOffset(trimmed, &seconds)) {
-        NSDate *resolved = [NSDate dateWithTimeIntervalSinceNow:(NSTimeInterval)seconds];
-        return [df stringFromDate:resolved];
+        return [NSDate dateWithTimeIntervalSinceNow:(NSTimeInterval)seconds];
     }
-
     return nil;
 }
 
+NSString *ESDateArgumentHint(void) {
+    return @"Provide ISO-8601 (e.g. 2026-06-01T12:00:00Z) or a relative offset "
+            "like \"+30 days\", \"-1 hour\", \"+2h\".";
+}
+
+NS_ASSUME_NONNULL_END

@@ -33,7 +33,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// One stage from the pipeline DSL: command name plus positional args and
-/// flag dict. Bridge's ESBridgeCLIStage maps directly to this shape.
+/// flag dict. ESPipelineParser emits exactly this shape.
 @interface ESPipelineStage : NSObject
 @property (nonatomic, readonly) NSString *name;
 @property (nonatomic, readonly) NSArray<NSString *> *positional;

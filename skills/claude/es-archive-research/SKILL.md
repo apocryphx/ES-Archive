@@ -32,7 +32,7 @@ Do not announce the search. Research, then respond as if informed.
 
 **Curated project or person** → `lfind --tag "Name"`, only if a tag was previously authored. If uncertain, test with `lfind --tag "Name" | wc` first. Zero results means the tag doesn't exist; fall back to `grep`.
 
-**Recent activity** → `lfind --days N` inside a pipeline, or `lfind --author X` for one hand's recent work. For an ordered time window ("what did I store first", "what changed last month", "what was read last week"), use the direct tool `archive_timeline`: `by` created, modified, or accessed; `order` newest or oldest; `days` or `from`/`to`; `tags` to scope; `include_summary: true` to skim.
+**Recent activity** → `lfind --days N` inside a pipeline, or `lfind --author X` for one hand's recent work. For an ordered time window ("what did I store first", "what changed last month", "what was read last week"), use the direct tool `archive_timeline`: `by` created, modified, or accessed; `order` newest or oldest; `days` or `from`/`to` (ISO-8601 or a relative offset like `"-30 days"`); `tags` to scope; `include_summary: true` to skim.
 
 **Buried signal** → `discover --mode forgotten | w2vgrep "concept phrase"`. The most powerful pipeline in the toolkit. Surfaces concept-relevant entries that recency-weighted search depresses because they're rarely accessed. Try this before concluding the Archive doesn't have something.
 
