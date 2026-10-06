@@ -107,9 +107,19 @@ static NSDictionary * _Nullable ESRelayError(id rpcId, NSInteger code, NSString 
     // _lock, after the watcher is cancelled: that way the fd is never closed under
     // a request that is mid-poll on it, and its number can't be reused by the
     // re-election's new socket while a stale reader still holds it.
+    //
+    // The watcher runs on its own serial queue at user-interactive QoS.
+    // -closeConnection blocks on a semaphore until the cancel handler has run,
+    // and a semaphore carries no ownership libdispatch could boost through, so
+    // the handler must already run at least as high as any closer — the main
+    // thread included — or every close is a priority inversion. The handler is
+    // one peek per wake, so the high class costs nothing.
+    dispatch_queue_t watcherQueue = dispatch_queue_create(
+        "esm.socketclient.eof",
+        dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL,
+                                                QOS_CLASS_USER_INTERACTIVE, 0));
     __block dispatch_source_t src =
-        dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0,
-                               dispatch_get_global_queue(QOS_CLASS_UTILITY, 0));
+        dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, watcherQueue);
     if (src) {
         int watchedFD = fd;
         __weak MCPSocketClient *weakC = c;
