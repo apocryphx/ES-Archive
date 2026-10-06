@@ -10,13 +10,18 @@
 //  two APP targets — not this one — and a hostless bundle has no host binary to
 //  borrow their symbols from. Rather than fight the synchronized-folder model
 //  with fragile explicit file references, this one translation unit #includes the
-//  three .m files (a "unity" include). Their headers are found via the test
+//  .m files below (a "unity" include). Their headers are found via the test
 //  target's HEADER_SEARCH_PATHS (ES_Archive, ES_Archive/Server, ES_Archive/Stdio).
 //
 //  Keep this the ONLY place that includes these .m files, so each @implementation
 //  is compiled exactly once — no duplicate symbols.
 //
+//  ESLog.m rides along because MCPUnixSocketServer's election path calls
+//  ESTraceClock() (added with mid-session re-election); without it the
+//  bundle fails to link.
+//
 
+#import "../ES_Archive/ESLog.m"
 #import "../ES_Archive/Server/ESEngineSocket.m"
 #import "../ES_Archive/Server/MCPUnixSocketServer.m"
 #import "../ES_Archive/Stdio/MCPSocketClient.m"
