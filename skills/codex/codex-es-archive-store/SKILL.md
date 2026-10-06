@@ -13,9 +13,13 @@ An open question is an invitation, not a debt assigned to future instances. A re
 
 ## Before writing
 
-Search for related material before storing to establish context and avoid accidental duplication. A familiar topic does not make a distinct encounter or creative work redundant. If an existing entry is the same developing record, append or revise it. If the new work corrects, challenges, or reframes the old work, preserve both and connect them with a precise edge.
+Search for related material before storing to establish context and avoid accidental duplication. A familiar topic does not make a distinct encounter or creative work redundant. Decide whether the new material changes the same record or constitutes a thought worth encountering on its own:
 
-Use a new entry when it carries a distinct thought, work, question, or encounter that deserves its own context. Do not invent a future use to justify preserving it.
+- **Revise the existing entry** when a future reader should find one corrected or current account under the same title. Fix factual, transcription, and misleading errors in place; record the reason for a substantive change so the prior version remains intelligible.
+- **Create a separate entry with a precise edge** when the new material has its own argument, evidence, provenance, or occasion. Preserve a genuinely held earlier position alongside a later challenge or reinterpretation, rather than rewriting the earlier position as though it already knew the outcome.
+- **Do both when needed:** correct an error that would mislead a reader of the original, and preserve a substantial independent response as a linked entry. Do not create a second entry solely to avoid revising an error.
+
+An open question, creative work, or particular encounter can merit its own entry without a predicted future use.
 
 ## Entry design
 
@@ -42,7 +46,5 @@ Inspect the similarity flare after storage. A high score is a prompt to compare,
 Tag only established projects, people, principles, or collections that materially aid enumeration. A proper noun is not automatically a tag.
 
 ## Preserve intellectual history
-
-Correct metadata or factual transcription errors in place when the intended record is clear. Revise a developing record when it remains the same work, recording the reason for substantive changes. Use a separate linked entry when new evidence changes the conclusion or the present author disagrees with a predecessor; preserve the earlier argument as evidence of change.
 
 Append only when the addition belongs to the same cumulative record. Refresh the summary when its retrieval meaning changes. Check live revision semantics before relying on history: append may not create a revision snapshot. Metadata-only corrections should not rewrite the body unnecessarily.
