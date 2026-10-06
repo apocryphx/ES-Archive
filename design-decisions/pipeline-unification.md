@@ -1,6 +1,13 @@
 # Pipeline Unification — one `archive_cli` grammar on every surface
 
-**Status:** Design brief, ready to implement. Nothing implemented yet.
+**Status:** Phase 1 implemented October 6, 2026. The parser lives in
+`Server/Pipeline/ESPipelineParser.{h,m}`; `archive_pipeline` accepts
+`expression` or `stages`; `archive_cli` is an engine tool
+(`Server/Tools/ESMemoryCLITool.{h,m}`) and both apps list it; the stdio host
+only reorders it to index 0. Grammar parity table:
+`ES Archive Tests/ESPipelineParserTests.m`. Phase 2 (the date normalizer,
+still in `Stdio/ESBridgeCLI.{h,m}`) is open. The rest of this brief is kept
+as written: §2 describes the state *before* phase 1.
 **Audience:** A fresh coding session. Read this whole document first; the code
 locations below are exact as of `main` at `bce65b7` (September 8, 2026).
 **Archive record:** *Unify the pipeline interface: archive_cli strings on the

@@ -234,9 +234,9 @@ static int gRPCFileDescriptor = -1;
     NSString *output = nil;
 
     if ([method isEqualToString:@"tools/list"]) {
-        // The stdio host IS the curated surface: archive_cli is presented at
-        // index 0 ahead of the engine's own schemas, preserving the bridge's
-        // merge behavior exactly.
+        // The stdio host curates the order only: the engine's archive_cli is
+        // moved to index 0 ahead of the other schemas, preserving the
+        // bridge's presentation exactly.
         output = [self toolsListResponseForMessage:msg rpcId:rpcId];
     } else if ([method isEqualToString:@"tools/call"]) {
         NSDictionary *params = [msg[@"params"] isKindOfClass:NSDictionary.class] ? msg[@"params"] : nil;
@@ -281,51 +281,13 @@ static int gRPCFileDescriptor = -1;
             newMsg[@"params"] = newParams;
             msg = newMsg;
         }
-
-        if (!dateNormFailed && [toolName isEqualToString:@"archive_cli"]) {
-            // Host-local handling. The CLI executor drives the engine's
-            // archive_pipeline tool in-process, one call per pipeline.
-            NSString *expression = params[@"arguments"][@"expression"];
-            if (![expression isKindOfClass:[NSString class]] || expression.length == 0) {
-                output = ESMBJSONRPCError(rpcId, -32602,
-                    @"`expression` is required. Try archive_cli(\"man\") to see commands.");
-            } else {
-                NSError *parseErr = nil;
-                NSArray *tokens = ESBridgeCLITokenize(expression, &parseErr);
-                NSDictionary *result = nil;
-                if (!tokens) {
-                    result = @{
-                        @"error":      @"parse_error",
-                        @"message":    parseErr.localizedDescription ?: @"could not tokenize",
-                        @"expression": expression,
-                    };
-                } else {
-                    NSArray *stages = ESBridgeCLIParseStages(tokens, &parseErr);
-                    if (!stages) {
-                        result = @{
-                            @"error":      @"parse_error",
-                            @"message":    parseErr.localizedDescription ?: @"could not parse",
-                            @"expression": expression,
-                        };
-                    } else {
-                        result = ESBridgeCLIExecute(stages);
-                    }
-                }
-                NSData *resultData = [NSJSONSerialization
-                    dataWithJSONObject:result options:NSJSONWritingPrettyPrinted error:nil];
-                NSString *resultText = resultData
-                    ? [[NSString alloc] initWithData:resultData encoding:NSUTF8StringEncoding]
-                    : @"{}";
-                output = ESMBJSONRPCResult(rpcId, @{
-                    @"content": @[ @{ @"type": @"text", @"text": resultText } ]
-                });
-            }
-        }
     }
 
     if (!output) {
         // Everything else — initialize, notifications/*, resources/*, and
-        // every non-CLI tools/call — goes straight to the in-process engine.
+        // every tools/call, archive_cli included (it is an engine tool now;
+        // the parser lives in Server/Pipeline/ESPipelineParser) — goes
+        // straight to the in-process engine.
         //
         // The call is synchronous on this concurrent work queue for the same
         // reason the bridge forwarded synchronously: stdin EOF triggers the
@@ -359,54 +321,21 @@ static int gRPCFileDescriptor = -1;
                         : ESMBJSONRPCError(rpcId, -32603, @"tools/list failed");
     }
 
-    NSMutableArray *merged = [NSMutableArray arrayWithCapacity:engineTools.count + 1];
-    [merged addObject:[MCPStdioServer memoryCLISchema]];
+    // The engine (in-process or the elected host) supplies archive_cli like
+    // any other tool; this host only moves it to index 0 so Claude sees the
+    // composable surface first, as the bridge always presented it.
+    NSMutableArray *merged = [NSMutableArray arrayWithCapacity:engineTools.count];
+    NSDictionary *cli = nil;
     for (NSDictionary *t in engineTools) {
-        if ([t isKindOfClass:NSDictionary.class] && ![t[@"name"] isEqual:@"archive_cli"]) {
+        if (![t isKindOfClass:NSDictionary.class]) continue;
+        if (!cli && [t[@"name"] isEqual:@"archive_cli"]) {
+            cli = t;
+        } else {
             [merged addObject:t];
         }
     }
+    if (cli) [merged insertObject:cli atIndex:0];
     return ESMBJSONRPCResult(rpcId, @{ @"tools": merged });
-}
-
-/// The archive_cli tool schema, carried over verbatim from the bridge's
-/// SchemaCache. archive_cli is implemented by this host (ESBridgeCLI), not by
-/// an engine tool class, so its schema lives with the transport.
-+ (NSDictionary *)memoryCLISchema {
-    static NSDictionary *schema = nil;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        schema = @{
-            @"name": @"archive_cli",
-            @"description":
-                @"Unix-pipeline-style surface for ES Archive. Compose retrieval and "
-                 "curatorial operations with `|` exactly the way you would in a shell.\n\n"
-                 "Start with `man` to see the full command vocabulary, then `man <command>` "
-                 "for any specific command. The system documents itself.\n\n"
-                 "Quick examples:\n"
-                 "  archive_cli(\"man\")\n"
-                 "  archive_cli(\"lfind --tag 'Isolde' | head 5\")\n"
-                 "  archive_cli(\"lfind --tag-kind project | wc\")\n"
-                 "  archive_cli(\"discover --mode forgotten | w2vgrep 'continuity' | head 10\")\n"
-                 "  archive_cli(\"grep Isolde | grep Myth | tag 'Isoldes Stories'\")  // curatorial\n\n"
-                 "Most stages read; `tag` and `untag` write (atomic per pipeline). If "
-                 "results disappoint, vary the pipeline: reorder stages, replace one "
-                 "command with another at the same position, or change a parameter and "
-                 "re-run. Be persistent. Be creative. You will find it eventually.",
-            @"annotations": @{ @"readOnlyHint": @NO, @"destructiveHint": @NO },
-            @"inputSchema": @{
-                @"type": @"object",
-                @"properties": @{
-                    @"expression": @{
-                        @"type": @"string",
-                        @"description": @"A pipeline expression. Run archive_cli(\"man\") to list commands."
-                    }
-                },
-                @"required": @[ @"expression" ]
-            }
-        };
-    });
-    return schema;
 }
 
 @end

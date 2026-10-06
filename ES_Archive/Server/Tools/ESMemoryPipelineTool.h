@@ -7,14 +7,15 @@
 //
 //  MCP tool: archive_pipeline
 //
-//  Server-side pipeline executor entry point. Accepts a parsed pipeline
-//  from the bridge as an array of {name, positional, flags} stage dicts;
-//  instantiates the matching ESPipelineFilter classes; runs them; returns
-//  the response.
+//  Engine-side pipeline entry point. Accepts a pipeline either as an
+//  `expression` string in the archive_cli grammar (parsed by
+//  ESPipelineParser) or as a pre-parsed `stages` array of
+//  {name, positional, flags} dicts; instantiates the matching
+//  ESPipelineFilter classes; runs them; returns the response.
 //
-//  This tool is bridge-facing — Claude never calls it directly. The bridge
-//  parses the user's CLI string, marshals stages, and invokes this tool.
-//  Bridge translates the response back to the user-facing archive_cli shape.
+//  archive_cli (ESMemoryCLITool) is the LLM-facing alias: same grammar,
+//  same executor, with entry UUIDs stripped from the results. This tool
+//  keeps the structural form and the UUIDs for scripts and graph tools.
 //
 
 #import <Foundation/Foundation.h>
@@ -23,6 +24,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ESMemoryPipelineTool : NSObject <MCPTooling>
+
+/// Parse `expression` and run it. Returns the executor's response, or the
+/// archive_cli parse-error shape {error: "parse_error", message, expression}.
+/// `stripUUIDs` removes the per-row `uuid` field for LLM-facing callers.
++ (NSDictionary *)executeExpression:(NSString *)expression
+                    persistentStore:(NSPersistentCloudKitContainer *)store
+                              scope:(ESRequestScope *)scope
+                         stripUUIDs:(BOOL)stripUUIDs;
+
 @end
 
 NS_ASSUME_NONNULL_END
