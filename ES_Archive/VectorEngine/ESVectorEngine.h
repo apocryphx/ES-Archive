@@ -128,18 +128,27 @@ extern NSNotificationName const ESVectorCacheReadyNotification;
 /// Pure cosine similarity (no decay weighting). For graph topology.
 - (NSArray<ESVectorSearchResult *> *)cosineSimilarToMemory:(CDMemory *)memory limit:(NSUInteger)k;
 
-/// Return top-K memories similar to the given vector. Excludes any
-/// memory whose title matches excludedTitle (case-insensitive).
-/// Returns NSArray of NSDictionary: @{ @"title": NSString, @"score": NSNumber (float) }
+/// Return top-K memories similar to the given vector, for the store-time
+/// similarity flare. Excludes the memory with objectID `excludedMemoryID`
+/// (the entry just stored), so the flare never reports an entry against
+/// itself. The exclusion used to be by title, which also hid any
+/// pre-existing entry that shared the new entry's title — the likeliest
+/// near-duplicate of all, and the one case the flare exists for.
+/// Returns NSArray of NSDictionary:
+///   @{ @"title": NSString, @"score": NSNumber (float),
+///      @"dateCreated": NSDate (if set), @"dateModified": NSDate (if set) }
+/// The dates ride along so the caller can say how old a near-duplicate is;
+/// erase-and-append is the right move for one from this session, not for
+/// one from last year.
 - (NSArray<NSDictionary *> *)topKSimilarToVector:(NSData *)vector
                                            limit:(NSInteger)limit
-                                  excludingTitle:(NSString *)excludedTitle;
+                               excludingMemoryID:(nullable NSManagedObjectID *)excludedMemoryID;
 
 /// As above, restricted to an explicit set of CDVector objectIDs — used to
 /// scope the store-time similarity flare to the connecting persona.
 - (NSArray<NSDictionary *> *)topKSimilarToVector:(NSData *)vector
                                            limit:(NSInteger)limit
-                                  excludingTitle:(NSString *)excludedTitle
+                               excludingMemoryID:(nullable NSManagedObjectID *)excludedMemoryID
                                 allowedVectorIDs:(nullable NSSet<NSManagedObjectID *> *)allowed;
 
 #pragma mark - Visualization

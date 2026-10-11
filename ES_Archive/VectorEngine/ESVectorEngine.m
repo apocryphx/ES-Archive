@@ -821,13 +821,13 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
 
 - (NSArray<NSDictionary *> *)topKSimilarToVector:(NSData *)vector
                                            limit:(NSInteger)limit
-                                  excludingTitle:(NSString *)excludedTitle {
-    return [self topKSimilarToVector:vector limit:limit excludingTitle:excludedTitle allowedVectorIDs:nil];
+                               excludingMemoryID:(NSManagedObjectID *)excludedMemoryID {
+    return [self topKSimilarToVector:vector limit:limit excludingMemoryID:excludedMemoryID allowedVectorIDs:nil];
 }
 
 - (NSArray<NSDictionary *> *)topKSimilarToVector:(NSData *)vector
                                            limit:(NSInteger)limit
-                                  excludingTitle:(NSString *)excludedTitle
+                               excludingMemoryID:(NSManagedObjectID *)excludedMemoryID
                                 allowedVectorIDs:(NSSet<NSManagedObjectID *> *)allowed {
 
     if (!vector || vector.length == 0) return @[];
@@ -888,45 +888,33 @@ NSNotificationName const ESVectorCacheReadyNotification = @"ESVectorCacheReady";
     NSArray<CDVector *> *topVectors = [context executeFetchRequest:fetchRequest error:&error];
     if (error) return @[];
 
-    NSMutableDictionary<NSManagedObjectID *, NSString *> *titleMap =
+    NSMutableDictionary<NSManagedObjectID *, CDMemory *> *memoryMap =
         [NSMutableDictionary dictionaryWithCapacity:topVectors.count];
     for (CDVector *v in topVectors) {
-        if (v.memory) {
-            titleMap[v.objectID] = v.memory.title ?: @"Untitled";
-        }
+        if (v.memory) memoryMap[v.objectID] = v.memory;
     }
 
-    // Filter by excluded title and build results (raw scores)
+    // Drop the stored entry itself (by identity, never by title) and build
+    // the result rows. Surface score = raw cosine, no transformation; the
+    // dates ride along for the caller's age rendering.
     NSMutableArray<NSDictionary *> *results = [NSMutableArray array];
     for (NSDictionary *entry in topEntries) {
         if ((NSInteger)results.count >= limit) break;
 
-        NSManagedObjectID *objID = entry[@"objectID"];
-        NSString *title = titleMap[objID];
-        if (!title) continue;
+        CDMemory *m = memoryMap[entry[@"objectID"]];
+        if (!m) continue;
+        if (excludedMemoryID && [m.objectID isEqual:excludedMemoryID]) continue;
 
-        if ([title caseInsensitiveCompare:excludedTitle] == NSOrderedSame) continue;
-
-        [results addObject:@{
-            @"title": title,
-            @"rawScore": entry[@"score"]
+        float raw = [entry[@"score"] floatValue];
+        NSMutableDictionary *row = [NSMutableDictionary dictionaryWithDictionary:@{
+            @"title": m.title ?: @"Untitled",
+            @"score": @(raw),
+            @"rawScore": @(raw)
         }];
+        if (m.dateCreated)  row[@"dateCreated"]  = m.dateCreated;
+        if (m.dateModified) row[@"dateModified"] = m.dateModified;
+        [results addObject:row];
     }
-
-    // Surface score = raw cosine. No transformation.
-    if (results.count > 0) {
-        NSMutableArray *rescaled = [NSMutableArray arrayWithCapacity:results.count];
-        for (NSDictionary *r in results) {
-            float raw = [r[@"rawScore"] floatValue];
-            [rescaled addObject:@{
-                @"title": r[@"title"],
-                @"score": @(raw),
-                @"rawScore": @(raw)
-            }];
-        }
-        return rescaled;
-    }
-
     return results;
 }
 

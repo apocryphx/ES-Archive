@@ -74,10 +74,10 @@ The type value `memory` is a stored string and stays exactly as written: one kin
 
 ## Similarity flare
 
-The server returns similar existing entries in the store response. These are summary-vs-summary comparisons; scores run higher than search results.
+The server returns similar existing entries in the store response, each with its score and age: `Title (0.87, created 2 hours ago) · Title (0.61, created Mar 2025, updated Jun 12)`. These are summary-vs-summary comparisons; scores run higher than search results. An entry that shares your new entry's title is reported like any other.
 
-- **0.85+** near-duplicate. The thought already existed. Your new entry is seconds old with no history, so it is the one to remove: `archive_erase` it, then `archive_update` the original with `append: true` if anything in your version was new. The original keeps its `dateCreated`.
-- **0.55–0.85** closely related. Keep both; link only if one genuinely depends on the other.
+- **0.85+** near-duplicate. The thought already existed. If the original is from this session or the last few days, your new entry is seconds old with no history, so it is the one to remove: `archive_erase` it, then `archive_update` the original with `append: true` if anything in your version was new. The original keeps its `dateCreated`. If the original is months old, the same thought has resurfaced after a long gap: that is worth recording. Keep the new entry, link it to the original with `revises` or `extends`, and say in the body what changed in between.
+- **0.55–0.85** closely related. Keep both; link only if one genuinely depends on the other. Age is the strongest hint: an entry created hours apart from yours is probably the same session's arc and worth a link; one from a year ago is usually a neighbor, not a dependency.
 - **below 0.55** distinct. Proceed.
 
 ## Tagging at store time

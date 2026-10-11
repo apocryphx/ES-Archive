@@ -12,6 +12,7 @@
 
 #import "ESMemoryStoreTool.h"
 #import "ESDateArgument.h"
+#import "ESRelativeDate.h"
 #import "CDMemory.h"
 #import "CDVector.h"
 #import "CDMemoryLookup.h"
@@ -205,10 +206,14 @@
                 @"memory.author == %@ AND embedder.identifier == %@", scope.author, activeID];
             [scopedVectorIDs addObjectsFromArray:([ctx executeFetchRequest:vfetch error:nil] ?: @[])];
         }
+        // Exclude the new entry by identity. Its vector is not in the cache
+        // yet (generateVector runs below), so today this is a guard; by title
+        // it was a bug — a pre-existing entry with the same title, the
+        // likeliest near-duplicate, was hidden from the flare.
         similar = [[ESVectorEngine shared]
             topKSimilarToVector:vectorData
                           limit:2
-                 excludingTitle:memory.title ?: @""
+              excludingMemoryID:memory.objectID
                allowedVectorIDs:scopedVectorIDs];
     }
 
@@ -223,11 +228,19 @@
     } mutableCopy];
     if (createdTags.count > 0) result[@"createdTags"] = createdTags;
 
+    // Each hit carries its age so the caller can tell a near-duplicate from
+    // this session (erase the new one, append to the original) from the same
+    // thought resurfacing after a year (keep both, link). Same ladder and
+    // one-stamp rule as archive_timeline; see ESRelativeDate.
     if (similar.count > 0) {
+        NSDate *now = [NSDate now];
         NSMutableArray *parts = [NSMutableArray array];
         for (NSDictionary *hit in similar) {
-            [parts addObject:[NSString stringWithFormat:@"%@ (%.2f)",
-                hit[@"title"], [hit[@"score"] floatValue]]];
+            NSString *stamp = ESRelativeDateStamp(@"created", hit[@"dateCreated"],
+                                                  hit[@"dateCreated"], hit[@"dateModified"], now);
+            [parts addObject:stamp.length > 0
+                ? [NSString stringWithFormat:@"%@ (%.2f, %@)", hit[@"title"], [hit[@"score"] floatValue], stamp]
+                : [NSString stringWithFormat:@"%@ (%.2f)", hit[@"title"], [hit[@"score"] floatValue]]];
         }
         result[@"similar"] = [parts componentsJoinedByString:@" \u00B7 "];
     }
