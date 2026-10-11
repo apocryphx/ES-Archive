@@ -79,6 +79,15 @@ typedef NS_ENUM(NSInteger, CDMemoryLookupStatus) {
 /// Shared ISO8601 formatter.
 + (NSISO8601DateFormatter *)sharedFormatter;
 
+/// The rows of an "ambiguous" response, one per match in disambiguation
+/// order: @{ index, title, age, author }. `age` is the entry's creation age
+/// on the recall ladder ("created 3 days ago", "created Mar 2025, updated
+/// Jun 12"; see ESRelativeDate), which separates same-title copies better
+/// than two ISO stamps the reader has to subtract — and the index settles
+/// any tie. Every tool that can return CDMemoryLookupAmbiguous builds its
+/// matches here, so the shape and the ordering contract live in one place.
++ (NSArray<NSDictionary *> *)disambiguationRowsForMatches:(NSArray<CDMemory *> *)matches;
+
 @end
 
 NS_ASSUME_NONNULL_END

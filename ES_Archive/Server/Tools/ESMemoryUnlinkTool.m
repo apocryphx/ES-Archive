@@ -51,20 +51,9 @@
 static NSDictionary *AmbiguousEndpointResponse(NSString *status,
                                                NSArray<CDMemory *> *matches,
                                                NSString *indexParam) {
-    NSISO8601DateFormatter *df = [CDMemoryLookup sharedFormatter];
-    NSMutableArray *entries = [NSMutableArray arrayWithCapacity:matches.count];
-    NSInteger i = 0;
-    for (CDMemory *m in matches) {
-        [entries addObject:@{
-            @"index": @(i++),
-            @"title": m.title ?: @"",
-            @"dateCreated": m.dateCreated ? [df stringFromDate:m.dateCreated] : @"",
-            @"author": m.author ?: @""
-        }];
-    }
     return @{
         @"status": status,
-        @"matches": entries,
+        @"matches": [CDMemoryLookup disambiguationRowsForMatches:matches],
         @"hint": [NSString stringWithFormat:@"Several entries share this title. Retry with %@ set to the intended match.", indexParam]
     };
 }

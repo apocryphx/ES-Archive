@@ -130,6 +130,27 @@ try:
     ok(tb.get("count") == 1, f"B: sees 1 tagged entry (got {tb.get('count')})")
     ta = A.tool("archive_tagged", tag="scope-drill")
     ok(ta.get("count") == 0, f"A: sees 0 tagged entries — none of A's were tagged (got {ta.get('count')})")
+    print("[phase 5] recall rows carry an age, not an ISO stamp")
+    # Two of A's entries share a title → an ambiguous response, whose rows
+    # come from CDMemoryLookup's shared helper.
+    r = A.tool("archive_store", body="A twin\nFirst twin.", summary="Author A's first twin entry for the scope drill.")
+    ok(r.get("status") == "created", "A: store twin 1")
+    r = A.tool("archive_store", body="A twin\nSecond twin.", summary="Author A's second twin entry for the scope drill.")
+    ok(r.get("status") == "created", "A: store twin 2")
+    amb = A.tool("archive_read", title="A twin")
+    rows = amb.get("matches") or []
+    ok(amb.get("status") == "ambiguous" and len(rows) == 2, f"A: read of a shared title is ambiguous with 2 rows ({amb.get('status')})")
+    ok(all("age" in row and "dateCreated" not in row for row in rows), f"A: ambiguous rows carry age, not dateCreated ({[sorted(r.keys()) for r in rows]})")
+    ok(all(row.get("age", "").startswith("created ") for row in rows), f"A: ages read 'created …' ({[r.get('age') for r in rows]})")
+    # forgotten ranks by oldest dateAccessed and skips never-read entries, so
+    # read one first; an ambiguous response is not an access.
+    rd = A.tool("archive_read", title="A twin", index=0)
+    ok(rd.get("title") == "A twin", f"A: read twin 0 ({rd.get('status', 'ok')})")
+    disc = A.tool("archive_discover", mode="forgotten", limit=5)
+    found = disc.get("results") if isinstance(disc.get("results"), list) else []
+    ok(len(found) > 0, f"A: discover forgotten returns rows ({len(found)})")
+    ok(all("T" not in str(row.get("lastAccessed", "")) for row in found),
+       f"A: lastAccessed is an age or 'never', not ISO ({sorted(set(str(r.get('lastAccessed')) for r in found))})")
 finally:
     for p in (B, A):
         if p: p.kill()

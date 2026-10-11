@@ -23,6 +23,7 @@
 #import "CDMarginalia.h"
 #import "CDMemoryLookup.h"
 #import "ESMemoryToolBase.h"
+#import "ESRelativeDate.h"
 #import "ESVectorEngine.h"
 
 static const NSTimeInterval kHalfLifeDays = 7.0;
@@ -286,7 +287,11 @@ static const double kLambda = 0.693147 / kHalfLifeDays;
 + (NSDictionary *)formatResults:(NSArray<CDMemory *> *)memories
                            mode:(NSString *)mode
                  includeSummary:(BOOL)includeSummary {
-    NSISO8601DateFormatter *df = [CDMemoryLookup sharedFormatter];
+    // lastAccessed is how long an entry has sat unread — the one fact the
+    // forgotten lens exists to show — so it goes out on the recall-age
+    // ladder ("7 days ago", "Mar 2025"; see ESRelativeDate), not as an ISO
+    // stamp the reader has to subtract from now.
+    NSDate *now = [NSDate now];
     NSMutableArray *results = [NSMutableArray array];
     NSMutableArray *objectIDs = [NSMutableArray arrayWithCapacity:memories.count];
     NSMutableArray *discoverScores = [NSMutableArray arrayWithCapacity:memories.count];
@@ -297,7 +302,7 @@ static const double kLambda = 0.693147 / kHalfLifeDays;
         entry[@"title"] = m.title ?: @"Untitled";
         entry[@"accessCount"] = @(m.accessCount);
         entry[@"connectionCount"] = @(m.sourceLinks.count + m.targetLinks.count);
-        entry[@"lastAccessed"] = m.dateAccessed ? [df stringFromDate:m.dateAccessed] : @"never";
+        entry[@"lastAccessed"] = m.dateAccessed ? ESRelativeDateDescription(m.dateAccessed, now) : @"never";
         if (includeSummary) {
             entry[@"summary"] = m.summary ?: @"";
         }

@@ -17,6 +17,7 @@
 #import "CDMemoryLookup.h"
 #import "CDMemory.h"
 #import "ESMemoryToolBase.h" // single source of the persona scope predicate
+#import "ESRelativeDate.h"
 
 // Total, stable ordering of same-title matches. Sorted in memory (not via
 // NSSortDescriptor) because body length is not a stored Core Data attribute
@@ -88,6 +89,21 @@ static NSArray<CDMemory *> *ESDisambiguationOrder(NSArray<CDMemory *> *matches) 
                           | NSISO8601DateFormatWithFractionalSeconds;
     });
     return fmt;
+}
+
++ (NSArray<NSDictionary *> *)disambiguationRowsForMatches:(NSArray<CDMemory *> *)matches {
+    NSDate *now = [NSDate now];
+    NSMutableArray *rows = [NSMutableArray arrayWithCapacity:matches.count];
+    NSInteger i = 0;
+    for (CDMemory *m in matches) {
+        [rows addObject:@{
+            @"index":  @(i++),
+            @"title":  m.title ?: @"",
+            @"age":    ESRelativeDateStamp(@"created", m.dateCreated, m.dateCreated, m.dateModified, now),
+            @"author": m.author ?: @""
+        }];
+    }
+    return rows;
 }
 
 + (CDMemoryLookupResult *)findMemoryWithTitle:(NSString *)title

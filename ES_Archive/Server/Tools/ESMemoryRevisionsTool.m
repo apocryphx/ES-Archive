@@ -144,13 +144,8 @@ static NSArray<NSString *> *ESMetadataChanges(CDMemory *from, CDMemory *to,
 
     if (lookup.status == CDMemoryLookupNotFound) return @{@"status": @"not_found"};
     if (lookup.status == CDMemoryLookupAmbiguous) {
-        NSISO8601DateFormatter *df = [CDMemoryLookup sharedFormatter];
-        NSMutableArray *matches = [NSMutableArray array];
-        NSInteger i = 0;
-        for (CDMemory *m in lookup.matches) {
-            [matches addObject:@{@"index": @(i++), @"title": m.title ?: @"", @"dateCreated": m.dateCreated ? [df stringFromDate:m.dateCreated] : @"", @"author": m.author ?: @""}];
-        }
-        return @{@"status": @"ambiguous", @"matches": matches};
+        return @{@"status": @"ambiguous",
+                 @"matches": [CDMemoryLookup disambiguationRowsForMatches:lookup.matches]};
     }
 
     CDMemory *memory = lookup.memory;
