@@ -91,12 +91,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Filters whose results' meaning depends on temporal proximity (arc is the
 /// canonical case — a session-cluster is unintelligible without timestamps)
-/// can return YES here to request that the standard render emit a
-/// `dateCreated` field on each row. The executor walks all filters in a
-/// pipeline at the final render step; if any declares YES, RenderPopulation
-/// includes dateCreated. Cheap, additive — preserves the standard
-/// title/summary triage shape and stays out of cat's terminal-response path
-/// (cat already emits its own dates).
+/// can return YES here to request that the standard render append a short
+/// creation age to each title ("Title · created 27 hours ago", decaying to a
+/// calendar date with distance; see ESRelativeDate). The executor walks all
+/// filters in a pipeline at the final render step; if any declares YES,
+/// RenderPopulation adds the suffix. Cheap, additive — preserves the
+/// standard title/summary triage shape and stays out of cat's
+/// terminal-response path (cat emits exact ISO dates, for when the precise
+/// instant is the point).
 + (BOOL)requiresDateContext;
 
 

@@ -13,6 +13,7 @@
 #import "CDMemory.h"
 #import "CDMemory+CoreDataProperties.h"
 #import "CDMemoryLookup.h"
+#import "ESRelativeDate.h"
 #import <objc/runtime.h>
 
 // The individual filter class headers are imported here ONLY to ensure
@@ -127,13 +128,17 @@ SubsetScoreMap(NSDictionary<NSManagedObjectID *, NSNumber *> *map,
 // `includeDateCreated` is set by the executor when any filter in the
 // pipeline declares +requiresDateContext (arc is the canonical case — a
 // session-cluster is unintelligible without timestamps). When YES, the
-// row carries an ISO-8601 dateCreated. The default is NO; non-temporal
-// pipelines stay quiet about dates.
+// title carries a short age suffix on the creation axis ("Title · created
+// 27 hours ago"; see ESRelativeDate for the ladder) — the same adjacency
+// argument as the score prefix, applied to time. A full ISO stamp per row
+// is arithmetic the reader has to do; the age is the answer. Pipelines
+// that need the exact instant end in `cat`, which always emits ISO dates.
+// The default is NO; non-temporal pipelines stay quiet about dates.
 static NSArray<NSDictionary *> *RenderPopulation(NSArray<NSManagedObjectID *> *ids,
                                                   NSManagedObjectContext *ctx,
                                                   NSDictionary<NSManagedObjectID *, NSNumber *> * _Nullable scoreMap,
                                                   BOOL includeDateCreated) {
-    NSISO8601DateFormatter *df = includeDateCreated ? [CDMemoryLookup sharedFormatter] : nil;
+    NSDate *now = includeDateCreated ? [NSDate now] : nil;
     NSMutableArray<NSDictionary *> *out = [NSMutableArray arrayWithCapacity:ids.count];
     for (NSManagedObjectID *oid in ids) {
         NSError *err = nil;
@@ -146,10 +151,11 @@ static NSArray<NSDictionary *> *RenderPopulation(NSArray<NSManagedObjectID *> *i
         if (score) {
             titleStr = [NSString stringWithFormat:@"[%.3f] %@", score.doubleValue, titleStr];
         }
-        row[@"title"] = titleStr;
         if (includeDateCreated && m.dateCreated) {
-            row[@"dateCreated"] = [df stringFromDate:m.dateCreated];
+            NSString *stamp = ESRelativeDateStamp(@"created", m.dateCreated, m.dateCreated, m.dateModified, now);
+            titleStr = [NSString stringWithFormat:@"%@ · %@", titleStr, stamp];
         }
+        row[@"title"] = titleStr;
         if (m.summary.length > 0) row[@"summary"] = m.summary;
         if (m.uuid) row[@"uuid"] = m.uuid.UUIDString;
         [out addObject:row];
@@ -486,7 +492,7 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
 
     // Check whether any filter in the pipeline asked for date context
     // (arc is the canonical case). Single scan; cheap. If any does, the
-    // standard render emits dateCreated per row.
+    // standard render appends a creation age to each title.
     BOOL includeDateCreated = NO;
     for (id<ESPipelineFilter> filter in filters) {
         Class fc = [(NSObject *)filter class];

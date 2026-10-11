@@ -15,6 +15,7 @@
 
 #import "ESMemoryTimelineTool.h"
 #import "ESDateArgument.h"
+#import "ESRelativeDate.h"
 #import "CDMemory.h"
 #import "CDMemoryLookup.h"
 #import "CDTag.h"
@@ -33,7 +34,9 @@
                          "the former memory_recent was order:newest+by:modified), or accessed (last read). "
                          "from/to bound a window (ISO-8601 or a relative offset like '-30 days', resolved "
                          "against the current time); days is sugar for the last N days. Optional tags scope the "
-                         "timeline to a project or entity.",
+                         "timeline to a project or entity. Each title carries a short age on the chosen "
+                         "axis ('created 27 hours ago', 'updated 2 hours ago'); set exact:true for ISO-8601 "
+                         "dateCreated/dateModified fields instead when the precise instant matters.",
         @"annotations": @{
             @"readOnlyHint": @YES,
             @"destructiveHint": @NO
@@ -52,7 +55,8 @@
                     @"description": @"Restrict to entries carrying ANY of these tags (OR semantics, case-insensitive). Scope the timeline to a project or entity — e.g. tags:[\"Isolde\"].",
                     @"items": @{@"type": @"string"}
                 },
-                @"include_summary": @{@"description": @"If true, include each entry's summary — skim a timeline without N archive_read calls. Default false.", @"oneOf": @[@{@"type": @"boolean"}, @{@"type": @"string"}]}
+                @"include_summary": @{@"description": @"If true, include each entry's summary — skim a timeline without N archive_read calls. Default false.", @"oneOf": @[@{@"type": @"boolean"}, @{@"type": @"string"}]},
+                @"exact": @{@"description": @"If true, emit exact ISO-8601 dateCreated/dateModified (and dateAccessed when by:accessed) fields and leave titles bare, instead of the relative age suffix. Use when you need the precise instant — e.g. to feed from/to or a dateCreated override. Default false.", @"oneOf": @[@{@"type": @"boolean"}, @{@"type": @"string"}]}
             }
         }
     };
@@ -69,6 +73,7 @@
     if (limit == 0) limit = 20;
 
     BOOL includeSummary = [ESMemoryToolBase boolFromArgs:arguments key:@"include_summary" default:NO];
+    BOOL exact = [ESMemoryToolBase boolFromArgs:arguments key:@"exact" default:NO];
 
     // Direction: oldest → ascending, anything else → newest (descending).
     NSString *orderArg = [ESMemoryToolBase stringFromArgs:arguments key:@"order"] ?: @"newest";
@@ -78,9 +83,10 @@
     // silently defaulting — mirrors the pipeline 'sort' discipline.
     NSString *byArg = [ESMemoryToolBase stringFromArgs:arguments key:@"by"] ?: @"created";
     NSString *dateKey = nil;
-    if ([byArg caseInsensitiveCompare:@"created"] == NSOrderedSame) dateKey = @"dateCreated";
-    else if ([byArg caseInsensitiveCompare:@"modified"] == NSOrderedSame) dateKey = @"dateModified";
-    else if ([byArg caseInsensitiveCompare:@"accessed"] == NSOrderedSame) dateKey = @"dateAccessed";
+    NSString *axisWord = nil;   // the verb the age suffix uses for this axis
+    if ([byArg caseInsensitiveCompare:@"created"] == NSOrderedSame) { dateKey = @"dateCreated"; axisWord = @"created"; }
+    else if ([byArg caseInsensitiveCompare:@"modified"] == NSOrderedSame) { dateKey = @"dateModified"; axisWord = @"updated"; }
+    else if ([byArg caseInsensitiveCompare:@"accessed"] == NSOrderedSame) { dateKey = @"dateAccessed"; axisWord = @"read"; }
     else return @{@"status": @"invalid_by", @"hint": @"by must be created, modified, or accessed."};
 
     // Window bounds. from/to are ISO-8601 or relative offsets, resolved
@@ -162,15 +168,31 @@
         return nil;
     }
 
+    // Rows carry time one of two ways. Default: a short age appended to the
+    // title on the sorted axis ("Title · created 27 hours ago"), one stamp
+    // per row, with a second only when it carries news (see
+    // ESRelativeDateStamp). A full ISO stamp per row floods the reader with
+    // arithmetic; the age is the answer. exact:true restores the ISO fields
+    // for the cases where the precise instant is the point.
     NSISO8601DateFormatter *df = [CDMemoryLookup sharedFormatter];
+    NSDate *now = [NSDate now];
     NSMutableArray *results = [NSMutableArray arrayWithCapacity:memories.count];
     for (CDMemory *m in memories) {
-        NSMutableDictionary *row = [@{
-            @"title": m.title ?: @"Untitled",
-            @"type": m.type ?: @"memory",
-            @"dateCreated": m.dateCreated ? [df stringFromDate:m.dateCreated] : @"",
-            @"dateModified": m.dateModified ? [df stringFromDate:m.dateModified] : @""
-        } mutableCopy];
+        NSString *title = m.title ?: @"Untitled";
+        NSMutableDictionary *row = [NSMutableDictionary dictionary];
+        if (exact) {
+            row[@"title"] = title;
+            row[@"dateCreated"]  = m.dateCreated  ? [df stringFromDate:m.dateCreated]  : @"";
+            row[@"dateModified"] = m.dateModified ? [df stringFromDate:m.dateModified] : @"";
+            if ([dateKey isEqualToString:@"dateAccessed"]) {
+                row[@"dateAccessed"] = m.dateAccessed ? [df stringFromDate:m.dateAccessed] : @"";
+            }
+        } else {
+            NSDate *axisDate = [m valueForKey:dateKey];
+            NSString *stamp = ESRelativeDateStamp(axisWord, axisDate, m.dateCreated, m.dateModified, now);
+            row[@"title"] = stamp.length > 0 ? [NSString stringWithFormat:@"%@ · %@", title, stamp] : title;
+        }
+        row[@"type"] = m.type ?: @"memory";
         if (includeSummary) {
             row[@"summary"] = m.summary ?: @"";
         }

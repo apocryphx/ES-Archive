@@ -73,7 +73,8 @@ static NSTimeInterval ESArcParseDuration(NSString *input, BOOL *parsed) {
 
 // arc results' meaning is temporal proximity — a session-cluster without
 // timestamps is just a list of titles, no way to see the temporal shape
-// of what arrived together. Opt in to dateCreated on every rendered row.
+// of what arrived together. Opt in to a creation age on every rendered
+// title (pipe into cat when the exact instants matter).
 + (BOOL)requiresDateContext { return YES; }
 
 - (nullable instancetype)initWithStage:(ESPipelineStage *)stage error:(NSError **)errOut {
