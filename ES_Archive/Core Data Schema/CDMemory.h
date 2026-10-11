@@ -56,11 +56,6 @@ typedef NS_ENUM(NSInteger, CDMemoryErrorCode) {
 /// Increment accessCount, update dateAccessed.
 - (void)recordAccess;
 
-#pragma mark - Semantic Handles
-
-/// Lightweight summary: {title, author, type, dateCreated, accessCount}
-- (NSDictionary *)semanticSummary;
-
 #pragma mark - Graph Traversal
 
 - (NSArray<CDLink *> *)outgoingLinks;

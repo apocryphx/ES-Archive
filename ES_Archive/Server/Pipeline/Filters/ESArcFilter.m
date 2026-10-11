@@ -9,6 +9,7 @@
 #import "ESArcFilter.h"
 #import "ESPipelineDiagnostic.h"
 #import "CDMemory.h"
+#import "ESMemoryToolBase.h"
 
 #pragma mark - Duration parsing
 
@@ -67,7 +68,10 @@ static NSTimeInterval ESArcParseDuration(NSString *input, BOOL *parsed) {
     NSString * _Nullable _anchorTitle;    // exact-match fallback
     NSTimeInterval _windowSeconds;
     ESPipelineStage *_stage;
+    NSString * _Nullable _scopeAuthor;    // set by the executor; bounds explicit anchors
 }
+
+- (void)setScopeAuthor:(NSString *)scopeAuthor { _scopeAuthor = [scopeAuthor copy]; }
 
 + (NSString *)commandName { return @"arc"; }
 
@@ -158,7 +162,10 @@ static NSTimeInterval ESArcParseDuration(NSString *input, BOOL *parsed) {
         }
         NSError *fetchErr = nil;
         CDMemory *m = (CDMemory *)[ctx existingObjectWithID:moid error:&fetchErr];
-        if (!m || ![m isKindOfClass:CDMemory.class]) {
+        // An entry outside the persona's scope reads as missing — the same
+        // answer as a bad id, so the id is not an existence oracle.
+        if (!m || ![m isKindOfClass:CDMemory.class] ||
+            ![[ESMemoryToolBase scopePredicateForAuthor:_scopeAuthor] evaluateWithObject:m]) {
             if (errOut) *errOut = fetchErr ?: [NSError errorWithDomain:@"ESPipelineError" code:6
                                                               userInfo:@{NSLocalizedDescriptionKey:
                                                 @"arc: --anchor-id refers to a missing entry."}];
@@ -168,10 +175,14 @@ static NSTimeInterval ESArcParseDuration(NSString *input, BOOL *parsed) {
     }
 
     if (_anchorTitle.length > 0) {
-        // Exact title match. If multiple, take the most recently modified.
+        // Exact title match within the persona's scope (the scope predicate
+        // fails closed when no scope was set). If multiple, take the most
+        // recently modified.
         NSFetchRequest *fr = [NSFetchRequest fetchRequestWithEntityName:@"CDMemory"];
         fr.includesSubentities = NO;
-        fr.predicate = [NSPredicate predicateWithFormat:@"title == %@", _anchorTitle];
+        fr.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[
+            [ESMemoryToolBase scopePredicateForAuthor:_scopeAuthor],
+            [NSPredicate predicateWithFormat:@"title == %@", _anchorTitle]]];
         fr.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"dateModified" ascending:NO]];
         fr.fetchLimit = 1;
         NSError *fetchErr = nil;

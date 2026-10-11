@@ -283,19 +283,6 @@ NSString *const CDMemoryErrorDomain = @"CDMemoryErrorDomain";
     self.accessCount += 1; // int64_t scalar — not NSNumber
 }
 
-#pragma mark - Semantic Handles
-
-- (NSDictionary *)semanticSummary {
-    NSISO8601DateFormatter *df = [CDMemoryLookup sharedFormatter];
-    return @{
-        @"title": self.title ?: @"Untitled",
-        @"author": self.author ?: [CDMemory defaultAuthor],
-        @"type": self.type ?: @"memory",
-        @"dateCreated": self.dateCreated ? [df stringFromDate:self.dateCreated] : @"",
-        @"accessCount": @(self.accessCount)
-    };
-}
-
 #pragma mark - Graph Traversal
 
 - (NSArray<CDLink *> *)outgoingLinks {

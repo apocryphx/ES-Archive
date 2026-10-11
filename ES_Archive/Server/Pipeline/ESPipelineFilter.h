@@ -83,6 +83,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Diagnostic policy
 
+/// Filters that resolve an entry from an explicit argument rather than from
+/// the incoming population (arc's --anchor-title and --anchor-id) need the
+/// connection's scope to refuse an anchor that belongs to another persona.
+/// The executor calls this on every filter that implements it, right after
+/// instantiation and before any stage runs. Filters that only narrow the
+/// population they are handed never need it: that population is already
+/// scoped.
+- (void)setScopeAuthor:(NSString *)scopeAuthor;
+
 /// Filters that don't operate on a population (man, in particular) can
 /// return YES here to tell the executor to skip emitting a pipeline
 /// diagnostic line for this stage. Default behavior (method absent) is

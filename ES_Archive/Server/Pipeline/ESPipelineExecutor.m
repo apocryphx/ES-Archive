@@ -397,6 +397,9 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
             };
         }
         [parsedStages addObject:stage];
+        if ([filter respondsToSelector:@selector(setScopeAuthor:)]) {
+            [filter setScopeAuthor:scopeAuthor];
+        }
         [filters addObject:filter];
     }
 

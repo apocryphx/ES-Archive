@@ -151,6 +151,14 @@ try:
     ok(len(found) > 0, f"A: discover forgotten returns rows ({len(found)})")
     ok(all("T" not in str(row.get("lastAccessed", "")) for row in found),
        f"A: lastAccessed is an age or 'never', not ISO ({sorted(set(str(r.get('lastAccessed')) for r in found))})")
+    print("[phase 6] an explicit arc anchor outside the author's scope reads as missing")
+    foreign = B.tool("archive_cli", expression='arc --anchor-title "A entry 0" | wc')
+    ok(foreign.get("error") == "apply_failed" and "no entry titled" in foreign.get("message", ""),
+       f"B: arc --anchor-title on A's entry errors as not found ({foreign.get('error')}: {foreign.get('message')})")
+    own = B.tool("archive_cli", expression='arc --anchor-title "B entry" | wc')
+    # arc is the first stage here, so its diagnostic line carries no "| " prefix.
+    ok(own.get("count") == 1 and stage_hits(own, "arc") == 1,
+       f"B: arc --anchor-title on its own entry works (count {own.get('count')}, arc {stage_hits(own, 'arc')})")
 finally:
     for p in (B, A):
         if p: p.kill()
