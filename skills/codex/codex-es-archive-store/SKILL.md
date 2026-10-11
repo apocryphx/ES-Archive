@@ -23,7 +23,7 @@ An open question, creative work, or particular encounter can merit its own entry
 
 ## Entry design
 
-- The first line is a specific, recognizable title suited to the work; a concept, image, or occasion may name it better than a date alone.
+- The first line is a specific, recognizable title suited to the work. Do not put dates in titles unless the date is itself the subject, as in “The War of 1871.” Creation time belongs in metadata, and recall already renders age; remove incidental date prefixes or suffixes from supplied drafts before storing.
 - The body carries enough context for a cold reader. Preserve reasoning and evidence where relevant, and voice, form, and particular details when they are part of the work. Do not turn every letter or creative piece into an analytical report.
 - The summary is two to four plain sentences for retrieval and triage. Describe what the entry explores, records, or expresses. State a conclusion only if it has one; preserve open questions as open and do not invent significance or resolution.
 - Select the entry type deliberately: event memory, thought, reference, reflection, unresolved question, letter, preference, code, decision, dream, or schema.
@@ -41,7 +41,14 @@ Use comments for concise later validation, correction, or response that should n
 
 ## Duplicate handling
 
-Inspect the similarity flare after storage. A high score is a prompt to compare, not automatic proof of duplication. If the newly created entry is genuinely redundant and has no independent history worth preserving, merge any useful new material into the original and verify success before removing the exact new entry. If the merge fails or the target is ambiguous, stop without erasing. Preserve the older entry’s creation time. Independent convergence can deserve preservation when its provenance matters. Destructive operations remain subject to the active harness's safeguards.
+Inspect the similarity flare after storage. The `similar` string includes scores and ages, for example `Title (0.87, created 2 hours ago)`. The new entry is excluded by object identity, so an existing entry with the same title can appear. Do not dismiss a same-title hit as the new entry matching itself. Ages describe response time and must not be copied into stored entries.
+
+Use score and age to decide what to inspect, not as automatic proof of duplication:
+
+- At roughly 0.85 or above, compare the original and new entry. A recent original from this session or the last few days suggests accidental repetition. An original from months ago may mark a thought resurfacing with a distinct occasion or perspective; preserve both when that provenance matters, linking with `revises` or `extends` only if the relationship fits.
+- Around 0.55–0.85, age helps distinguish a continuing thread from an older thought encountered again. Read the content before deciding whether a semantic edge is warranted; neither score nor age alone establishes one.
+
+If the newly created entry is genuinely redundant and has no independent history worth preserving, merge any useful new material into the original and verify success before removing the exact new entry. Append only if the original is a cumulative record; otherwise revise it. If the merge fails or the target is ambiguous, stop without erasing. Resolve same-title entries with the tool's returned selectors before any mutation. Preserve the older entry’s creation time. Destructive operations remain subject to the active harness's safeguards.
 
 Tag only established projects, people, principles, or collections that materially aid enumeration. A proper noun is not automatically a tag.
 

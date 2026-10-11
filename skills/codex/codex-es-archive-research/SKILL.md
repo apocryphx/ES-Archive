@@ -19,6 +19,16 @@ Research to recover evidence and intellectual history, not merely a plausible an
 
 Compose pipelines when the sequence expresses the question. Examples of useful shapes include project then concept, forgotten then concept, disagreement edges then oldest-first, or exact-title matches then full bodies. Reorder and change axes before concluding that the Archive is silent.
 
+## Time and recall rendering
+
+`archive_timeline` defaults to ages appended to titles on the selected axis: `created`, `updated`, or `read`. An entry without a substantive edit says `created` even on the modified axis. A creation stamp may also show an update when it falls in a different age bucket. The ladder runs from `just now` through minutes, hours under two days, days under thirty days, then a calendar day within a year or month and year for older entries.
+
+For exact chronology, call `archive_timeline` with `exact: true`: titles are bare and rows include ISO-8601 `dateCreated` and `dateModified`, plus `dateAccessed` when `by: accessed`. For example, use `{"by":"modified","order":"newest","exact":true}` to recover exact edit times. Default rows omit these fields.
+
+Pipeline populations rendered after `arc` carry creation-age suffixes instead of ISO creation dates. End a pipeline in `cat` when exact dates are needed. Full `archive_read` responses, revision history, and dedupe plans retain exact dates. References also retain exact timestamps because removal matches by timestamp; use that returned value unchanged.
+
+Ages describe the response time only. Never copy them into stored entries or use them as exact date values. The rendered suffix is not part of the stored title; use a bare title or a supported stable selector for follow-up operations. Retrieve exact metadata when a timeline boundary or stored date depends on the precise instant.
+
 ## Evidence discipline
 
 Read enough neighboring and corrective material to avoid freezing the Archive at one attractive entry. Prefer original references when a conclusion depends on an external source. Keep three layers distinct in the answer:

@@ -35,6 +35,10 @@ Use direct `archive_*` tools for exact acts on known entries: full reads, stores
 
 Use `archive_cli` pipelines when the method itself should be composed across semantic, lexical, temporal, structural, sorting, and slicing stages. A pipeline is a disposable investigative lens, not necessarily a durable collection.
 
+Author scope is a retrieval and mutation boundary, not just provenance. The executor intersects every stage's result with the connected persona's scope before diagnostics and downstream stages, including writes. Explicit `arc` anchors outside that scope behave as missing entries; an explicit `--author` for another persona is rejected. A missing result does not establish absence from another author's Archive.
+
+When a title lookup returns `status: "ambiguous"`, candidate rows contain `index`, `title`, `age`, and `author`; they no longer contain `dateCreated`. Use the returned index with the tool's selector to resolve the intended entry, including exact-title ties. Link and unlink expose the same rows under `ambiguous_source` or `ambiguous_target`. An age is a display hint, not an identifier or exact timestamp; do not guess a write target from age alone.
+
 Reading is not neutral: full reads update access metadata and can affect later discovery ranking. Do not describe ordinary reads as non-mutating. If a true audit requires untouched attention statistics and the server offers no no-touch read, state the limitation.
 
 ## Route by activity

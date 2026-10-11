@@ -20,6 +20,8 @@ Discovery asks what the Archive has become rather than where a known fact lives.
 
 Use the direct discovery tool with summaries for a survey. Use the CLI form when the population should be narrowed, sorted, traversed, or read.
 
+In every discovery mode, `lastAccessed` is now a rendered age such as `7 days ago` or `Mar 2025`, or `never`; it is not an ISO timestamp. Ages are valid only at response time and must not be copied into stored entries. If an exact access time matters, use `archive_timeline` with `by: accessed` and `exact: true`.
+
 ## Workshop routines
 
 Prefer routines that test the center rather than merely admire it:
