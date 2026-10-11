@@ -163,6 +163,28 @@ static NSArray<NSDictionary *> *RenderPopulation(NSArray<NSManagedObjectID *> *i
     return out;
 }
 
+#pragma mark - Scope
+
+// Intersect a stage's result with the persona scope, preserving order. Runs
+// after EVERY stage, not only before a terminal and at the final render:
+// a stage that builds its own fetch without `SELF IN prior` (arc's time
+// window is the known case) otherwise hands out-of-scope IDs to the stages
+// after it. Read stages only lose them at the exit backstops, so the
+// diagnostic counted entries the caller never saw ("arc → 8 hits", 2
+// rendered). Write stages — tag, untag — are not terminals and were never
+// behind a backstop, so `… | arc | tag X` tagged another persona's
+// entries. Scoping each result before the diagnostic is emitted and before
+// the next stage runs closes both without any filter needing to know
+// about scope.
+static NSArray<NSManagedObjectID *> *ScopeResult(NSArray<NSManagedObjectID *> *result,
+                                                 NSSet<NSManagedObjectID *> *scopeSet) {
+    NSMutableArray<NSManagedObjectID *> *scoped = [NSMutableArray arrayWithCapacity:result.count];
+    for (NSManagedObjectID *oid in result) {
+        if ([scopeSet containsObject:oid]) [scoped addObject:oid];
+    }
+    return scoped;
+}
+
 #pragma mark - Phase 2 fusion helpers
 
 // Width to pad command spellings to before "→" — matches ESPipelineDiagnostic.
@@ -407,6 +429,7 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
                     @"pipeline": [diagLines componentsJoinedByString:@"\n"],
                 };
             }
+            result = ScopeResult(result, scopeSet);
             EmitFusionDiagnostic(filters, parsedStages, fusionRange, result.count, diagLines);
             prior = result;
             // Fused runs only trim — they don't introduce scores. Carry the
@@ -430,6 +453,7 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
                 @"pipeline": [diagLines componentsJoinedByString:@"\n"],
             };
         }
+        result = ScopeResult(result, scopeSet);
 
         BOOL isFirst = (diagLines.count == 0);
         BOOL isLast = (i == filters.count - 1);
@@ -459,13 +483,9 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
         // Terminal stages produce their own response shape and short-circuit
         // the default rendering. Only honored on the last stage of the pipeline.
         if (isLast && [filter respondsToSelector:@selector(terminalResponseWithPrior:context:error:)]) {
-            // Backstop: a terminal (cat/wc/...) must only ever see in-scope IDs,
-            // even if some upstream filter ignored `prior`.
-            NSMutableArray<NSManagedObjectID *> *scopedResult = [NSMutableArray array];
-            for (NSManagedObjectID *oid in result) {
-                if ([scopeSet containsObject:oid]) [scopedResult addObject:oid];
-            }
-            result = scopedResult;
+            // Already scoped above; kept as the terminal's own guarantee so a
+            // future edit to the loop cannot hand a terminal an unscoped set.
+            result = ScopeResult(result, scopeSet);
             NSError *termErr = nil;
             NSDictionary *termResponse = [filter terminalResponseWithPrior:result
                                                                     context:ctx
@@ -503,14 +523,9 @@ NSDictionary *ESPipelineExecute(NSArray<NSDictionary *> *stages,
         }
     }
 
-    // Backstop: intersect the final population with the persona scope so a
-    // filter that ignored `prior` (e.g. a generator stage) cannot leak another
-    // persona's memory into the rendered output.
-    NSMutableArray<NSManagedObjectID *> *scopedFinal = [NSMutableArray array];
-    for (NSManagedObjectID *oid in (prior ?: @[])) {
-        if ([scopeSet containsObject:oid]) [scopedFinal addObject:oid];
-    }
-    prior = scopedFinal;
+    // Final backstop. Every stage result is already scoped; this keeps the
+    // render's guarantee independent of the loop above.
+    prior = ScopeResult(prior ?: @[], scopeSet);
 
     NSMutableDictionary *finalResult = [NSMutableDictionary dictionary];
     finalResult[@"results"] = RenderPopulation(prior ?: @[], ctx, currentScoreMap, includeDateCreated);
