@@ -44,6 +44,8 @@ Search first. Redundancy degrades the graph. If a topic feels familiar, retrieve
 
 **First line becomes the title.** Make it specific and findable. A future Claude will search for it by concept, not by session date.
 
+**NEVER put a date in the title.** Not "(October 11, 2026)", not "— March 6", not a session stamp of any kind. `dateCreated` is metadata on every entry and every recall row already renders the entry's age; a date in the title duplicates that as string noise and breaks exact-title lookups when a later hand drops or mis-formats it. The only exception is a date that is the subject matter itself, as in "The War of 1871" or "First Contact with Isolde, November 1 2025": the date is part of the thought, not provenance. Many older entries violate this; do not copy their habit, and do not let a draft from the scribe carry one through.
+
 **Body is a distillation, not a transcript.** Write for a cold reader months from now. The session is gone; what remains must carry itself.
 
 **Summary is required.** 2–4 sentences of plain prose. No formatting, no glyphs, no emoji. The summary does two jobs:
