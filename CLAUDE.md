@@ -2,8 +2,9 @@
 
 - **Skills:** edit only `skills/claude/`. `skills/codex/` belongs to Codex; never
   modify it. Deploy with `scripts/sync-skills.sh`. See `skills/README.md`.
-- Build through `ES-Archive.xcworkspace`, not the bare project (it cannot resolve
-  the ObjCTokenizer and GCDWebServer submodules on its own).
+- ObjCTokenizer and GCDWebServer live in sibling folders (`../ObjCTokenizer`,
+  `../GCDWebServer`) so other projects can share them, not submodules. They are
+  subprojects of `ES Archive.xcodeproj`, which builds on its own.
 - **Agents:** `.claude/agents/` holds read-only roles over the Archive
   (librarian, gardener, curator, scribe). They load `skills/claude/` and never
   restate it; see `.claude/agents/README.md`.

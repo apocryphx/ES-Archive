@@ -17,6 +17,16 @@
 		15AE1F0630450006000000B4 /* help/ES Archive MCP.help in Resources */ = {isa = PBXBuildFile; fileRef = 15AE1F0530450005000000B4 /* help/ES Archive MCP.help */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1536B4C1307D9FB400BCB0D1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1536B4BB307D9FB300BCB0D1 /* ObjCTokenizer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 156BDE8A2FAEF88B0094C95C;
+			remoteInfo = ObjCTokenizer;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		151E6E402F9C15DE00369DC2 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -40,6 +50,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1536B4BB307D9FB300BCB0D1 /* ObjCTokenizer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ObjCTokenizer.xcodeproj; path = ../ObjCTokenizer/ObjCTokenizer.xcodeproj; sourceTree = "<group>"; };
+		1536B4C7307D9FB900BCB0D1 /* GCDWebServer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GCDWebServer.xcodeproj; path = ../GCDWebServer/GCDWebServer.xcodeproj; sourceTree = "<group>"; };
 		153E91822FFF49CE00108E93 /* ES Archive Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ES Archive Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		153FB1F03044FB1C00B75B4A /* ES-Archive-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ES-Archive-Info.plist"; sourceTree = "<group>"; };
 		153FB1F23044FB2B00B75B4A /* ES-Archive-Server-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ES-Archive-Server-Info.plist"; sourceTree = "<group>"; };
@@ -158,6 +170,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1536B4BC307D9FB300BCB0D1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1536B4C2307D9FB400BCB0D1 /* ObjCTokenizer.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1536B4C8307D9FB900BCB0D1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		153FB73C3044FD1C00B75B4A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -185,6 +212,8 @@
 				153FC9563045073400B75B4A /* Testing */,
 				153FB73C3044FD1C00B75B4A /* Frameworks */,
 				15786DB52F55F87F00E136DA /* Products */,
+				1536B4BB307D9FB300BCB0D1 /* ObjCTokenizer.xcodeproj */,
+				1536B4C7307D9FB900BCB0D1 /* GCDWebServer.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -293,6 +322,16 @@
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 15786DB52F55F87F00E136DA /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 1536B4C8307D9FB900BCB0D1 /* Products */;
+					ProjectRef = 1536B4C7307D9FB900BCB0D1 /* GCDWebServer.xcodeproj */;
+				},
+				{
+					ProductGroup = 1536B4BC307D9FB300BCB0D1 /* Products */;
+					ProjectRef = 1536B4BB307D9FB300BCB0D1 /* ObjCTokenizer.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				15786DB32F55F87F00E136DA /* ES Archive MCP */,
@@ -301,6 +340,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1536B4C2307D9FB400BCB0D1 /* ObjCTokenizer.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ObjCTokenizer.framework;
+			remoteRef = 1536B4C1307D9FB400BCB0D1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		153E91802FFF49CE00108E93 /* Resources */ = {
