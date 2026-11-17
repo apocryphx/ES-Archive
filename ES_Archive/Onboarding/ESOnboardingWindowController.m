@@ -22,6 +22,35 @@ static const CGFloat kCardBodyWidth = 552.0;
 - (BOOL)isFlipped { return YES; }
 @end
 
+// Layer-backed surfaces whose colors must follow the effective appearance.
+// A dynamic NSColor converted to CGColor at construction time is resolved
+// against whatever appearance is current then (Aqua, before the window is
+// on screen) and never changes again, so a dark-mode window got white cards
+// with white text on them. -updateLayer runs under the view's effective
+// appearance and is called again on every appearance change.
+@interface ESOnboardingSurfaceView : NSView
+@property (nonatomic, strong) NSColor *surfaceColor;
+@end
+@implementation ESOnboardingSurfaceView
+- (BOOL)wantsUpdateLayer { return YES; }
+- (void)updateLayer { self.layer.backgroundColor = self.surfaceColor.CGColor; }
+- (void)setSurfaceColor:(NSColor *)c { _surfaceColor = c; self.needsDisplay = YES; }
+@end
+
+@interface ESOnboardingCardView : NSStackView
+@property (nonatomic, strong) NSColor *surfaceColor;
+@property (nonatomic, strong) NSColor *borderColor;
+@end
+@implementation ESOnboardingCardView
+- (BOOL)wantsUpdateLayer { return YES; }
+- (void)updateLayer {
+    self.layer.backgroundColor = self.surfaceColor.CGColor;
+    self.layer.borderColor = self.borderColor.CGColor;
+}
+- (void)setSurfaceColor:(NSColor *)c { _surfaceColor = c; self.needsDisplay = YES; }
+- (void)setBorderColor:(NSColor *)c { _borderColor = c; self.needsDisplay = YES; }
+@end
+
 @interface ESOnboardingWindowController ()
 @property (weak) NSButton *showAtStartupCheckbox;
 + (BOOL)showAtStartupEnabled;
@@ -290,10 +319,10 @@ static const CGFloat kCardBodyWidth = 552.0;
                                                                                   weight:NSFontWeightMedium];
     symbol.imageScaling = NSImageScaleProportionallyUpOrDown;
 
-    NSView *symbolWell = [[NSView alloc] init];
+    ESOnboardingSurfaceView *symbolWell = [[ESOnboardingSurfaceView alloc] init];
     symbolWell.wantsLayer = YES;
     symbolWell.layer.cornerRadius = 12;
-    symbolWell.layer.backgroundColor = [[accentColor colorWithAlphaComponent:0.12] CGColor];
+    symbolWell.surfaceColor = [accentColor colorWithAlphaComponent:0.12];
     [symbolWell.widthAnchor constraintEqualToConstant:48].active = YES;
     [symbolWell.heightAnchor constraintEqualToConstant:48].active = YES;
     symbol.translatesAutoresizingMaskIntoConstraints = NO;
@@ -329,7 +358,7 @@ static const CGFloat kCardBodyWidth = 552.0;
     [bottomSpacer.heightAnchor constraintEqualToConstant:10].active = YES;
     [copy addArrangedSubview:bottomSpacer];
 
-    NSStackView *card = [[NSStackView alloc] init];
+    ESOnboardingCardView *card = [[ESOnboardingCardView alloc] init];
     card.orientation = NSUserInterfaceLayoutOrientationHorizontal;
     card.alignment = NSLayoutAttributeTop;
     card.spacing = 16;
@@ -337,8 +366,8 @@ static const CGFloat kCardBodyWidth = 552.0;
     card.wantsLayer = YES;
     card.layer.cornerRadius = 14;
     card.layer.borderWidth = 1;
-    card.layer.borderColor = NSColor.separatorColor.CGColor;
-    card.layer.backgroundColor = NSColor.controlBackgroundColor.CGColor;
+    card.borderColor = NSColor.separatorColor;
+    card.surfaceColor = NSColor.controlBackgroundColor;
     [card addArrangedSubview:symbolWell];
     [card addArrangedSubview:copy];
     [card.widthAnchor constraintEqualToConstant:kCardWidth].active = YES;

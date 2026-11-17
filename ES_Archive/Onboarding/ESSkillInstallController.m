@@ -12,6 +12,16 @@
 
 static const CGFloat kWindowWidth = 620.0;
 static const CGFloat kRowTextWidth = 380.0;
+/// Shortest the window may be made; the list scrolls below that, so no row is
+/// ever out of reach on a small display.
+static const CGFloat kMinHeight = 320.0;
+
+// Keep the list anchored at the top when the viewport is shorter than its content.
+@interface ESSkillInstallDocumentView : NSView
+@end
+@implementation ESSkillInstallDocumentView
+- (BOOL)isFlipped { return YES; }
+@end
 
 /// One bundled skill: its folder name, the SKILL.md text, and the description
 /// lifted from the YAML frontmatter for the row.
@@ -50,7 +60,7 @@ static const CGFloat kRowTextWidth = 380.0;
 - (instancetype)init {
     NSWindow *w = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, kWindowWidth, 520)
-                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
                     backing:NSBackingStoreBuffered
                       defer:NO];
     w.title = @"Install Claude Skills";
@@ -171,16 +181,43 @@ static const CGFloat kRowTextWidth = 380.0;
     [bottomSpacer.heightAnchor constraintEqualToConstant:4].active = YES;
     [stack addArrangedSubview:bottomSpacer];
 
+    // The list lives in a scroll view: the window used to take the stack's full
+    // fitting height, which on a small display ran past the bottom of the
+    // screen and left the last rows unreachable. The window keeps its width,
+    // resizes vertically, and opens no taller than the screen allows.
     NSView *content = self.window.contentView;
-    [content addSubview:stack];
+    NSScrollView *scroll = [[NSScrollView alloc] init];
+    scroll.translatesAutoresizingMaskIntoConstraints = NO;
+    scroll.hasVerticalScroller = YES;
+    scroll.hasHorizontalScroller = NO;
+    scroll.scrollerStyle = NSScrollerStyleOverlay;
+    scroll.drawsBackground = NO;
+    NSView *document = [[ESSkillInstallDocumentView alloc] init];
+    document.translatesAutoresizingMaskIntoConstraints = NO;
+    scroll.documentView = document;
+    [document addSubview:stack];
+    [content addSubview:scroll];
     [NSLayoutConstraint activateConstraints:@[
-        [stack.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
-        [stack.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-        [stack.topAnchor constraintEqualToAnchor:content.topAnchor],
-        [stack.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
+        [scroll.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+        [scroll.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+        [scroll.topAnchor constraintEqualToAnchor:content.topAnchor],
+        [scroll.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
+        [document.widthAnchor constraintEqualToAnchor:scroll.contentView.widthAnchor],
+        [stack.leadingAnchor constraintEqualToAnchor:document.leadingAnchor],
+        [stack.trailingAnchor constraintEqualToAnchor:document.trailingAnchor],
+        [stack.topAnchor constraintEqualToAnchor:document.topAnchor],
+        [stack.bottomAnchor constraintEqualToAnchor:document.bottomAnchor],
     ]];
     [content layoutSubtreeIfNeeded];
-    [self.window setContentSize:NSMakeSize(kWindowWidth, stack.fittingSize.height)];
+
+    // Open at the content's own height when it fits, otherwise as tall as the
+    // screen allows (title bar and screen edges included); the rest scrolls.
+    NSScreen *screen = self.window.screen ?: NSScreen.mainScreen;
+    CGFloat availableHeight = screen ? NSHeight(screen.visibleFrame) - 80 : stack.fittingSize.height;
+    CGFloat height = MAX(kMinHeight, MIN(stack.fittingSize.height, availableHeight));
+    self.window.contentMinSize = NSMakeSize(kWindowWidth, kMinHeight);
+    self.window.contentMaxSize = NSMakeSize(kWindowWidth, CGFLOAT_MAX);
+    [self.window setContentSize:NSMakeSize(kWindowWidth, height)];
 }
 
 - (NSView *)rowForSkill:(ESBundledSkill *)skill {
